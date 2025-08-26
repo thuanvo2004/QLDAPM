@@ -1,42 +1,19 @@
-{% extends 'base.html' %}
-
-{% block title %}Trang chính{% endblock %}
-
+{% extends "layout.html" %}
 {% block content %}
-<div class="hero">
-    <h1>Chào mừng đến với My TopCV Clone</h1>
-    <p>Tìm kiếm việc làm và tạo hồ sơ xin việc dễ dàng!</p>
-    <a href="{{ url_for('register') }}" class="btn">Đăng ký ngay</a>
+<h2 class="mb-4">Danh sách việc làm</h2>
+
+<div class="row">
+    {% for job in jobs %}
+    <div class="col-md-4 mb-3">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ job.title }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{ job.company }}</h6>
+                <p class="card-text"><b>Địa điểm:</b> {{ job.location }}</p>
+                <a href="{{ url_for('job_detail', id=job.id) }}" class="btn btn-primary btn-sm">Xem chi tiết</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 </div>
-
-<section class="introduction">
-    <h2>Giới thiệu</h2>
-    <p>Chúng tôi giúp bạn kết nối với các nhà tuyển dụng và tìm kiếm cơ hội việc làm phù hợp với bạn.</p>
-</section>
-
-<section class="job-listings">
-    <h2>Các việc làm mới nhất</h2>
-    <div class="job">
-        <h3>Nhà phát triển Python</h3>
-        <p>Công ty ABC đang tìm kiếm một nhà phát triển Python có kinh nghiệm.</p>
-        <a href="#" class="btn">Xem chi tiết</a>
-    </div>
-    <div class="job">
-        <h3>Chuyên viên Marketing</h3>
-        <p>Công ty XYZ cần một chuyên viên marketing sáng tạo.</p>
-        <a href="#" class="btn">Xem chi tiết</a>
-    </div>
-    <div class="job">
-        <h3>Thiết kế đồ họa</h3>
-        <p>Công ty DEF đang tìm kiếm một nhà thiết kế đồ họa tài năng.</p>
-        <a href="#" class="btn">Xem chi tiết</a>
-    </div>
-</section>
-
-<section class="testimonials">
-    <h2>Ý kiến khách hàng</h2>
-    <blockquote>
-
-    </blockquote>
-</section>
 {% endblock %}
