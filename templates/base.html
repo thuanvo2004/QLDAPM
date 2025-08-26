@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>{% block title %}Cổng Việc Làm{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <h1>Cổng Thông Tin Việc Làm</h1>
+        <nav>
+            <a href="{{ url_for('index') }}">Trang chủ</a>
+            <a href="{{ url_for('login') }}">Đăng nhập</a>
+            <a href="{{ url_for('register') }}">Đăng ký</a>
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        <p> Cổng Thông Tin Việc Làm © 2025</p>
+    </footer>
+</body>
+</html>
