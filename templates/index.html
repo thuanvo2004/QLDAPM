@@ -10,37 +10,50 @@
 
       <form id="main-search" class="search-bar" action="{{ url_for('index') }}" method="get" role="search">
         <input type="text" name="keyword" placeholder="Vị trí, kỹ năng hoặc công ty" value="{{ search.keyword }}">
-        <!-- location select custom -->
+
+        <!-- Location: readonly chips + dropdown multi-select -->
         <div class="location-select">
-          <input type="text" id="location-input" name="location" placeholder="Nhập Tỉnh/Thành phố" readonly value="{{ search.location }}">
-          <div class="location-dropdown" id="location-dropdown">
-            <div class="location-left">
-              <ul id="province-list"></ul>
-            </div>
-            <div class="location-right">
-              <p class="placeholder">Vui lòng chọn Tỉnh/Thành phố</p>
-              <ul id="district-list"></ul>
-            </div>
+          <div id="location-input" class="location-input" role="button" tabindex="0">
+            <span class="location-placeholder">Chọn Tỉnh/Thành phố</span>
+            <!-- chips inserted by JS -->
+          </div>
+
+          <input type="hidden" id="location-hidden" name="location" value="{{ search.location or '' }}">
+          <div class="location-dropdown" id="location-dropdown" aria-hidden="true">
+            <ul id="province-list" class="province-list">
+              {% if provinces %}
+                {% for p in provinces %}
+                  <li>
+                    <label>
+                      <input type="checkbox" data-name="{{ p }}" {% if search.location and p in search.location.split(',') %}checked{% endif %}>
+                      <span class="pname">{{ p }}</span>
+                    </label>
+                  </li>
+                {% endfor %}
+              {% endif %}
+            </ul>
           </div>
         </div>
 
-
-        <input type="text" name="min_salary" id="min_salary" placeholder="Mức lương từ (VND)" value="{{ search.min_salary }}">
-        <input type="text" name="max_salary" id="max_salary" placeholder="Đến (VND)" value="{{ search.max_salary }}">
+        <div class="salary-row">
+          <input type="text" id="min_salary" name="min_salary" placeholder="Mức lương từ (VNĐ)" value="{{ search.min_salary }}">
+          <input type="text" id="max_salary" name="max_salary" placeholder="Đến (VNĐ)" value="{{ search.max_salary }}">
+        </div>
 
         <select name="job_type">
           <option value="">Loại công việc</option>
-          <option value="Full-time" {% if search.job_type =='Full-time' %}selected{% endif %}>Full-time</option>
-          <option value="Part-time" {% if search.job_type =='Part-time' %}selected{% endif %}>Part-time</option>
-          <option value="Contract" {% if search.job_type =='Contract' %}selected{% endif %}>Contract</option>
-          <option value="Intern" {% if search.job_type =='Intern' %}selected{% endif %}>Intern</option>
+          <option value="Full-time" {% if search.job_type == 'Full-time' %}selected{% endif %}>Full-time</option>
+          <option value="Part-time" {% if search.job_type == 'Part-time' %}selected{% endif %}>Part-time</option>
+          <option value="Remote" {% if search.job_type == 'Remote' %}selected{% endif %}>Remote</option>
+          <option value="Contract" {% if search.job_type == 'Contract' %}selected{% endif %}>Contract</option>
+          <option value="Intern" {% if search.job_type == 'Intern' %}selected{% endif %}>Intern</option>
         </select>
 
         <select name="sort_by">
           <option value="">Sắp xếp</option>
-          <option value="newest" {% if search.sort_by =='newest' %}selected{% endif %}>Mới nhất</option>
-          <option value="salary_desc" {% if search.sort_by =='salary_desc' %}selected{% endif %}>Lương cao nhất</option>
-          <option value="salary_asc" {% if search.sort_by =='salary_asc' %}selected{% endif %}>Lương thấp nhất</option>
+          <option value="newest" {% if search.sort_by == 'newest' %}selected{% endif %}>Mới nhất</option>
+          <option value="salary_desc" {% if search.sort_by == 'salary_desc' %}selected{% endif %}>Lương cao nhất</option>
+          <option value="salary_asc" {% if search.sort_by == 'salary_asc' %}selected{% endif %}>Lương thấp nhất</option>
         </select>
 
         <button type="submit" class="btn search-btn">
@@ -52,42 +65,56 @@
   </div>
 </section>
 
+<!-- FILTERS BAR (below hero) -->
+<div class="filters-bar container">
+  <form id="quick-filters" action="{{ url_for('index') }}" method="get" role="search">
+    <input type="hidden" name="keyword" value="{{ search.keyword }}">
+    <input type="hidden" id="location-hidden-quick" name="location" value="{{ search.location or '' }}">
+
+    <div class="filter-group">
+      <label>Loại công việc</label>
+      <select name="job_type" id="flt_job_type">
+        <option value="">Tất cả</option>
+        <option value="Full-time" {% if search.job_type == 'Full-time' %}selected{% endif %}>Full-time</option>
+        <option value="Part-time" {% if search.job_type == 'Part-time' %}selected{% endif %}>Part-time</option>
+        <option value="Remote" {% if search.job_type == 'Remote' %}selected{% endif %}>Remote</option>
+        <option value="Contract" {% if search.job_type == 'Contract' %}selected{% endif %}>Contract</option>
+        <option value="Intern" {% if search.job_type == 'Intern' %}selected{% endif %}>Intern</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Mức lương</label>
+      <div class="salary-row">
+        <input type="text" id="flt_min" name="min_salary" placeholder="Mức lương từ (VNĐ)" value="{{ search.min_salary }}">
+        <input type="text" id="flt_max" name="max_salary" placeholder="Đến (VNĐ)" value="{{ search.max_salary }}">
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <button type="submit" class="btn primary">Áp dụng</button>
+      <button type="button" id="reset-filters" class="btn primary">Đặt lại</button>
+    </div>
+  </form>
+</div>
+
+<!-- JOBS LIST: each card is clickable (link) -->
 <section class="jobs container">
   <div class="jobs-grid">
-    <aside class="filters">
-      <div class="filter-card">
-        <h4>Bộ lọc nhanh</h4>
-        <label>Loại công việc</label>
-        <select onchange="document.getElementById('main-search').job_type.value=this.value">
-          <option value="">Tất cả</option>
-          <option value="Full-time">Full-time</option>
-          <option value="Part-time">Part-time</option>
-          <option value="Contract">Contract</option>
-        </select>
-
-        <label style="margin-top:12px">Mức lương</label>
-        <input type="text" id="flt_min" placeholder="Từ (VND)" oninput="document.getElementById('main-search').min_salary.value=this.value">
-        <input type="text" id="flt_max" placeholder="Đến (VND)" oninput="document.getElementById('main-search').max_salary.value=this.value">
-
-        <button class="btn primary" onclick="document.getElementById('main-search').submit()">Áp dụng</button>
-      </div>
-    </aside>
-
     <div class="job-list">
       <h2>Công việc nổi bật</h2>
       <div class="job-grid">
         {% for job in hot_jobs %}
-        <article class="job-card featured">
-          <div class="logo">🏢</div>
-          <div class="job-info">
-            <h3>{{ job.title }}</h3>
-            <p class="muted">{{ job.company }} - {{ job.location }}</p>
-            <p class="salary">{{ job.salary | fmt_salary }} VND · {{ job.job_type or '-' }}</p>
-          </div>
-          <div class="job-cta">
-            <a class="btn ghost" href="#">Xem chi tiết</a>
-          </div>
-        </article>
+          <a class="job-card-link" href="{{ url_for('job_detail', id=job.id) }}">
+            <article class="job-card featured" aria-labelledby="title-{{ job.id }}">
+              <div class="logo">🏢</div>
+              <div class="job-info">
+                <h3 id="title-{{ job.id }}">{{ job.title }}</h3>
+                <p class="muted">{{ job.company }} · {{ job.location }}</p>
+                <p class="salary">{{ job.salary | fmt_salary }} · {{ job.job_type or '-' }}</p>
+              </div>
+            </article>
+          </a>
         {% else %}
           <p>Không có công việc nổi bật phù hợp.</p>
         {% endfor %}
@@ -96,24 +123,60 @@
       <h3 style="margin-top:24px">Các công việc khác</h3>
       <div class="job-grid">
         {% for job in other_jobs %}
-        <article class="job-card">
-          <div class="logo">🏢</div>
-          <div class="job-info">
-            <h4>{{ job.title }}</h4>
-            <p class="muted">{{ job.company }} - {{ job.location }}</p>
-            <p class="salary">{{ job.salary | fmt_salary }} VND · {{ job.job_type or '-' }}</p>
-          </div>
-          <div class="job-cta">
-            <a class="btn ghost" href="#">Xem chi tiết</a>
-          </div>
-        </article>
+          <a class="job-card-link" href="{{ url_for('job_detail', id=job.id) }}">
+            <article class="job-card" aria-labelledby="title-{{ job.id }}">
+              <div class="logo">🏢</div>
+              <div class="job-info">
+                <h4>{{ job.title }}</h4>
+                <p class="muted">{{ job.company }} · {{ job.location }}</p>
+                <p class="salary">{{ job.salary | fmt_salary }} · {{ job.job_type or '-' }}</p>
+              </div>
+            </article>
+          </a>
         {% else %}
           <p>Không có công việc nào.</p>
         {% endfor %}
       </div>
+
+      <!-- Pagination -->
+      {% if total_pages > 1 %}
+        <nav class="pagination container" aria-label="Pagination">
+          <ul>
+            <!-- Previous page -->
+            {% if page > 1 %}
+              <li>
+                <a href="{{ url_for('index', page=page-1, **search) }}" class="btn secondary">Trước</a>
+              </li>
+            {% endif %}
+
+            <!-- Page numbers -->
+            {% for p in range(1, total_pages + 1) %}
+              <li>
+                <a href="{{ url_for('index', page=p, **search) }}"
+                   class="btn {% if p == page %}primary{% else %}secondary{% endif %}">
+                  {{ p }}
+                </a>
+              </li>
+            {% endfor %}
+
+            <!-- Next page -->
+            {% if page < total_pages %}
+              <li>
+                <a href="{{ url_for('index', page=page+1, **search) }}" class="btn secondary">Sau</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
     </div>
   </div>
 </section>
+
+<script>
+  document.getElementById('reset-filters').addEventListener('click', function() {
+    document.getElementById('quick-filters').reset();
+    document.getElementById('location-hidden-quick').value = '';
+    window.location.href = '{{ url_for("index") }}';
+  });
+</script>
 {% endblock %}
-
-
