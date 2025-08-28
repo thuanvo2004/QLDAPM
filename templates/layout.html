@@ -49,17 +49,18 @@
     </header>
 
     <!-- Flash messages -->
-    <div class="container mt-3">
-      {% with messages = get_flashed_messages() %}
-        {% if messages %}
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="container mt-3">
           <div class="alert">
             {% for msg in messages %}
               <p>{{ msg }}</p>
             {% endfor %}
           </div>
-        {% endif %}
-      {% endwith %}
-    </div>
+        </div>
+      {% endif %}
+    {% endwith %}
+
 
     <!-- Main -->
     <main class="site-main">
