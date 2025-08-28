@@ -40,7 +40,7 @@
             <a class="btn secondary" href="{{ url_for('add_job') }}">➕ Đăng việc</a>
             <a class="btn ghost" href="{{ url_for('logout') }}">Đăng xuất</a>
           {% else %}
-            <a class="btn ghost" href="{{ url_for('login') }}">Đăng nhập</a>
+            <a class="btn ghost" href="{{ url_for('choose_role') }}">Đăng nhập</a>
             <a class="btn primary" href="{{ url_for('register') }}">Đăng ký</a>
             <a class="btn secondary" href="#">Đăng tin tuyển dụng</a>
           {% endif %}

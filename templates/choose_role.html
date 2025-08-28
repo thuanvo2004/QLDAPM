@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Chọn loại tài khoản</h2>
+    <div class="d-flex justify-content-center gap-3">
+        <a href="{{ url_for('login_candidate') }}" class="btn btn-primary btn-lg">Ứng viên</a>
+        <a href="{{ url_for('login_employer') }}" class="btn btn-success btn-lg">Nhà tuyển dụng</a>
+    </div>
+</div>
+{% endblock %}

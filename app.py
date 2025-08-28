@@ -214,42 +214,119 @@ def provinces():
 # ============================
 # Đăng ký
 # ============================
-@app.route('/register', methods=['GET', 'POST'])
+
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
+    if request.method == "POST":
+        role = request.form.get("role")
+        if role == "candidate":
+            return redirect(url_for("register_candidate"))
+        elif role == "employer":
+            return redirect(url_for("register_employer"))
+    return render_template("register.html")  # Trang chọn loại
 
-        if User.query.filter_by(username=username).first():
-            flash("⚠️ Tên đăng nhập đã tồn tại!")
-            return redirect(url_for('register'))
+@app.route("/register/candidate", methods=["GET", "POST"])
+def register_candidate():
+    if request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        confirm_password = request.form.get("confirm_password")
 
-        new_user = User(username=username, password=password)
-        db.session.add(new_user)
-        db.session.commit()
-        flash("✅ Đăng ký thành công, mời bạn đăng nhập!")
-        return redirect(url_for('login'))
+        if password != confirm_password:
+            flash("Mật khẩu không khớp", "danger")
+            return redirect(url_for("register_candidate"))
 
-    return render_template('register.html')
+        cursor = mysql.connection.cursor()
+        cursor.execute("INSERT INTO candidates (name, email, password) VALUES (%s, %s, %s)",
+                       (name, email, password))
+        mysql.connection.commit()
+        cursor.close()
+
+        flash("Đăng ký ứng viên thành công!", "success")
+        return redirect(url_for("login"))
+
+    return render_template("register_candidate.html")
+@app.route("/register/employer", methods=["GET", "POST"])
+def register_employer():
+    if request.method == "POST":
+        name = request.form.get("name")
+        gender = request.form.get("gender")
+        phone = request.form.get("phone")
+        company = request.form.get("company")
+        location = request.form.get("location")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        confirm_password = request.form.get("confirm_password")
+
+        if password != confirm_password:
+            flash("Mật khẩu không khớp", "danger")
+            return redirect(url_for("register_employer"))
+
+        cursor = mysql.connection.cursor()
+        cursor.execute("""INSERT INTO employers 
+                          (name, gender, phone, company, location, email, password) 
+                          VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                       (name, gender, phone, company, location, email, password))
+        mysql.connection.commit()
+        cursor.close()
+
+        flash("Đăng ký nhà tuyển dụng thành công!", "success")
+        return redirect(url_for("login"))
+
+    return render_template("register_employer.html")
+
+
 
 # ============================
 # Đăng nhập
 # ============================
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login")
 def login():
+    return redirect(url_for("choose_role"))
+
+@app.route("/choose_role")
+def choose_role():
+    return render_template("choose_role.html")
+
+def process_login(username, password, role):
+    # Tìm user theo username và role
+    user = User.query.filter_by(username=username, role=role).first()
+
+    if user and bcrypt.check_password_hash(user.password, password):
+        login_user(user)
+        flash("Đăng nhập thành công!", "success")
+        return redirect(url_for('index'))
+    else:
+        flash("Sai tài khoản hoặc mật khẩu!", "danger")
+        return None
+
+@app.route('/login/candidate', methods=['GET', 'POST'])
+def login_candidate():
+    if request.method == 'POST':
+        username = request.form['email']
+        password = request.form['password']
+
+        result = process_login(username, password, role="candidate")
+        if result:  # Nếu login thành công
+            return result
+
+    return render_template('login_candidate.html')
+
+@app.route('/login/employer', methods=['GET', 'POST'])
+def login_employer():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
 
-        user = User.query.filter_by(username=username).first()
-        if user and bcrypt.check_password_hash(user.password, password):
-            login_user(user)
-            flash("✅ Đăng nhập thành công!")
-            return redirect(url_for('index'))
-        else:
-            flash("❌ Sai tài khoản hoặc mật khẩu!")
+        result = process_login(username, password, role="employer")
+        if result:
+            return result
 
-    return render_template('login.html')
+    return render_template('login_employer.html')
+
+
+
 
 # ============================
 # Đăng xuất
