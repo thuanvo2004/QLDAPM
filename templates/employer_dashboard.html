@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Dashboard Nhà Tuyển Dụng</h2>
+    <p>Xin chào, <strong>{{ current_user.name }}</strong>! Quản lý các hồ sơ ứng viên cho công ty: <strong>{{ current_user.company }}</strong></p>
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Ứng viên</th>
+                        <th>Email</th>
+                        <th>Job</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ app.user.name }}</td>
+                        <td>{{ app.user.email }}</td>
+                        <td>{{ app.job.title }}</td>
+                        <td>
+                            {% if app.status == "Đang chờ" %}
+                                <span class="badge bg-warning text-dark">{{ app.status }}</span>
+                            {% elif app.status == "Đã duyệt" %}
+                                <span class="badge bg-success">{{ app.status }}</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ app.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('update_application_status', app_id=app.id, status='Đã duyệt') }}" class="btn btn-success btn-sm">Duyệt</a>
+                            <a href="{{ url_for('update_application_status', app_id=app.id, status='Từ chối') }}" class="btn btn-danger btn-sm">Từ chối</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">Chưa có hồ sơ ứng viên nào</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
