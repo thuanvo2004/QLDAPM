@@ -85,7 +85,12 @@ def filter_jobs(job_list, keyword=None, location=None, min_salary=None, max_sala
 # ============================
 app = Flask(__name__)
 app.secret_key = "jobportal_secret"
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+# nhớ thây thế: root:admin@localhost/db1
+#root: là tài khoản kết nối db
+#admin: là pass đăng nhập db
+# db1 là tên db cần kết nối 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:admin@localhost/db1?charset=utf8mb4'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
