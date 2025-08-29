@@ -5,8 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
 from models import db, Candidate, Employer,Job, CandidateProfile,Application
-
-
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Hàm trích xuất số nguyên từ chuỗi, trả về None nếu không có số
 def parse_int_from_str(s):
@@ -80,22 +79,20 @@ def filter_jobs(job_list, keyword=None, location=None, min_salary=None, max_sala
 
     return filtered
 
-# Khởi tạo Flask app
-
 app = Flask(__name__)
-app.secret_key = "jobportal_secret"
+app.secret_key = "secret-key"
 
 # nhớ thay thế: root:admin@localhost/db1
 #root: là tài khoản kết nối db
 #admin: là pass đăng nhập db
 # db1 là tên db cần kết nối
+app.config["SECRET_KEY"] = "secret123"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:admin@localhost/db1?charset=utf8mb4'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-
-
 db.init_app(app)
-bcrypt = Bcrypt(app)
+
+
 
 # ============================
 # Hàm định dạng lương cho template
@@ -114,17 +111,22 @@ app.jinja_env.filters['fmt_salary'] = format_salary_for_template
 
 # Quản lý login
 login_manager = LoginManager()
+login_manager.login_view = "login"
 login_manager.init_app(app)
-login_manager.login_view = "choose_role"
-
 
 @login_manager.user_loader
 def load_user(user_id):
-    # Tìm trong cả Candidate và Employer
-    user = Candidate.query.get(user_id)
-    if not user:
-        user = Employer.query.get(user_id)
-    return user
+    # Candidate và Employer có ID riêng
+    # Để phân biệt, ta truyền "C-{id}" hoặc "E-{id}"
+    if user_id.startswith("C-"):
+        return Candidate.query.get(int(user_id.split("-")[1]))
+    elif user_id.startswith("E-"):
+        return Employer.query.get(int(user_id.split("-")[1]))
+    return None
+
+# Custom get_id để phân biệt
+Candidate.get_id = lambda self: f"C-{self.id}"
+Employer.get_id = lambda self: f"E-{self.id}"
 
 
 
@@ -200,135 +202,136 @@ def provinces():
     return send_from_directory('static/data', 'provinces.json')
 
 
-# Trang chọn role
-@app.route("/choose_role")
-def choose_role():
-    return render_template("choose_role.html")
-@app.route('/register')
-def register():
-    return render_template('choose_role.html')
 
-# Đăng ký ứng viên
+@app.route("/login")
+def login():
+    return render_template("choose_login.html")
+
+@app.route("/register")
+def register():
+    return render_template("choose_register.html")
+
 @app.route("/register/candidate", methods=["GET", "POST"])
 def register_candidate():
     if request.method == "POST":
-        name = request.form['name']
-        email = request.form['email']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
+        name = request.form["name"]
+        email = request.form["email"]
+        password = generate_password_hash(request.form["password"])
 
-        if password != confirm_password:
-            flash("Mật khẩu không khớp!", "danger")
-            return redirect(url_for('register_candidate'))
-
-        existing_user = Candidate.query.filter_by(email=email).first()
-        if existing_user:
+        if Candidate.query.filter_by(email=email).first():
             flash("Email đã tồn tại!", "danger")
-            return redirect(url_for('register_candidate'))
+            return redirect(url_for("register_candidate"))
 
-        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-        new_candidate = Candidate(name=name, email=email, password=hashed_password)
-        db.session.add(new_candidate)
+        new_user = Candidate(name=name, email=email, password=password)
+        db.session.add(new_user)
         db.session.commit()
-        flash("Đăng ký thành công! Vui lòng đăng nhập.", "success")
-        return redirect(url_for('login_candidate'))
+        flash("Đăng ký thành công, vui lòng đăng nhập!", "success")
+        return redirect(url_for("login_candidate"))
 
-    return render_template("register_candidate.html")
-
-# Đăng ký nhà tuyển dụng
-@app.route("/register/employer", methods=["GET", "POST"])
-def register_employer():
-    if request.method == "POST":
-        name = request.form['name']
-        email = request.form['email']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        company = request.form.get('company')
-        phone = request.form.get('phone')
-        location = request.form.get('location')
-        gender = request.form.get('gender')
-
-        if password != confirm_password:
-            flash("Mật khẩu không khớp!", "danger")
-            return redirect(url_for('register_employer'))
-
-        existing_user = Employer.query.filter_by(email=email).first()
-        if existing_user:
-            flash("Email đã tồn tại!", "danger")
-            return redirect(url_for('register_employer'))
-
-        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-        new_employer = Employer(
-            name=name, email=email, password=hashed_password,
-            company=company, phone=phone, location=location
-        )
-        db.session.add(new_employer)
-        db.session.commit()
-        flash("Đăng ký thành công! Vui lòng đăng nhập.", "success")
-        return redirect(url_for('login_employer'))
-
-    return render_template("register_employer.html")
-
-def process_login(email, password, role):
-    if role == "employer":
-        user = Employer.query.filter_by(email=email).first()
-    else:
-        user = Candidate.query.filter_by(email=email).first()
-
-    if user and bcrypt.check_password_hash(user.password, password):
-        # Lưu id và role vào session
-        session["user_id"] = user.id
-        session["role"] = role
-
-        if role == "employer":
-            return redirect(url_for("employer_dashboard"))
-        else:
-            return redirect(url_for("candidate_dashboard"))
-    else:
-        flash("Sai email hoặc mật khẩu!", "danger")
-        return redirect(request.url)
+    return render_template("register_candidate.html", title="Đăng ký Ứng viên")
 
 
-
-# Đăng nhập ứng viên
 @app.route("/login/candidate", methods=["GET", "POST"])
 def login_candidate():
     if request.method == "POST":
-        email = request.form['email']
-        password = request.form['password']
-        return process_login(email, password, role="candidate")
-    return render_template("login_candidate.html")
+        email = request.form["email"]
+        password = request.form["password"]
 
-# Đăng nhập nhà tuyển dụng
+        user = Candidate.query.filter_by(email=email).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for("candidate_dashboard"))
+        flash("Sai email hoặc mật khẩu!", "danger")
+    return render_template("login_candidate.html", title="Đăng nhập Ứng viên")
+@app.route("/dashboard/candidate")
+@login_required
+def candidate_dashboard():
+    if not isinstance(current_user, Candidate):
+        flash("Bạn không có quyền vào trang này!", "danger")
+        return redirect("/")
+    return render_template("candidate_dashboard.html", user=current_user)
+@app.route("/register/employer", methods=["GET", "POST"])
+def register_employer():
+    if request.method == "POST":
+        name = request.form["name"]
+        email = request.form["email"]
+        password = generate_password_hash(request.form["password"])
+        company = request.form["company"]
+        phone = request.form["phone"]
+        location = request.form["location"]
+
+        # Kiểm tra email trùng
+        if Employer.query.filter_by(email=email).first():
+            flash("Email đã tồn tại!", "danger")
+            return redirect(url_for("register_employer"))
+
+        new_emp = Employer(
+            name=name,
+            email=email,
+            password=password,
+            company=company,
+            phone=phone,
+            location=location
+        )
+        db.session.add(new_emp)
+        db.session.commit()
+        flash("Đăng ký thành công, vui lòng đăng nhập!", "success")
+        return redirect(url_for("login_employer"))
+
+    return render_template("register_employer.html", title="Đăng ký Nhà tuyển dụng")
+
 @app.route("/login/employer", methods=["GET", "POST"])
 def login_employer():
     if request.method == "POST":
-        email = request.form['email']
-        password = request.form['password']
-        return process_login(email, password, role="employer")
-    return render_template("login_employer.html")
+        email = request.form["email"]
+        password = request.form["password"]
 
-
-# Trang dashboard của nhà tuyển dụng
+        user = Employer.query.filter_by(email=email).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for("employer_dashboard"))
+        flash("Sai email hoặc mật khẩu!", "danger")
+    return render_template("login_employer.html", title="Đăng nhập Nhà tuyển dụng")
 @app.route("/dashboard/employer")
+@login_required
 def employer_dashboard():
-    if session.get("role") != "employer":
-        flash("Bạn không có quyền truy cập!", "danger")
-        return redirect(url_for("login_employer"))
-
-    employer_id = session["user_id"]
-    applications = Application.query.join(Job).filter(Job.employer_id == employer_id).all()
-    return render_template("employer_dashboard.html", applications=applications)
+    if not isinstance(current_user, Employer):
+        flash("Bạn không có quyền vào trang này!", "danger")
+        return redirect("/")
+    return render_template("employer_dashboard.html", user=current_user)
 
 
-# ============================
+
+@app.route("/candidate/manage_cv")
+@login_required
+def manage_cv():
+    return "Trang quản lý CV (chưa code)"
+
+@app.route("/candidate/search_jobs")
+@login_required
+def search_jobs():
+    return "Trang tìm kiếm việc làm (chưa code)"
+
+@app.route("/candidate/apply_jobs")
+@login_required
+def apply_jobs():
+    return "Trang nộp hồ sơ (chưa code)"
+
+
+
+
+
+
+
 # Đăng xuất
-# ============================
-@app.route('/logout')
+@app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    flash("Đã đăng xuất!", "info")
+    return redirect(url_for("index"))
+
+
 
 # ============================
 # Trang thêm việc làm

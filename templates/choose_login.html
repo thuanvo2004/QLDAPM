@@ -1,0 +1,8 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="col-md-6 offset-md-3 text-center">
+  <h3>Chọn vai trò để đăng nhập</h3>
+  <a href="{{ url_for('login_candidate') }}" class="btn btn-primary w-100 my-2">Đăng nhập Ứng viên</a>
+  <a href="{{ url_for('login_employer') }}" class="btn btn-success w-100 my-2">Đăng nhập Nhà tuyển dụng</a>
+</div>
+{% endblock %}
