@@ -6,6 +6,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from flask_bcrypt import Bcrypt
 from models import db, Candidate, Employer,Job, CandidateProfile,Application
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 # Hàm trích xuất số nguyên từ chuỗi, trả về None nếu không có số
 def parse_int_from_str(s):
@@ -377,6 +378,55 @@ def update_application_status(app_id, status):
     flash(f"Hồ sơ đã được cập nhật: {status}", "success")
     return redirect(url_for('employer_dashboard'))
 
+# dang tin tuyen dung
+@app.route("/post_job", methods=["GET", "POST"])
+@login_required
+def post_job():
+    if request.method == "POST":
+        title = request.form["title"]
+        location = request.form["location"]
+        experience_required = request.form["experience_required"]
+        deadline = datetime.strptime(request.form["deadline"], "%Y-%m-%d")
+        description = request.form["description"]
+        requirements = request.form["requirements"]
+        benefits = request.form["benefits"]
+        working_time = request.form["working_time"]
+        address = request.form["address"]
+        salary = request.form["salary"]
+        base_salary = request.form["base_salary"]
+        job_type = request.form["job_type"]
+
+        new_job = Job(
+            employer_id=current_user.id,
+            title=title,
+            location=location,
+            experience_required=experience_required,
+            deadline=deadline,
+            description=description,
+            requirements=requirements,
+            benefits=benefits,
+            working_time=working_time,
+            address=address,
+            salary=salary,
+            base_salary=base_salary,
+            job_type=job_type
+        )
+        db.session.add(new_job)
+        db.session.commit()
+
+        flash("✅ Tin tuyển dụng đã được đăng thành công!", "success")
+        return redirect(url_for("list_jobs"))
+
+    return render_template("post_job.html")
+
+@app.route("/jobs")
+def list_jobs():
+    jobs = Job.query.filter_by(status="active").order_by(Job.id.desc()).all()
+    return render_template("jobs.html", jobs=jobs)
+@app.route("/job/<int:id>")
+def job_detail(id):
+    job = Job.query.get_or_404(id)
+    return render_template("job_detail.html", job=job)
 
 
 # ============================

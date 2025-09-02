@@ -1,0 +1,31 @@
+<!-- templates/job_detail.html -->
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="job-detail-container">
+    <h1>{{ job.title }}</h1>
+
+    <p><strong>Công ty:</strong> {{ job.employer.name if job.employer else "Không có thông tin" }}</p>
+    <p><strong>Địa điểm:</strong> {{ job.location }}</p>
+    <p><strong>Địa chỉ:</strong> {{ job.address }}</p>
+    <p><strong>Loại công việc:</strong> {{ job.job_type }}</p>
+    <p><strong>Kinh nghiệm yêu cầu:</strong> {{ job.experience_required }}</p>
+    <p><strong>Lương cơ bản:</strong> {{ job.base_salary }}</p>
+    <p><strong>Lương tổng:</strong> {{ job.salary }}</p>
+    <p><strong>Thời gian làm việc:</strong> {{ job.working_time }}</p>
+    <p><strong>Hạn nộp hồ sơ:</strong> {{ job.deadline.strftime("%d/%m/%Y") if job.deadline else "Không có" }}</p>
+
+    <hr>
+
+    <h3>Mô tả công việc</h3>
+    <p>{{ job.description }}</p>
+
+    <h3>Yêu cầu</h3>
+    <p>{{ job.requirements }}</p>
+
+    <h3>Phúc lợi</h3>
+    <p>{{ job.benefits }}</p>
+
+    <a href="{{ url_for('list_jobs') }}" class="btn btn-primary">Quay lại danh sách việc làm</a>
+</div>
+{% endblock %}

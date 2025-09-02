@@ -123,13 +123,14 @@
       <h3 style="margin-top:24px">Các công việc khác</h3>
       <div class="job-grid">
         {% for job in other_jobs %}
-          <a class="job-card-link" href="{{ url_for('job_detail', id=job.id) }}">
+
             <article class="job-card" aria-labelledby="title-{{ job.id }}">
               <div class="logo">🏢</div>
               <div class="job-info">
                 <h4>{{ job.title }}</h4>
                 <p class="muted">{{ job.company }} · {{ job.location }}</p>
                 <p class="salary">{{ job.salary | fmt_salary }} · {{ job.job_type or '-' }}</p>
+                <a href="{{ url_for('job_detail', id=job.id) }}">Xem chi tiết</a>
               </div>
             </article>
           </a>

@@ -45,18 +45,34 @@ class Employer(db.Model,UserMixin):
 
 
 # Bảng Job: tin tuyển dụng
-class Job(db.Model,UserMixin):
+class Job(db.Model):
     __tablename__ = "job"
     id = db.Column(db.Integer, primary_key=True)
     employer_id = db.Column(db.Integer, db.ForeignKey("employer.id"), nullable=False)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    location = db.Column(db.String(150))
-    salary = db.Column(db.String(100))
-    job_type = db.Column(db.String(50))  # full-time, part-time, ...
-    status = db.Column(db.String(50), default="active")
 
-    # Hồ sơ ứng tuyển cho job này
+    # Thông tin chung
+    title = db.Column(db.String(200), nullable=False)
+    location = db.Column(db.String(150))
+    experience_required = db.Column(db.String(100))
+    deadline = db.Column(db.Date)
+
+    # Nội dung chi tiết
+    description = db.Column(db.Text, nullable=False)   # Mô tả công việc
+    requirements = db.Column(db.Text)                  # Yêu cầu ứng viên
+    benefits = db.Column(db.Text)                      # Quyền lợi
+    working_time = db.Column(db.String(200))
+    address = db.Column(db.String(300))
+
+    # Thu nhập
+    salary = db.Column(db.String(100))                 # 15-20 triệu
+    base_salary = db.Column(db.String(100))            # 9-12 triệu
+    job_type = db.Column(db.String(50))                # Full-time, Part-time, ...
+
+    # Trạng thái
+    status = db.Column(db.String(50), default="active")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Hồ sơ ứng tuyển
     applications = db.relationship("Application", backref="job", lazy=True)
 
 

@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2 class="mb-4">📋 Danh sách việc làm</h2>
+{% for job in jobs %}
+<div class="card mb-4 shadow-sm rounded-4">
+  <div class="card-body">
+    <h4 class="text-primary">{{ job.title }}</h4>
+    <p><b>Địa điểm:</b> {{ job.location }} | <b>Kinh nghiệm:</b> {{ job.experience_required }}</p>
+    <p><b>Thu nhập:</b> {{ job.salary }} | <b>Lương cứng:</b> {{ job.base_salary }}</p>
+    <p><b>Loại công việc:</b> {{ job.job_type }}</p>
+    <p><b>Hạn nộp hồ sơ:</b> {{ job.deadline.strftime('%d/%m/%Y') }}</p>
+    <p>{{ job.description[:150] }}...</p>
+    <a href="#" class="btn btn-outline-primary btn-sm">Chi tiết</a>
+    <a href="#" class="btn btn-success btn-sm">Ứng tuyển ngay</a>
+  </div>
+</div>
+{% else %}
+<p class="text-muted">Hiện chưa có tin tuyển dụng nào.</p>
+{% endfor %}
+{% endblock %}
