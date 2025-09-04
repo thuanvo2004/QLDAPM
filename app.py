@@ -1,15 +1,18 @@
-from string import digits
-import re
-from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory,session
+import re, os
+from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_bcrypt import Bcrypt
-from models import db, Candidate, Employer,Job, CandidateProfile,Application
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from werkzeug.utils import secure_filename
 
-# Hàm trích xuất số nguyên từ chuỗi, trả về None nếu không có số
+from models import db, Candidate, Employer, Job, CandidateProfile, Application, SavedJob
+
+# ==================================
+# Hàm tiện ích
+# ==================================
 def parse_int_from_str(s):
+    """Chuyển chuỗi lương thành số int (VNĐ)"""
     if not s:
         return None
     if isinstance(s, int):
@@ -18,7 +21,7 @@ def parse_int_from_str(s):
     if s == "":
         return None
 
-    m = re.search(r'(\d+(?:[.,]\d+)?)\s*(triỆu|triệu|tr)\b', s, flags=re.IGNORECASE)
+    m = re.search(r'(\d+(?:[.,]\d+)?)\s*(triệu|tr)\b', s, flags=re.IGNORECASE)
     if m:
         try:
             num = float(m.group(1).replace(',', '.'))
@@ -34,71 +37,9 @@ def parse_int_from_str(s):
             return None
     return None
 
-def get_job_salary(job):
-    raw = getattr(job, "salary", None)
-    return parse_int_from_str(raw)
 
-
-# Hàm lọc và sắp xếp việc làm dựa trên các tiêu chí
-def filter_jobs(job_list, keyword=None, location=None, min_salary=None, max_salary=None, job_type=None, sort_by=None):
-    k = (keyword or "").strip().lower()
-    location_list = [loc.strip().lower() for loc in (location or "").split(',') if loc.strip()]
-    filtered = []
-
-    for j in job_list:
-        if k:
-            title = (j.title or "").lower()
-            company = (j.company or "").lower()
-            if k not in title and k not in company:
-                continue
-
-        if location_list:
-            job_loc = (j.location or "").strip().lower()
-            if job_loc not in location_list:
-                continue
-
-        if job_type and job_type.strip():
-            if not j.job_type or j.job_type.strip().lower() != job_type.strip().lower():
-                continue
-
-        job_sal = get_job_salary(j)
-        if min_salary is not None:
-            if job_sal is None or job_sal < min_salary:
-                continue
-        if max_salary is not None:
-            if job_sal is None or job_sal > max_salary:
-                continue
-
-        filtered.append(j)
-
-    if sort_by == "salary_desc":
-        filtered.sort(key=lambda x: (get_job_salary(x) or 0), reverse=True)
-    elif sort_by == "salary_asc":
-        filtered.sort(key=lambda x: (get_job_salary(x) or 0))
-    elif sort_by == "newest":
-        filtered.sort(key=lambda x: x.id, reverse=True)
-
-    return filtered
-
-app = Flask(__name__)
-app.secret_key = "secret-key"
-
-# nhớ thay thế: root:admin@localhost/db1
-#root: là tài khoản kết nối db
-#admin: là pass đăng nhập db
-# db1 là tên db cần kết nối
-app.config["SECRET_KEY"] = "secret123"
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:admin@localhost/db1?charset=utf8mb4'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db.init_app(app)
-
-
-
-# ============================
-# Hàm định dạng lương cho template
-# ============================
 def format_salary_for_template(value):
+    """Định dạng hiển thị lương"""
     if value is None or value == "":
         return "Thương lượng"
     try:
@@ -107,110 +48,94 @@ def format_salary_for_template(value):
     except Exception:
         return str(value)
 
+
+# ==================================
+# Cấu hình Flask
+# ==================================
+app = Flask(__name__)
+app.secret_key = "secret-key"
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:admin@localhost/db1?charset=utf8mb4'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
 app.jinja_env.filters['fmt_salary'] = format_salary_for_template
 
 
+# ==================================
 # Quản lý login
+# ==================================
 login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
 
+
 @login_manager.user_loader
 def load_user(user_id):
-    # Candidate và Employer có ID riêng
-    # Để phân biệt, ta truyền "C-{id}" hoặc "E-{id}"
     if user_id.startswith("C-"):
         return Candidate.query.get(int(user_id.split("-")[1]))
     elif user_id.startswith("E-"):
         return Employer.query.get(int(user_id.split("-")[1]))
     return None
 
-# Custom get_id để phân biệt
+
 Candidate.get_id = lambda self: f"C-{self.id}"
 Employer.get_id = lambda self: f"E-{self.id}"
 
 
-
-# Trang chủ
-
-@app.route('/')
+# ==================================
+# Trang chính
+# ==================================
+@app.route("/")
 def index():
-    # Lấy tham số phân trang
-    page = request.args.get('page', 1, type=int)
-    per_page = 15
-
-    # Lấy các tham số lọc
     keyword = request.args.get("keyword", "")
-    location_raw = request.args.get("location", "")
+    location = request.args.get("location", "")
+    min_salary = request.args.get("min_salary", "")
+    max_salary = request.args.get("max_salary", "")
     job_type = request.args.get("job_type", "")
     sort_by = request.args.get("sort_by", "")
-    min_salary_raw = request.args.get("min_salary", "")
-    max_salary_raw = request.args.get("max_salary", "")
+    page = int(request.args.get("page", 1))
 
-    min_salary = parse_int_from_str(min_salary_raw)
-    max_salary = parse_int_from_str(max_salary_raw)
+    # Lọc dữ liệu (demo: chưa viết query filter chi tiết)
+    jobs = Job.query.all()
 
-    # Lấy tất cả công việc và lọc
-    jobs_query = Job.query
-    jobs = jobs_query.all()
-    filtered_jobs = filter_jobs(
-        jobs,
-        keyword=keyword,
-        location=location_raw,
-        min_salary=min_salary,
-        max_salary=max_salary,
-        job_type=job_type,
-        sort_by=sort_by
-    )
-
-    # Phân trang
-    total_jobs = len(filtered_jobs)
-    total_pages = (total_jobs + per_page - 1) // per_page  # Tính tổng số trang
-    start = (page - 1) * per_page
-    end = start + per_page
-    paginated_jobs = filtered_jobs[start:end]
-
-    # Tách công việc nổi bật và không nổi bật
-    hot_jobs = [j for j in paginated_jobs if getattr(j, "featured", False)]
-    other_jobs = [j for j in paginated_jobs if not getattr(j, "featured", False)]
-
-    # Lưu các tham số tìm kiếm
-    search_params = {
+    # Gói thông tin search để truyền xuống template
+    search = {
         "keyword": keyword,
-        "location": location_raw,
+        "location": location,
+        "min_salary": min_salary,
+        "max_salary": max_salary,
         "job_type": job_type,
         "sort_by": sort_by,
-        "min_salary": min_salary_raw,
-        "max_salary": max_salary_raw
     }
 
     return render_template(
-        'index.html',
-        hot_jobs=hot_jobs,
-        other_jobs=other_jobs,
-        search=search_params,
+        "index.html",
         jobs=jobs,
-        user=current_user,
+        hot_jobs=jobs[:3],       # ví dụ: 3 job hot
+        other_jobs=jobs[3:],     # còn lại
+        total_pages=1,           # chưa phân trang thật
         page=page,
-        total_pages=total_pages  # Đảm bảo truyền total_pages
+        search=search,           # ✅ thêm dòng này
+        user=current_user,
     )
-
-# ============================
-# Phục vụ file JSON tỉnh thành
-# ============================
-@app.route('/provinces')
+@app.route("/provinces")
 def provinces():
-    return send_from_directory('static/data', 'provinces.json')
+    return send_from_directory("static/data", "provinces.json")
 
 
-
+# ==================================
+# Đăng ký / Đăng nhập
+# ==================================
 @app.route("/login")
 def login():
     return render_template("choose_login.html")
 
+
 @app.route("/register")
 def register():
     return render_template("choose_register.html")
+
 
 @app.route("/register/candidate", methods=["GET", "POST"])
 def register_candidate():
@@ -241,45 +166,38 @@ def login_candidate():
         user = Candidate.query.filter_by(email=email).first()
         if user and check_password_hash(user.password, password):
             login_user(user)
-            return redirect(url_for("candidate_dashboard"))
+            return redirect(url_for("index"))
         flash("Sai email hoặc mật khẩu!", "danger")
     return render_template("login_candidate.html", title="Đăng nhập Ứng viên")
-@app.route("/dashboard/candidate")
-@login_required
-def candidate_dashboard():
-    if not isinstance(current_user, Candidate):
-        flash("Bạn không có quyền vào trang này!", "danger")
-        return redirect("/")
-    return render_template("candidate_dashboard.html", user=current_user)
-@app.route("/register/employer", methods=["GET", "POST"])
+
+
+
+@app.route("/register_employer", methods=["GET", "POST"])
 def register_employer():
     if request.method == "POST":
-        name = request.form["name"]
-        email = request.form["email"]
-        password = generate_password_hash(request.form["password"])
-        company = request.form["company"]
-        phone = request.form["phone"]
-        location = request.form["location"]
+        name = request.form.get("name")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        company_name = request.form.get("company_name")
+        phone = request.form.get("phone")
+        location = request.form.get("location")
 
-        # Kiểm tra email trùng
-        if Employer.query.filter_by(email=email).first():
-            flash("Email đã tồn tại!", "danger")
-            return redirect(url_for("register_employer"))
+        hashed_pw = generate_password_hash(password)
 
         new_emp = Employer(
             name=name,
             email=email,
-            password=password,
-            company=company,
+            password=hashed_pw,
+            company_name=company_name,
             phone=phone,
             location=location
         )
         db.session.add(new_emp)
         db.session.commit()
-        flash("Đăng ký thành công, vui lòng đăng nhập!", "success")
-        return redirect(url_for("login_employer"))
+        flash("Đăng ký nhà tuyển dụng thành công!", "success")
+        return redirect(url_for("index"))
 
-    return render_template("register_employer.html", title="Đăng ký Nhà tuyển dụng")
+    return render_template("register_employer.html")
 
 @app.route("/login/employer", methods=["GET", "POST"])
 def login_employer():
@@ -293,6 +211,8 @@ def login_employer():
             return redirect(url_for("employer_dashboard"))
         flash("Sai email hoặc mật khẩu!", "danger")
     return render_template("login_employer.html", title="Đăng nhập Nhà tuyển dụng")
+
+
 @app.route("/dashboard/employer")
 @login_required
 def employer_dashboard():
@@ -302,29 +222,6 @@ def employer_dashboard():
     return render_template("employer_dashboard.html", user=current_user)
 
 
-
-@app.route("/candidate/manage_cv")
-@login_required
-def manage_cv():
-    return "Trang quản lý CV (chưa code)"
-
-@app.route("/candidate/search_jobs")
-@login_required
-def search_jobs():
-    return "Trang tìm kiếm việc làm (chưa code)"
-
-@app.route("/candidate/apply_jobs")
-@login_required
-def apply_jobs():
-    return "Trang nộp hồ sơ (chưa code)"
-
-
-
-
-
-
-
-# Đăng xuất
 @app.route("/logout")
 @login_required
 def logout():
@@ -333,83 +230,25 @@ def logout():
     return redirect(url_for("index"))
 
 
-
-# ============================
-# Trang thêm việc làm
-# ============================
-@app.route('/add', methods=['GET', 'POST'])
-@login_required
-def add_job():
-    if request.method == 'POST':
-        title = request.form['title']
-        company = request.form['company']
-        location = request.form.get('location', '')
-        description = request.form['description']
-        salary_raw = request.form.get('salary', '').strip()
-        salary = parse_int_from_str(salary_raw)
-        job_type = request.form.get('job_type', '').strip()
-        featured = bool(request.form.get('featured'))
-
-        new_job = Job(title=title, company=company, location=location, description=description,
-                      salary=salary, job_type=job_type, featured=featured)
-        db.session.add(new_job)
-        db.session.commit()
-        return redirect(url_for('index'))
-
-    return render_template('add_job.html')
-
-
-@app.route('/application/<int:app_id>/<status>')
-@login_required
-def update_application_status(app_id, status):
-    if current_user.role != 'employer':
-        flash("Bạn không có quyền!", "danger")
-        return redirect(url_for('login_employer'))
-
-    application = JobApplication.query.get_or_404(app_id)
-
-    # Chỉ cho phép employer quản lý các job của họ
-    if application.job.employer_id != current_user.id:
-        flash("Bạn không có quyền chỉnh sửa hồ sơ này!", "danger")
-        return redirect(url_for('employer_dashboard'))
-
-    application.status = status
-    db.session.commit()
-    flash(f"Hồ sơ đã được cập nhật: {status}", "success")
-    return redirect(url_for('employer_dashboard'))
-
-# dang tin tuyen dung
+# ==================================
+# Tin tuyển dụng
+# ==================================
 @app.route("/post_job", methods=["GET", "POST"])
 @login_required
 def post_job():
-    if request.method == "POST":
-        title = request.form["title"]
-        location = request.form["location"]
-        experience_required = request.form["experience_required"]
-        deadline = datetime.strptime(request.form["deadline"], "%Y-%m-%d")
-        description = request.form["description"]
-        requirements = request.form["requirements"]
-        benefits = request.form["benefits"]
-        working_time = request.form["working_time"]
-        address = request.form["address"]
-        salary = request.form["salary"]
-        base_salary = request.form["base_salary"]
-        job_type = request.form["job_type"]
+    if not isinstance(current_user, Employer):
+        flash("Chỉ nhà tuyển dụng mới có thể đăng tin.", "danger")
+        return redirect(url_for("index"))
 
+    if request.method == "POST":
         new_job = Job(
             employer_id=current_user.id,
-            title=title,
-            location=location,
-            experience_required=experience_required,
-            deadline=deadline,
-            description=description,
-            requirements=requirements,
-            benefits=benefits,
-            working_time=working_time,
-            address=address,
-            salary=salary,
-            base_salary=base_salary,
-            job_type=job_type
+            title=request.form["title"],
+            location=request.form["location"],
+            description=request.form["description"],
+            salary=request.form["salary"],
+            job_type=request.form["job_type"],
+            status="active"
         )
         db.session.add(new_job)
         db.session.commit()
@@ -419,19 +258,139 @@ def post_job():
 
     return render_template("post_job.html")
 
+
 @app.route("/jobs")
 def list_jobs():
     jobs = Job.query.filter_by(status="active").order_by(Job.id.desc()).all()
     return render_template("jobs.html", jobs=jobs)
+
+
 @app.route("/job/<int:id>")
 def job_detail(id):
     job = Job.query.get_or_404(id)
     return render_template("job_detail.html", job=job)
 
 
+# ==================================
+# Ứng viên lưu tin & ứng tuyển
+# ==================================
+UPLOAD_FOLDER = "uploads/cv"
+
+
+@app.route("/jobs/<int:job_id>/save")
+@login_required
+def save_job(job_id):
+    if not isinstance(current_user, Candidate):
+        flash("Chỉ ứng viên mới có thể lưu tin.", "danger")
+        return redirect(url_for("job_detail", id=job_id))
+
+    saved = SavedJob.query.filter_by(candidate_id=current_user.id, job_id=job_id).first()
+    if not saved:
+        saved = SavedJob(candidate_id=current_user.id, job_id=job_id)
+        db.session.add(saved)
+        db.session.commit()
+        flash("Tin đã được lưu!", "success")
+    else:
+        flash("Bạn đã lưu tin này rồi.", "warning")
+    return redirect(url_for("job_detail", id=job_id))
+
+
+@app.route("/jobs/<int:job_id>/apply", methods=["GET", "POST"])
+@login_required
+def apply_job(job_id):
+    if not isinstance(current_user, Candidate):
+        flash("Chỉ ứng viên mới có thể ứng tuyển.", "danger")
+        return redirect(url_for("job_detail", id=job_id))
+
+    job = Job.query.get_or_404(job_id)
+
+    if request.method == "POST":
+        cv = request.files.get("cv_file")
+
+        filename = None
+        if cv:
+            filename = secure_filename(cv.filename)
+            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+            cv.save(os.path.join(UPLOAD_FOLDER, filename))
+
+        application = Application(
+            job_id=job.id,
+            candidate_id=current_user.id,
+            cv_file=filename
+        )
+        db.session.add(application)
+        db.session.commit()
+        flash("✅ Ứng tuyển thành công!", "success")
+        return redirect(url_for("job_detail", id=job.id))
+
+    return render_template("apply_job.html", job=job)
+
+
+@app.route("/saved_jobs")
+@login_required
+def saved_jobs():
+    if not hasattr(current_user, "saved_jobs"):
+        flash("Chỉ ứng viên mới có thể xem tin đã lưu!", "warning")
+        return redirect(url_for("index"))
+
+    jobs = [s.job for s in current_user.saved_jobs]
+    return render_template("saved_jobs.html", jobs=jobs)
+
+
 # ============================
-# Chạy server
+# Xem & cập nhật hồ sơ ứng viên
 # ============================
+@app.route("/profile")
+@login_required
+def profile():
+    if not hasattr(current_user, "profile"):
+        flash("Bạn chưa có hồ sơ. Hãy tạo ngay!", "info")
+        return redirect(url_for("create_profile"))
+
+    return render_template("profile.html", profile=current_user.profile)
+
+
+@app.route("/create_profile", methods=["GET", "POST"])
+@login_required
+def create_profile():
+    if request.method == "POST":
+        phone = request.form["phone"]
+        location = request.form["location"]
+        cv_file = request.form["cv_file"]
+
+        profile = CandidateProfile(
+            candidate_id=current_user.id,
+            phone=phone,
+            location=location,
+            cv_file=cv_file
+        )
+        db.session.add(profile)
+        db.session.commit()
+        flash("Hồ sơ đã được tạo thành công!", "success")
+        return redirect(url_for("profile"))
+
+    return render_template("create_profile.html")
+
+@app.route("/search_jobs")
+def search_jobs():
+    jobs = Job.query.filter_by(status="active").all()
+    return render_template("search_jobs.html", jobs=jobs)
+
+@app.route("/candidate/dashboard")
+def candidate_dashboard():
+    # Lấy danh sách job từ DB (ví dụ query theo user_id)
+    applied_jobs = Job.query.join(Application).filter(Application.user_id == current_user.id).all()
+    saved_jobs = Job.query.join(SavedJob).filter(SavedJob.user_id == current_user.id).all()
+
+    return render_template(
+        "candidate_dashboard.html",
+        applied_jobs=applied_jobs,
+        saved_jobs=saved_jobs
+    )
+
+# ==================================
+# Run App
+# ==================================
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()

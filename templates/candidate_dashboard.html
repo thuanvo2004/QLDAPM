@@ -1,71 +1,39 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="container-fluid mt-4">
-  <div class="row">
-    <!-- Sidebar -->
-    <div class="col-md-3">
-      <div class="list-group">
-        <a href="{{ url_for('candidate_dashboard') }}" class="list-group-item list-group-item-action active">
-          🏠 Trang chủ
-        </a>
-        <a href="{{ url_for('manage_cv') }}" class="list-group-item list-group-item-action">
-          📄 Quản lý hồ sơ (CV)
-        </a>
-        <a href="{{ url_for('search_jobs') }}" class="list-group-item list-group-item-action">
-          🔍 Tìm kiếm & Lọc việc làm
-        </a>
-        <a href="{{ url_for('apply_jobs') }}" class="list-group-item list-group-item-action">
-          📤 Nộp hồ sơ ứng tuyển
-        </a>
-      </div>
-    </div>
 
-    <!-- Nội dung chính -->
-    <div class="col-md-9">
-      <h2 class="mb-4">Xin chào, {{ current_user.name }} 👋</h2>
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="fa-solid fa-user"></i> Quản lý hồ sơ ứng viên</h2>
 
-      <!-- Giới thiệu nhanh -->
-      <div class="card mb-3">
-        <div class="card-body">
-          <h5>📢 Thông báo mới</h5>
-          <p>Chào mừng bạn đến với hệ thống việc làm. Hãy tạo CV để có thể ứng tuyển ngay!</p>
-        </div>
-      </div>
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="applied-tab" data-bs-toggle="tab" data-bs-target="#applied" type="button" role="tab">
+                Công việc đã ứng tuyển
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="saved-tab" data-bs-toggle="tab" data-bs-target="#saved" type="button" role="tab">
+                Công việc đã lưu
+            </button>
+        </li>
+    </ul>
 
-      <!-- Các tính năng chính -->
-      <div class="row">
-        <div class="col-md-4">
-          <div class="card shadow-sm">
-            <div class="card-body text-center">
-              <h5 class="card-title">📄 Quản lý CV</h5>
-              <p class="card-text">Tạo, chỉnh sửa và quản lý hồ sơ trực tuyến của bạn.</p>
-              <a href="{{ url_for('manage_cv') }}" class="btn btn-primary btn-sm">Quản lý ngay</a>
-            </div>
-          </div>
-        </div>
+    <!-- Tab content -->
+    <div class="tab-content mt-3" id="dashboardTabsContent">
 
-        <div class="col-md-4">
-          <div class="card shadow-sm">
-            <div class="card-body text-center">
-              <h5 class="card-title">🔍 Tìm kiếm việc</h5>
-              <p class="card-text">Khám phá hàng nghìn việc làm phù hợp với bạn.</p>
-              <a href="{{ url_for('search_jobs') }}" class="btn btn-success btn-sm">Tìm việc</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-4">
-          <div class="card shadow-sm">
-            <div class="card-body text-center">
-              <h5 class="card-title">📤 Ứng tuyển</h5>
-              <p class="card-text">Nộp CV nhanh chóng đến các nhà tuyển dụng.</p>
-              <a href="{{ url_for('apply_jobs') }}" class="btn btn-warning btn-sm">Ứng tuyển</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div> <!-- end main col -->
-  </div>
-</div>
-{% endblock %}
+        <!-- Công việc đã ứng tuyển -->
+        <div class="tab-pane fade show active" id="applied" role="tabpanel" aria-labelledby="applied-tab">
+            {% if applied_jobs %}
+                <div class="list-group">
+                    {% for job in applied_jobs %}
+                        <a href="{{ url_for('job_detail', job_id=job.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ job.title }}</h5>
+                                <small class="text-muted">{{ job.created_at.strftime("%d/%m/%Y") }}</small>
+                            </div>
+                            <p class="mb-1">{{ job.company }} - {{ job.location }}</p>
+                            <small>Thời gian làm việc: {{ job.working_time }}</small>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}

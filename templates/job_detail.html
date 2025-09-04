@@ -1,31 +1,136 @@
-<!-- templates/job_detail.html -->
 {% extends "layout.html" %}
-
 {% block content %}
-<div class="job-detail-container">
-    <h1>{{ job.title }}</h1>
+<div class="container mt-4 mb-5">
 
-    <p><strong>Công ty:</strong> {{ job.employer.name if job.employer else "Không có thông tin" }}</p>
-    <p><strong>Địa điểm:</strong> {{ job.location }}</p>
-    <p><strong>Địa chỉ:</strong> {{ job.address }}</p>
-    <p><strong>Loại công việc:</strong> {{ job.job_type }}</p>
-    <p><strong>Kinh nghiệm yêu cầu:</strong> {{ job.experience_required }}</p>
-    <p><strong>Lương cơ bản:</strong> {{ job.base_salary }}</p>
-    <p><strong>Lương tổng:</strong> {{ job.salary }}</p>
-    <p><strong>Thời gian làm việc:</strong> {{ job.working_time }}</p>
-    <p><strong>Hạn nộp hồ sơ:</strong> {{ job.deadline.strftime("%d/%m/%Y") if job.deadline else "Không có" }}</p>
+  <!-- Thông tin chính -->
+  <div class="card shadow-sm p-4 mb-4">
+    <h3 class="mb-1">{{ job.title }}</h3>
+    <h5 class="text-primary">{{ job.company_name }}</h5>
 
-    <hr>
+    <!-- Ngày tạo -->
+    <p class="text-muted mb-3">
+      Cập nhật ngày:
+      {% if job.created_at %}
+        {{ job.created_at.strftime("%d/%m/%Y") }}
+      {% else %}
+        Chưa có
+      {% endif %}
+    </p>
 
-    <h3>Mô tả công việc</h3>
-    <p>{{ job.description }}</p>
+    <div class="row">
+      <div class="col-md-6">
+        <p><strong>Địa điểm:</strong> {{ job.location or 'Không có' }}</p>
+        <p><strong>Ngành nghề:</strong> {{ job.category or 'Không có' }}</p>
+        <p><strong>Hình thức:</strong> {{ job.job_type or 'Không có' }}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>Lương:</strong> {{ job.salary or 'Không có' }}</p>
+        <p><strong>Cấp bậc:</strong> {{ job.level or 'Không có' }}</p>
+        <p><strong>Hạn nộp hồ sơ:</strong>
+          {% if job.deadline %}
+            {{ job.deadline.strftime("%d/%m/%Y") }}
+          {% else %}
+            Không có
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
 
-    <h3>Yêu cầu</h3>
-    <p>{{ job.requirements }}</p>
+  <!-- Nội dung công việc -->
+  <div class="card shadow-sm p-4 mb-4">
+    <h4 class="mb-3">Chi tiết công việc</h4>
 
-    <h3>Phúc lợi</h3>
-    <p>{{ job.benefits }}</p>
+    <!-- Mô tả -->
+    <div class="mb-4">
+      <h5><strong>1. MÔ TẢ CÔNG VIỆC</strong></h5>
+      <ul class="list-unstyled ms-3">
+        {% if job.description %}
+          {% if job.description is string %}
+            <li>• {{ job.description }}</li>
+          {% else %}
+            {% for desc in job.description %}
+              <li>• {{ desc }}</li>
+            {% endfor %}
+          {% endif %}
+        {% else %}
+          <li>• Không có mô tả</li>
+        {% endif %}
+      </ul>
+    </div>
 
-    <a href="{{ url_for('list_jobs') }}" class="btn btn-primary">Quay lại danh sách việc làm</a>
+    <!-- Thời gian làm việc -->
+    <div class="mb-4">
+      <h5><strong>2. THỜI GIAN LÀM VIỆC</strong></h5>
+      <ul class="list-unstyled ms-3">
+        {% if job.working_time %}
+          {% if job.working_time is string %}
+            <li>• {{ job.working_time }}</li>
+          {% else %}
+            {% for time in job.working_time %}
+              <li>• {{ time }}</li>
+            {% endfor %}
+          {% endif %}
+        {% else %}
+          <li>• Không có</li>
+        {% endif %}
+      </ul>
+    </div>
+
+    <!-- Yêu cầu -->
+    <div class="mb-4">
+      <h5><strong>YÊU CẦU CÔNG VIỆC</strong></h5>
+      <ul class="list-unstyled ms-3">
+        {% if job.requirements %}
+          {% if job.requirements is string %}
+            <li>• {{ job.requirements }}</li>
+          {% else %}
+            {% for req in job.requirements %}
+              <li>• {{ req }}</li>
+            {% endfor %}
+          {% endif %}
+        {% else %}
+          <li>• Không có</li>
+        {% endif %}
+      </ul>
+    </div>
+
+    <!-- Phúc lợi -->
+    <div class="mb-4">
+      <h5><strong>PHÚC LỢI</strong></h5>
+      <ul class="list-unstyled ms-3">
+        {% if job.benefits %}
+          {% if job.benefits is string %}
+            <li>• {{ job.benefits }}</li>
+          {% else %}
+            {% for benefit in job.benefits %}
+              <li>• {{ benefit }}</li>
+            {% endfor %}
+          {% endif %}
+        {% else %}
+          <li>• Không có</li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Thông tin khác -->
+  <div class="card shadow-sm p-4 mb-4">
+    <h4 class="mb-3">Thông tin khác</h4>
+    <p><strong>Bằng cấp:</strong> {{ job.degree or 'Không có' }}</p>
+    <p><strong>Độ tuổi:</strong> {{ job.age or 'Không có' }}</p>
+    <p><strong>Địa điểm làm việc:</strong> {{ job.address or 'Không có' }}</p>
+  </div>
+
+  <!-- Nút hành động -->
+  <div class="d-flex gap-3">
+    <a href="{{ url_for('apply_job', job_id=job.id) }}" class="btn btn-success btn-lg">
+      Nộp đơn ứng tuyển
+    </a>
+    <a href="{{ url_for('save_job', job_id=job.id) }}" class="btn btn-outline-primary btn-lg">
+      Lưu tin
+    </a>
+  </div>
+
 </div>
 {% endblock %}

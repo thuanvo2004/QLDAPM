@@ -1,75 +1,83 @@
 {% extends "layout.html" %}
+{% block title %}Đăng tin tuyển dụng{% endblock %}
+
 {% block content %}
-<div class="card shadow-lg p-4 rounded-4">
-  <h2 class="mb-4 text-primary">📝 Đăng tin tuyển dụng</h2>
-  <form method="POST" class="row g-3">
+<div class="container my-4">
+  <h2 class="mb-4">Đăng tin tuyển dụng</h2>
+  <form method="POST" action="{{ url_for('post_job') }}">
+    <div class="mb-3">
+  <label class="form-label">Công ty</label>
+  <input type="text" class="form-control" value="{{ current_user.company }}" disabled>
+</div>
 
-    <!-- Thông tin chung -->
-    <div class="col-md-6">
-      <label class="form-label">Tiêu đề công việc *</label>
-      <input type="text" name="title" class="form-control" required>
-    </div>
-    <div class="col-md-6">
-      <label class="form-label">Loại công việc</label>
-      <select name="job_type" class="form-select">
-        <option value="Full-time">Full-time</option>
-        <option value="Part-time">Part-time</option>
-        <option value="Internship">Internship</option>
-        <option value="Contract">Contract</option>
-      </select>
+    <div class="mb-3">
+      <label class="form-label">Tiêu đề công việc</label>
+      <input type="text" class="form-control" name="title" required>
     </div>
 
-    <div class="col-md-4">
-      <label class="form-label">Địa điểm</label>
-      <input type="text" name="location" class="form-control">
-    </div>
-    <div class="col-md-4">
-      <label class="form-label">Kinh nghiệm yêu cầu</label>
-      <input type="text" name="experience_required" class="form-control">
-    </div>
-    <div class="col-md-4">
-      <label class="form-label">Hạn nộp hồ sơ *</label>
-      <input type="date" name="deadline" class="form-control" required>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Địa điểm</label>
+        <input type="text" class="form-control" name="location" placeholder="VD: Hồ Chí Minh" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Ngành nghề</label>
+        <input type="text" class="form-control" name="category" placeholder="VD: CNTT - Phần cứng / Mạng" required>
+      </div>
     </div>
 
-    <!-- Lương -->
-    <div class="col-md-6">
-      <label class="form-label">Thu nhập (tổng)</label>
-      <input type="text" name="salary" class="form-control" placeholder="15 - 20 triệu">
-    </div>
-    <div class="col-md-6">
-      <label class="form-label">Lương cứng</label>
-      <input type="text" name="base_salary" class="form-control" placeholder="9 - 12 triệu">
-    </div>
-
-    <!-- Mô tả & yêu cầu -->
-    <div class="col-12">
-      <label class="form-label">Mô tả công việc *</label>
-      <textarea name="description" class="form-control" rows="5" required></textarea>
-    </div>
-    <div class="col-12">
-      <label class="form-label">Yêu cầu ứng viên</label>
-      <textarea name="requirements" class="form-control" rows="5"></textarea>
-    </div>
-    <div class="col-12">
-      <label class="form-label">Quyền lợi</label>
-      <textarea name="benefits" class="form-control" rows="4"></textarea>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Hình thức</label>
+        <select class="form-select" name="job_type">
+          <option>Nhân viên chính thức</option>
+          <option>Thực tập sinh</option>
+          <option>Part-time</option>
+          <option>Freelancer</option>
+        </select>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Cấp bậc</label>
+        <input type="text" class="form-control" name="level" placeholder="VD: Sinh viên/Thực tập sinh" required>
+      </div>
     </div>
 
-    <!-- Thông tin làm việc -->
-    <div class="col-md-6">
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Lương</label>
+        <input type="text" class="form-control" name="salary" placeholder="VD: Trên 5 Tr VND">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Hạn nộp hồ sơ</label>
+        <input type="date" class="form-control" name="deadline" required>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Phúc lợi</label>
+      <textarea class="form-control" name="benefits" rows="3" placeholder="VD: Laptop, Đồng phục, Đào tạo, Tăng lương"></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Mô tả công việc</label>
+      <textarea class="form-control" name="description" rows="5" placeholder="• Gạch đầu dòng từng nhiệm vụ cụ thể" required></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Yêu cầu công việc</label>
+      <textarea class="form-control" name="requirements" rows="5" placeholder="• Gạch đầu dòng các yêu cầu cụ thể" required></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Địa chỉ làm việc</label>
+      <input type="text" class="form-control" name="workplace" placeholder="VD: 456A Nguyễn Thị Minh Khai, P.5, Q.3">
+    </div>
+    <div class="mb-3">
       <label class="form-label">Thời gian làm việc</label>
-      <input type="text" name="working_time" class="form-control" placeholder="Thứ 2 - Thứ 6 (08:00 - 17:30)">
-    </div>
-    <div class="col-md-6">
-      <label class="form-label">Địa chỉ văn phòng</label>
-      <input type="text" name="address" class="form-control">
+      <input type="text" class="form-control" name="time" placeholder="">
     </div>
 
-    <!-- Submit -->
-    <div class="col-12 text-end">
-      <button type="submit" class="btn btn-primary px-4">Đăng tin</button>
-    </div>
+    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Đăng tin</button>
   </form>
 </div>
 {% endblock %}
