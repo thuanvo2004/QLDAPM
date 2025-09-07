@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Trang Chủ - JobNest{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="bg-light py-5">
+  <div class="container text-center">
+    <h1 class="mb-3">Tìm việc phù hợp - Nhanh chóng & Uy tín</h1>
+    <p class="text-muted">Tìm kiếm theo vị trí, mức lương và địa điểm. Hàng ngàn cơ hội từ nhà tuyển dụng uy tín.</p>
+
+
+  </div>
+</section>
+
+<!-- JOB LIST -->
+<section class="container my-5">
+  <h2>Công việc nổi bật</h2>
+<div class="job-grid">
+  {% for job in hot_jobs %}
+    <article class="job-card featured" aria-labelledby="title-{{ job.id }}">
+      <div class="logo">🏢</div>
+      <div class="job-info">
+        <h3>
+          <a href="{{ url_for('job_detail', id=job.id) }}" id="title-{{ job.id }}">
+            {{ job.title }}
+          </a>
+        </h3>
+
+
+
+        <div class="d-flex gap-2 mt-2">
+          <a href="{{ url_for('save_job', job_id=job.id) }}"
+             class="btn btn-sm btn-outline-primary">Lưu Tin</a>
+          <a href="{{ url_for('apply_job', job_id=job.id) }}"
+             class="btn btn-sm btn-success">Ứng Tuyển Ngay</a>
+        </div>
+      </div>
+    </article>
+  {% else %}
+    <p>Không có công việc nổi bật phù hợp.</p>
+  {% endfor %}
+</div>
+
+
+  <!-- Other Jobs -->
+  <h3 class="mt-5">Các công việc khác</h3>
+  <div class="row g-3">
+    {% for job in other_jobs %}
+    <div class="col-md-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title">{{ job.title }}</h6>
+          <p class="text-muted small">{{ job.company }} · {{ job.location }}</p>
+          <p class="small">{{ job.salary | fmt_salary }} · {{ job.job_type or '-' }}</p>
+          <a href="{{ url_for('job_detail', id=job.id) }}" class="stretched-link">Xem chi tiết</a>
+        </div>
+      </div>
+    </div>
+    {% else %}
+      <p>Không có công việc nào.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if total_pages > 1 %}
+  <nav class="mt-4" aria-label="Pagination">
+    <ul class="pagination justify-content-center">
+      {% if page > 1 %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('main.index', page=page-1, **search) }}">Trước</a>
+      </li>
+      {% endif %}
+      {% for p in range(1, total_pages + 1) %}
+      <li class="page-item {% if p == page %}active{% endif %}">
+        <a class="page-link" href="{{ url_for('main.index', page=p, **search) }}">{{ p }}</a>
+      </li>
+      {% endfor %}
+      {% if page < total_pages %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('main.index', page=page+1, **search) }}">Sau</a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</section>
+{% endblock %}

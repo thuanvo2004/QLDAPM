@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Hồ sơ ứng viên - JobNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <!-- Cột trái: avatar -->
+    <div class="col-md-4 text-center">
+      {% if candidate.avatar %}
+        <img src="{{ url_for('static', filename='uploads/' + candidate.avatar) }}"
+             class="img-fluid rounded-circle mb-3"
+             alt="Avatar"
+             style="width: 180px; height: 180px; object-fit: cover;">
+      {% else %}
+        <img src="{{ url_for('static', filename='default-avatar.png') }}"
+             class="img-fluid rounded-circle mb-3"
+             alt="Default Avatar"
+             style="width: 180px; height: 180px; object-fit: cover;">
+      {% endif %}
+      <h4 class="mt-2">{{ candidate.name }}</h4>
+      <p class="text-muted">{{ candidate.email }}</p>
+      <a href="{{ url_for('candidate.edit_profile') }}" class="btn btn-outline-primary btn-sm">
+        <i class="fa-solid fa-pen"></i> Chỉnh sửa hồ sơ
+      </a>
+    </div>
+
+    <!-- Cột phải: thông tin chi tiết -->
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Thông tin cá nhân</h5>
+          <ul class="list-unstyled">
+            <li><strong>Họ tên:</strong> {{ candidate.name or "Chưa cập nhật" }}</li>
+            <li><strong>Email:</strong> {{ candidate.email }}</li>
+            <li><strong>Số điện thoại:</strong> {{ candidate.phone or "Chưa cập nhật" }}</li>
+            <li><strong>Địa chỉ:</strong> {{ candidate.address or "Chưa cập nhật" }}</li>
+            <li><strong>Kỹ năng:</strong> {{ candidate.skills or "Chưa cập nhật" }}</li>
+            <li><strong>Kinh nghiệm:</strong> {{ candidate.experience or "Chưa cập nhật" }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mt-4">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Giới thiệu bản thân</h5>
+          <p>{{ candidate.bio or "Bạn chưa thêm phần giới thiệu." }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

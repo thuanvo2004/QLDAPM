@@ -1,10 +1,15 @@
-from app import app, db  # import app Flask và db SQLAlchemy
+from app import create_app
+from app.extensions import db
+from app.models import User
 
-with app.app_context():  # mở context của app
-    # XÓA hết bảng
-    db.drop_all()
+app = create_app()
+app.app_context().push()
 
-    # TẠO lại bảng
-    db.create_all()
+u = User(email="admin@gmail.com", role="employer")
+u.set_password("admin")
+db.session.add(u)
+db.session.commit()
 
-    print("✅ Đã xóa và tạo lại toàn bộ bảng!")
+# Kiểm tra login
+u.check_password("admin")   # True
+u.check_password("wrong")    # False

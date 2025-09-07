@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Tạo Job{% endblock %}
+{% block content %}
+<h2>Tạo công việc mới</h2>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    {% for field in form if field.type != "CSRFToken" %}
+    <div class="mb-3">
+        {{ field.label }} {{ field(class="form-control") }}
+        {% for error in field.errors %}
+            <span class="text-danger">{{ error }}</span>
+        {% endfor %}
+    </div>
+    {% endfor %}
+    <button class="btn btn-primary">{{ form.submit.label }}</button>
+</form>
+{% endblock %}
