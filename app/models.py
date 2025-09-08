@@ -116,7 +116,7 @@ class Job(db.Model):
     description = db.Column(db.Text, nullable=False)
     requirements = db.Column(db.Text)
     benefits = db.Column(db.Text)
-    job_type = db.Column(db.String(50))       # full-time, part-time, remote, internship
+    job_type = db.Column(db.String(50))
     salary_min = db.Column(db.Integer)
     salary_max = db.Column(db.Integer)
     currency = db.Column(db.String(10), default="VND")
