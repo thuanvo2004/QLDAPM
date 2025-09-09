@@ -226,7 +226,6 @@ class Notification(db.Model):
     candidate = db.relationship("Candidate", back_populates="notifications")
     employer = db.relationship("Employer", back_populates="notifications")
 
-
 # ======================================================
 # Bảng Message (chat ứng viên ↔ nhà tuyển dụng)
 # ======================================================
