@@ -1025,19 +1025,61 @@ body {
     font-size: 20px;
     color: var(--primary-blue);
     position: relative;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s ease; /* Hiệu ứng scale mượt mà */
+    background: transparent; /* Đảm bảo không trắng nền */
+}
+
+.save-btn .regular-icon,
+.save-btn .solid-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: opacity 0.2s ease; /* Chuyển đổi opacity nhanh */
+}
+
+.save-btn .regular-icon {
+    opacity: 1;
 }
 
 .save-btn .solid-icon {
-    display: none;
-    background: white;
+    opacity: 0;
+}
+
+.save-btn:hover {
+    transform: scale(1.2); /* Bự lên 20% khi hover */
 }
 
 .save-btn:hover .regular-icon {
-    display: none;
+    opacity: 1; /* Giữ regular-icon khi hover nếu chưa lưu */
 }
 
 .save-btn:hover .solid-icon {
-    display: inline-block;
+    opacity: 0; /* Ẩn solid-icon khi hover nếu chưa lưu */
+}
+
+.save-btn.saved .solid-icon {
+    opacity: 1; /* Hiển thị solid-icon sau khi lưu */
+}
+
+.save-btn.saved .regular-icon {
+    opacity: 0; /* Ẩn regular-icon sau khi lưu */
+}
+
+.save-btn.saved:hover .solid-icon {
+    opacity: 1; /* Giữ solid-icon khi hover sau khi lưu */
+}
+
+.save-btn.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.save-btn.disabled .regular-icon,
+.save-btn.disabled .solid-icon {
+    opacity: 0.5;
 }
 
 /* Job Title */

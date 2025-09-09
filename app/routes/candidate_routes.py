@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models import Job, Application, SavedJob
@@ -34,10 +34,13 @@ def apply_job(job_id):
 @candidate_bp.route("/saved_jobs")
 @login_required
 def saved_jobs():
+    if current_user.role != "candidate":
+        flash("Chỉ ứng viên mới xem công việc đã lưu", "danger")
+        return redirect(url_for("job.list_jobs"))
+
+    sj = SavedJob.query.filter_by(candidate_id=current_user.candidate_profile.id).all()
     jobs = [sj.job for sj in current_user.candidate_profile.saved_jobs]
     return render_template("candidate/saved_jobs.html", jobs=jobs)
-
-
 
 @candidate_bp.route("/applications")
 @login_required
@@ -74,3 +77,51 @@ def edit_profile():
         return redirect(url_for("candidate.profile"))
 
     return render_template("candidate/edit_profile.html", candidate=candidate)
+
+@candidate_bp.route("/save_job/<int:job_id>", methods=["POST"])
+@login_required
+def save_job(job_id):
+    if current_user.role != "candidate":
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': 'Chỉ ứng viên mới lưu công việc'}), 403
+        flash("Chỉ ứng viên mới lưu công việc", "danger")
+        return redirect(url_for("job.list_jobs"))
+
+    job = Job.query.get_or_404(job_id)
+    existing = SavedJob.query.filter_by(candidate_id=current_user.candidate_profile.id, job_id=job.id).first()
+    if existing:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': 'Công việc đã được lưu trước đó'}), 400
+        flash("Công việc đã được lưu trước đó", "warning")
+        return redirect(request.referrer or url_for("main.index"))
+
+    saved_job = SavedJob(candidate_id=current_user.candidate_profile.id, job_id=job.id)
+    db.session.add(saved_job)
+    db.session.commit()
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True, 'message': 'Lưu công việc thành công'})
+    flash("Lưu công việc thành công", "success")
+    return redirect(request.referrer or url_for("main.index"))
+
+@candidate_bp.route("/unsave_job/<int:job_id>", methods=["POST"])
+@login_required
+def unsave_job(job_id):
+    if current_user.role != "candidate":
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': 'Chỉ ứng viên mới bỏ lưu công việc'}), 403
+        flash("Chỉ ứng viên mới bỏ lưu công việc", "danger")
+        return redirect(url_for("job.list_jobs"))
+
+    saved_job = SavedJob.query.filter_by(candidate_id=current_user.candidate_profile.id, job_id=job_id).first()
+    if not saved_job:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': 'Công việc không được lưu trước đó'}), 400
+        flash("Công việc không được lưu trước đó", "warning")
+        return redirect(url_for("candidate.saved_jobs"))
+
+    db.session.delete(saved_job)
+    db.session.commit()
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True, 'message': 'Bỏ lưu công việc thành công', 'action': 'unsaved'})
+    flash("Bỏ lưu công việc thành công", "success")
+    return redirect(url_for("candidate.saved_jobs"))

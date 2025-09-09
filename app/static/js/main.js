@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const locationHiddenQuick = document.getElementById('location-hidden-quick');
   const jobTypeSelect = document.getElementById('job_type_select');
 
-  // Khai báo các checkbox trong bộ lọc
+  // Khai báo các checkbox/radio trong bộ lọc
   const jobTypeFilters = document.querySelectorAll('#job-type-filter input[name="job_type"]');
   const workTypeFilters = document.querySelectorAll('#work-type-filter input[name="work_type"]');
 
@@ -181,21 +181,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // Sync filter checkboxes with hidden inputs and auto-submit
+  // Sync filter inputs with hidden inputs and auto-submit
   const mainForm = document.getElementById('main-search');
-  const jobTypeMapping = {
-    "Full-time": "Full-time",
-    "Part-time": "Part-time",
-    "Contract": "Contract",
-    "Intern": "Intern",
-    "": "All" // Mapping cho "All"
-  };
 
+  // Handle job_type (single-select)
   [jobTypeFilters].forEach((filterGroup) => {
     filterGroup.forEach(checkbox => {
       checkbox.addEventListener('change', function () {
         if (mainForm) {
-          // Chỉ lấy giá trị của checkbox được chọn (single-select)
           const selectedValue = this.value;
           const jobTypeHidden = document.getElementById('job-type-hidden');
           if (jobTypeHidden) {
@@ -207,55 +200,110 @@ document.addEventListener('DOMContentLoaded', function () {
             jobTypeSelect.value = selectedValue || "";
           }
 
-          // Tự động submit form
           mainForm.submit();
         }
       });
     });
   });
 
-  // Sync dropdown with checkboxes when dropdown changes (single-select)
-  if (jobTypeSelect) {
-    jobTypeSelect.addEventListener('change', function () {
-      const selectedValue = this.value;
-      if (mainForm) {
-        const jobTypeHidden = document.getElementById('job-type-hidden');
-        if (jobTypeHidden) {
-          jobTypeHidden.value = selectedValue || "";
+  // Handle work_type (multi-check)
+  [workTypeFilters].forEach((filterGroup) => {
+    filterGroup.forEach(checkbox => {
+      checkbox.addEventListener('change', function () {
+        if (mainForm) {
+          const workTypeChecks = document.querySelectorAll('#work-type-filter input[name="work_type"]:checked');
+          const workTypeHidden = document.getElementById('work-type-hidden');
+          if (workTypeHidden) {
+            const selectedWorkTypes = Array.from(workTypeChecks).map(cb => cb.value);
+            workTypeHidden.value = selectedWorkTypes.join(",");
+          }
+
+          mainForm.submit();
         }
-
-        // Cập nhật checkbox dựa trên dropdown
-        jobTypeFilters.forEach(cb => {
-          cb.checked = (jobTypeMapping[cb.value] === selectedValue) || (selectedValue === "" && cb.value === "");
-        });
-
-        mainForm.submit();
-      }
+      });
     });
-  }
 
-  // Sync filter checkboxes with hidden inputs before manual submit
-  if (mainForm) {
-    mainForm.addEventListener('submit', () => {
-      if (minInput) minInput.value = stripNonDigits(minInput.value);
-      if (maxInput) maxInput.value = stripNonDigits(maxInput.value);
-      if (locationHidden && locationHiddenQuick) locationHiddenQuick.value = locationHidden.value;
-      const jobTypeChecks = document.querySelectorAll('#job-type-filter input[name="job_type"]:checked');
-      if (document.getElementById('job-type-hidden')) {
-        const selectedJobTypes = Array.from(jobTypeChecks).map(cb => cb.value)[0] || "";
-        document.getElementById('job-type-hidden').value = selectedJobTypes;
-      }
-      const workTypeChecks = document.querySelectorAll('#work-type-filter input[name="work_type"]:checked');
-      if (document.getElementById('work-type-hidden')) {
-        const selectedWorkTypes = Array.from(workTypeChecks).map(cb => cb.value);
-        if (selectedWorkTypes.includes("All") && selectedWorkTypes.length > 1) {
-          selectedWorkTypes.splice(selectedWorkTypes.indexOf("All"), 1);
+    // Sync dropdown with job_type when dropdown changes
+    if (jobTypeSelect) {
+      jobTypeSelect.addEventListener('change', function () {
+        const selectedValue = this.value;
+        if (mainForm) {
+          const jobTypeHidden = document.getElementById('job-type-hidden');
+          if (jobTypeHidden) {
+            jobTypeHidden.value = selectedValue || "";
+          }
+
+          // Cập nhật radio button
+          jobTypeFilters.forEach(cb => {
+            cb.checked = cb.value === selectedValue;
+          });
+
+          mainForm.submit();
         }
-        document.getElementById('work-type-hidden').value = selectedWorkTypes.join(",");
-      }
-    });
-  }
+      });
+    }
 
-  // init load
-  loadProvinces();
+    // Sync filter inputs with hidden inputs before manual submit
+    if (mainForm) {
+      mainForm.addEventListener('submit', () => {
+        if (minInput) minInput.value = stripNonDigits(minInput.value);
+        if (maxInput) maxInput.value = stripNonDigits(maxInput.value);
+        if (locationHidden && locationHiddenQuick) locationHiddenQuick.value = locationHidden.value;
+        const jobTypeChecks = document.querySelectorAll('#job-type-filter input[name="job_type"]:checked');
+        if (document.getElementById('job-type-hidden')) {
+          const selectedJobTypes = Array.from(jobTypeChecks).map(cb => cb.value)[0] || "";
+          document.getElementById('job-type-hidden').value = selectedJobTypes;
+        }
+        const workTypeChecks = document.querySelectorAll('#work-type-filter input[name="work_type"]:checked');
+        if (document.getElementById('work-type-hidden')) {
+          const selectedWorkTypes = Array.from(workTypeChecks).map(cb => cb.value);
+          document.getElementById('work-type-hidden').value = selectedWorkTypes.join(",");
+        }
+      });
+    }
+
+    // Xử lý save/unsave job với AJAX
+    document.querySelectorAll('.save-btn').forEach(button => {
+      button.addEventListener('click', function (e) {
+        e.preventDefault(); // Ngăn form submit mặc định
+        if (this.disabled) return; // Không xử lý nếu nút bị disable
+        const jobId = this.getAttribute('data-job-id');
+        const form = this.closest('form');
+        const isSaved = this.classList.contains('saved');
+        const url = isSaved ? `/candidate/unsave_job/${jobId}` : `/candidate/save_job/${jobId}`;
+        const buttonIcon = this.querySelector('i');
+
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest' // Đánh dấu là AJAX request
+          },
+        })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                if (data.action === 'saved') {
+                  this.classList.add('saved');
+                  buttonIcon.className = 'fa-solid fa-bookmark solid-icon';
+                  alert(data.message);
+                } else if (data.action === 'unsaved') {
+                  this.classList.remove('saved');
+                  buttonIcon.className = 'fa-regular fa-bookmark regular-icon';
+                  alert(data.message);
+                }
+              } else {
+                alert(data.message || 'Lỗi khi xử lý job');
+              }
+            })
+            .catch(error => {
+              console.error('Lỗi:', error);
+              alert('Lỗi kết nối');
+            });
+      });
+    });
+
+    // init load
+    loadProvinces();
+  })
 });
