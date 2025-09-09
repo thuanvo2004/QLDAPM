@@ -63,6 +63,14 @@ document.addEventListener('DOMContentLoaded', function () {
       initFromHidden();
     } catch (e) {
       console.warn('Could not load provinces', e);
+      Toastify({
+        text: 'Không thể tải danh sách tỉnh/thành phố',
+        duration: 3000,
+        gravity: 'top',
+        position: 'right',
+        backgroundColor: '#dc3545',
+        className: 'toastify-custom-error',
+      }).showToast();
     }
   }
 
@@ -185,125 +193,198 @@ document.addEventListener('DOMContentLoaded', function () {
   const mainForm = document.getElementById('main-search');
 
   // Handle job_type (single-select)
-  [jobTypeFilters].forEach((filterGroup) => {
-    filterGroup.forEach(checkbox => {
-      checkbox.addEventListener('change', function () {
-        if (mainForm) {
-          const selectedValue = this.value;
-          const jobTypeHidden = document.getElementById('job-type-hidden');
-          if (jobTypeHidden) {
-            jobTypeHidden.value = selectedValue || "";
-          }
-
-          // Cập nhật dropdown
-          if (jobTypeSelect) {
-            jobTypeSelect.value = selectedValue || "";
-          }
-
-          mainForm.submit();
+  jobTypeFilters.forEach(checkbox => {
+    checkbox.addEventListener('change', function () {
+      if (mainForm) {
+        const selectedValue = this.value;
+        const jobTypeHidden = document.getElementById('job-type-hidden');
+        if (jobTypeHidden) {
+          jobTypeHidden.value = selectedValue || "";
         }
-      });
+
+        // Cập nhật dropdown
+        if (jobTypeSelect) {
+          jobTypeSelect.value = selectedValue || "";
+        }
+
+        mainForm.submit();
+      }
     });
   });
 
   // Handle work_type (multi-check)
-  [workTypeFilters].forEach((filterGroup) => {
-    filterGroup.forEach(checkbox => {
-      checkbox.addEventListener('change', function () {
-        if (mainForm) {
-          const workTypeChecks = document.querySelectorAll('#work-type-filter input[name="work_type"]:checked');
-          const workTypeHidden = document.getElementById('work-type-hidden');
-          if (workTypeHidden) {
-            const selectedWorkTypes = Array.from(workTypeChecks).map(cb => cb.value);
-            workTypeHidden.value = selectedWorkTypes.join(",");
-          }
-
-          mainForm.submit();
-        }
-      });
-    });
-
-    // Sync dropdown with job_type when dropdown changes
-    if (jobTypeSelect) {
-      jobTypeSelect.addEventListener('change', function () {
-        const selectedValue = this.value;
-        if (mainForm) {
-          const jobTypeHidden = document.getElementById('job-type-hidden');
-          if (jobTypeHidden) {
-            jobTypeHidden.value = selectedValue || "";
-          }
-
-          // Cập nhật radio button
-          jobTypeFilters.forEach(cb => {
-            cb.checked = cb.value === selectedValue;
-          });
-
-          mainForm.submit();
-        }
-      });
-    }
-
-    // Sync filter inputs with hidden inputs before manual submit
-    if (mainForm) {
-      mainForm.addEventListener('submit', () => {
-        if (minInput) minInput.value = stripNonDigits(minInput.value);
-        if (maxInput) maxInput.value = stripNonDigits(maxInput.value);
-        if (locationHidden && locationHiddenQuick) locationHiddenQuick.value = locationHidden.value;
-        const jobTypeChecks = document.querySelectorAll('#job-type-filter input[name="job_type"]:checked');
-        if (document.getElementById('job-type-hidden')) {
-          const selectedJobTypes = Array.from(jobTypeChecks).map(cb => cb.value)[0] || "";
-          document.getElementById('job-type-hidden').value = selectedJobTypes;
-        }
+  workTypeFilters.forEach(checkbox => {
+    checkbox.addEventListener('change', function () {
+      if (mainForm) {
         const workTypeChecks = document.querySelectorAll('#work-type-filter input[name="work_type"]:checked');
-        if (document.getElementById('work-type-hidden')) {
+        const workTypeHidden = document.getElementById('work-type-hidden');
+        if (workTypeHidden) {
           const selectedWorkTypes = Array.from(workTypeChecks).map(cb => cb.value);
-          document.getElementById('work-type-hidden').value = selectedWorkTypes.join(",");
+          workTypeHidden.value = selectedWorkTypes.join(",");
         }
-      });
-    }
 
-    // Xử lý save/unsave job với AJAX
-    document.querySelectorAll('.save-btn').forEach(button => {
-      button.addEventListener('click', function (e) {
-        e.preventDefault(); // Ngăn form submit mặc định
-        if (this.disabled) return; // Không xử lý nếu nút bị disable
-        const jobId = this.getAttribute('data-job-id');
-        const form = this.closest('form');
-        const isSaved = this.classList.contains('saved');
-        const url = isSaved ? `/candidate/unsave_job/${jobId}` : `/candidate/save_job/${jobId}`;
-        const buttonIcon = this.querySelector('i');
-
-        fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest' // Đánh dấu là AJAX request
-          },
-        })
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                if (data.action === 'saved') {
-                  this.classList.add('saved');
-                  buttonIcon.className = 'fa-solid fa-bookmark solid-icon';
-                  alert(data.message);
-                } else if (data.action === 'unsaved') {
-                  this.classList.remove('saved');
-                  buttonIcon.className = 'fa-regular fa-bookmark regular-icon';
-                  alert(data.message);
-                }
-              } else {
-                alert(data.message || 'Lỗi khi xử lý job');
-              }
-            })
-            .catch(error => {
-              console.error('Lỗi:', error);
-              alert('Lỗi kết nối');
-            });
-      });
+        mainForm.submit();
+      }
     });
+  });
 
-    // init load
-    loadProvinces();
-  })
+  // Sync dropdown with job_type when dropdown changes
+  if (jobTypeSelect) {
+    jobTypeSelect.addEventListener('change', function () {
+      const selectedValue = this.value;
+      if (mainForm) {
+        const jobTypeHidden = document.getElementById('job-type-hidden');
+        if (jobTypeHidden) {
+          jobTypeHidden.value = selectedValue || "";
+        }
+
+        // Cập nhật radio button
+        jobTypeFilters.forEach(cb => {
+          cb.checked = cb.value === selectedValue;
+        });
+
+        mainForm.submit();
+      }
+    });
+  }
+
+  // Sync filter inputs with hidden inputs before manual submit
+  if (mainForm) {
+    mainForm.addEventListener('submit', () => {
+      if (minInput) minInput.value = stripNonDigits(minInput.value);
+      if (maxInput) maxInput.value = stripNonDigits(maxInput.value);
+      if (locationHidden && locationHiddenQuick) locationHiddenQuick.value = locationHidden.value;
+      const jobTypeChecks = document.querySelectorAll('#job-type-filter input[name="job_type"]:checked');
+      if (document.getElementById('job-type-hidden')) {
+        const selectedJobTypes = Array.from(jobTypeChecks).map(cb => cb.value)[0] || "";
+        document.getElementById('job-type-hidden').value = selectedJobTypes;
+      }
+      const workTypeChecks = document.querySelectorAll('#work-type-filter input[name="work_type"]:checked');
+      if (document.getElementById('work-type-hidden')) {
+        const selectedWorkTypes = Array.from(workTypeChecks).map(cb => cb.value);
+        document.getElementById('work-type-hidden').value = selectedWorkTypes.join(",");
+      }
+    });
+  }
+
+  // Kiểm tra trạng thái ban đầu của các nút save
+  document.querySelectorAll('.save-btn').forEach(button => {
+    const jobId = button.getAttribute('data-job-id');
+    if (!jobId) {
+      console.warn('Missing data-job-id on save-btn', button);
+      return;
+    }
+    // Chỉ kiểm tra trạng thái nếu đã đăng nhập
+    if (!button.classList.contains('unauthenticated')) {
+      fetch(`/candidate/check_saved/${jobId}`, {
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.is_saved) {
+            button.classList.add('saved');
+            const buttonIcon = button.querySelector('i');
+            if (buttonIcon) buttonIcon.className = 'fa-solid fa-bookmark solid-icon';
+          }
+        })
+        .catch(error => {
+          console.error('Lỗi kiểm tra trạng thái:', error);
+          Toastify({
+            text: 'Lỗi khi kiểm tra trạng thái lưu việc',
+            duration: 3000,
+            gravity: 'top',
+            position: 'right',
+            backgroundColor: '#dc3545',
+            className: 'toastify-custom-error',
+          }).showToast();
+        });
+    }
+  });
+
+  // Xử lý save/unsave job với AJAX
+  document.querySelectorAll('.save-btn').forEach(button => {
+    button.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (this.disabled) return;
+
+      if (this.classList.contains('unauthenticated')) {
+        // Lấy URL đăng nhập từ data attribute
+        const loginUrl = this.getAttribute('data-login-url');
+        window.location.href = loginUrl;
+        return;
+      }
+
+      const jobId = this.getAttribute('data-job-id');
+      const isSaved = this.classList.contains('saved');
+      const url = isSaved ? `/candidate/unsave_job/${jobId}` : `/candidate/save_job/${jobId}`;
+      const buttonIcon = this.querySelector('i');
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Response:', data);
+          if (data.success) {
+            if (data.action === 'saved') {
+              this.classList.add('saved');
+              if (buttonIcon) buttonIcon.className = 'fa-solid fa-bookmark solid-icon';
+              Toastify({
+                text: data.message,
+                duration: 3000,
+                gravity: 'bottom',
+                position: 'right',
+                className: 'toastify-custom-success',
+              }).showToast();
+            } else if (data.action === 'unsaved') {
+              this.classList.remove('saved');
+              if (buttonIcon) buttonIcon.className = 'fa-regular fa-bookmark regular-icon';
+              Toastify({
+                text: data.message,
+                duration: 3000,
+                gravity: 'bottom',
+                position: 'right',
+                className: 'toastify-custom-success',
+              }).showToast();
+            }
+          } else {
+            Toastify({
+              text: data.message || 'Lỗi khi xử lý job',
+              duration: 3000,
+              gravity: 'top',
+              position: 'right',
+              className: 'toastify-custom-error',
+            }).showToast();
+          }
+        })
+        .catch(error => {
+          console.error('Lỗi:', error);
+          Toastify({
+            text: 'Lỗi kết nối',
+            duration: 3000,
+            gravity: 'top',
+            position: 'right',
+            className: 'toastify-custom-error',
+          }).showToast();
+        });
+    });
+  });
+
+  // init load
+  loadProvinces();
 });

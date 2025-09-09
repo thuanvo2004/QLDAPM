@@ -38,9 +38,13 @@ def saved_jobs():
         flash("Chỉ ứng viên mới xem công việc đã lưu", "danger")
         return redirect(url_for("job.list_jobs"))
 
-    sj = SavedJob.query.filter_by(candidate_id=current_user.candidate_profile.id).all()
-    jobs = [sj.job for sj in current_user.candidate_profile.saved_jobs]
-    return render_template("candidate/saved_jobs.html", jobs=jobs)
+    # saved_jobs = SavedJob.query.filter_by(candidate_id=current_user.candidate_profile.id).order_by(SavedJob.saved_at.desc()).all()
+    # jobs = [sj.job for sj in current_user.candidate_profile.saved_jobs]
+
+    saved_jobs = SavedJob.query.filter_by(candidate_id=current_user.candidate_profile.id) \
+        .order_by(SavedJob.saved_at.desc()).all()
+
+    return render_template("candidate/saved_jobs.html", saved_jobs=saved_jobs)
 
 @candidate_bp.route("/applications")
 @login_required
@@ -99,7 +103,10 @@ def save_job(job_id):
     db.session.add(saved_job)
     db.session.commit()
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify({'success': True, 'message': 'Lưu công việc thành công'})
+        return jsonify({'success': True,
+                        'message': 'Lưu công việc thành công',
+                        'action': 'saved'
+        })
     flash("Lưu công việc thành công", "success")
     return redirect(request.referrer or url_for("main.index"))
 
@@ -122,6 +129,19 @@ def unsave_job(job_id):
     db.session.delete(saved_job)
     db.session.commit()
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify({'success': True, 'message': 'Bỏ lưu công việc thành công', 'action': 'unsaved'})
+        return jsonify({'success': True,
+                        'message': 'Bỏ lưu công việc thành công',
+                        'action': 'unsaved'})
     flash("Bỏ lưu công việc thành công", "success")
     return redirect(url_for("candidate.saved_jobs"))
+
+
+
+@candidate_bp.route("/check_saved/<int:job_id>", methods=["GET"])
+@login_required
+def check_saved(job_id):
+    if current_user.role != "candidate":
+        return jsonify({"success": False, "is_saved": False, "message": "Chỉ ứng viên mới dùng chức năng này"}), 403
+
+    saved = SavedJob.query.filter_by(candidate_id=current_user.candidate_profile.id, job_id=job_id).first()
+    return jsonify({"success": True, "is_saved": bool(saved)})

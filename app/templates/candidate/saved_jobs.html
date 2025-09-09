@@ -2,24 +2,102 @@
 {% block title %}Công việc đã lưu - JobNest{% endblock %}
 
 {% block content %}
-<h3 class="mb-4">Danh sách việc làm đã lưu</h3>
-<div class="row g-4">
-  {% for job in jobs %}
-  <div class="col-md-6 col-lg-4">
-    <div class="card p-3 shadow-sm">
-      <h5>{{ job.title }}</h5>
-      <p class="text-muted">{{ job.employer_id.company_name if job.employer_id else 'Công ty ẩn danh' }} | {{ job.city or 'Địa điểm ẩn danh' }}</p>
-      <div class="d-flex justify-content-between mt-3">
-        <a href="{{ url_for('job.job_detail', job_id=job.id) }}" class="btn btn-primary btn-sm">Chi tiết</a>
-        <form method="POST" action="{{ url_for('candidate.save_job', job_id=job.id) }}">
-          <button type="submit" class="btn btn-danger btn-sm">Bỏ lưu</button>
-        </form>
-      </div>
-    </div>
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+  <!-- Header gradient -->
+  <div class="bg-gradient-to-r from-[#0046FF] to-[#001f78] text-white rounded-lg shadow-md mb-6 p-6 min-h-[200px] flex flex-col justify-center">
+    <h2 class="text-4xl font-bold mb-2 uppercase">Việc làm đã lưu</h2>
+    <p class="text-2sm opacity-90">
+      Xem lại danh sách những việc làm mà bạn đã lưu trước đó. Ứng tuyển ngay để không bỏ lỡ cơ hội nghề nghiệp dành cho bạn.
+    </p>
   </div>
-  {% endfor %}
-  {% if not jobs %}
-    <p>Không có công việc nào được lưu.</p>
+
+  <!-- Đếm số việc -->
+  <p class="mb-6 font-regular">
+    Danh sách có <span class="font-bold text-blue-700">{{ saved_jobs|length }}</span> việc làm đã lưu
+  </p>
+
+  <!-- Grid jobs -->
+  <div class="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for saved in saved_jobs %}
+      {% set job = saved.job %}
+      <div class="bg-white rounded-xl shadow-sm border hover:shadow-md transform transition-transform duration-300 hover:-translate-y-2 transition flex flex-col">
+        <div class="p-5 flex flex-col flex-grow">
+          <!-- Job title -->
+          <h3 class="text-lg font-semibold text-black mb-2">
+            {{ job.title }}
+          </h3>
+
+          <!-- Company -->
+          <p class="text-[#6B7280] text-sm mb-1 flex items-center gap-2">
+            <i class="fa-solid fa-building text-[#6B7280]"></i>
+            {{ job.employer.company_name if job.employer else 'Công ty ẩn danh' }}
+            <i class="fa-solid fa-location-dot text-[#6B7280]"></i>
+            {{ job.city or 'Địa điểm ẩn danh' }}
+          </p>
+
+          <!-- Salary -->
+          {% if job.salary_min and job.salary_max %}
+            <p class="mt-2 text-[var(--primary-blue)] font-semibold">
+              {{ "{:,.0f}".format(job.salary_min) }} - {{ "{:,.0f}".format(job.salary_max) }} VND
+            </p>
+          {% elif job.salary_min %}
+            <p class="mt-2 text-[var(--primary-blue)] font-semibold">
+              Từ {{ "{:,.0f}".format(job.salary_min) }} VND
+            </p>
+          {% elif job.salary_max %}
+            <p class="mt-2 text-[var(--primary-blue)] font-semibold">
+              Đến {{ "{:,.0f}".format(job.salary_max) }} VND
+            </p>
+          {% else %}
+            <p class="mt-2 text-[var(--primary-blue)] italic">Mức lương thỏa thuận</p>
+          {% endif %}
+
+          <!-- Job type and remote option -->
+          <div class="mt-2 flex flex-wrap gap-2">
+            <span class="px-2 py-0.5 bg-[var(--blue-bg)] text-[var(--primary-blue)] text-xs rounded-full">{{ job.job_type or 'Chưa xác định' }}</span>
+            <span class="px-2 py-0.5 bg-[var(--blue-bg)] text-[var(--primary-blue)] text-xs rounded-full">{{ job.remote_option or 'On-Site' }}</span>
+          </div>
+
+          <!-- Deadline -->
+          {% if job.deadline %}
+            <p class="mt-2 text-[#6B7280] text-sm font-medium italic">
+              Hạn nộp hồ sơ: {{ job.deadline.strftime('%d/%m/%Y') }}
+            </p>
+          {% endif %}
+
+<!--          &lt;!&ndash; Save at &ndash;&gt;-->
+<!--          <p class="mt-2 text-[#6B7280] text-xs italic">Lưu vào {{ saved.saved_at.strftime('%d/%m/%Y') }}</p>-->
+
+          <!-- Actions -->
+          <div class="mt-auto pt-4 flex gap-2 font-semibold">
+            <a href="{{ url_for('job.job_detail', job_id=job.id) }}"
+               class="w-1/2 text-center px-3 py-2 text-sm text-white rounded-lg bg-[var(--primary-blue)] hover:bg-[var(--primary-blue-hover)] transition">
+              Chi tiết
+            </a>
+
+            <form method="POST" action="{{ url_for('candidate.unsave_job', job_id=job.id) }}" class="w-1/2">
+              <button type="submit"
+                      class="w-full px-3 py-2 text-sm border-1 border-[var(--primary-blue)] text-[var(--primary-blue)] rounded-lg hover:border-red-500 hover:bg-red-500 hover:text-white transition">
+                <i class="fa-solid fa-trash"></i> Bỏ lưu
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if not saved_jobs %}
+    <div class="col-span-full text-center py-10">
+      <img src="{{ url_for('static', filename='images/empty-jobs.svg') }}" alt="No jobs" class="mx-auto w-40 mb-4">
+      <h5 class="text-gray-500">Bạn chưa lưu công việc nào.</h5>
+      <a href="{{ url_for('job.list_jobs') }}"
+         class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+        <i class="fa-solid fa-magnifying-glass"></i> Khám phá việc làm
+      </a>
+    </div>
   {% endif %}
+
 </div>
 {% endblock %}

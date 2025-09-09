@@ -142,3 +142,4 @@ def format_salary_range(min_salary, max_salary):
     if b:
         return f"Đến {b} triệu"
     return "Thương lượng"
+
