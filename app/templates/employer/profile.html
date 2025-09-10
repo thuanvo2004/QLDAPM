@@ -1,10 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex align-items-center mb-4">
+    <div class="me-3">
+      {% if employer.logo %}
+        <img src="{{ employer.logo }}" alt="Logo" style="width:120px; height:120px; object-fit:cover; border-radius:8px;">
+      {% else %}
+        <div style="width:120px; height:120px; display:flex; align-items:center; justify-content:center; background:#f0f0f0; border-radius:8px;">
+          <small class="text-muted">No logo</small>
+        </div>
+      {% endif %}
+    </div>
+    <div>
+      <h3>{{ employer.company_name or "Chưa đặt tên công ty" }}</h3>
+      <div class="text-muted">{{ employer.industry }}</div>
+      <div>{{ employer.address }}{% if employer.city %}, {{ employer.city }}{% endif %}</div>
+      {% if employer.website %}
+        <div><a href="{{ employer.website }}" target="_blank">{{ employer.website }}</a></div>
+      {% endif %}
+    </div>
+    <div class="ms-auto">
+      <a href="{{ url_for('employer.edit_profile') }}" class="btn btn-outline-primary">Chỉnh sửa hồ sơ</a>
+    </div>
+  </div>
+
+  <div class="card p-3 mb-3">
+    <h5>Giới thiệu công ty</h5>
+    <p>{{ employer.description or "Chưa có mô tả" }}</p>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <ul class="list-group">
+        <li class="list-group-item"><strong>Quy mô:</strong> {{ employer.company_size or "—" }}</li>
+        <li class="list-group-item"><strong>Năm thành lập:</strong> {{ employer.founded_year or "—" }}</li>
+        <li class="list-group-item"><strong>Mã số thuế:</strong> {{ employer.tax_code or "—" }}</li>
+      </ul>
+    </div>
+    <div class="col-md-6">
+      <ul class="list-group">
+        <li class="list-group-item"><strong>Liên hệ:</strong> {{ employer.phone or "—" }}</li>
+        <li class="list-group-item"><strong>Thành phố:</strong> {{ employer.city or "—" }}</li>
+        <li class="list-group-item"><strong>Email liên kết:</strong> {{ employer.user.email }}</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField, TextAreaField, IntegerField, DateField, TimeField, DateTimeField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional
-
+from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional,URL,NumberRange
+from flask_wtf.file import FileField, FileAllowed
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, EmailField
 from wtforms.validators import DataRequired, Email, Length, EqualTo
@@ -69,20 +69,16 @@ class EmployerRegisterForm(FlaskForm):
         description = TextAreaField("Mô tả công ty")
         submit = SubmitField("Đăng ký Nhà tuyển dụng")
 
-
-
-# # CandidateRegisterForm
-# class CandidateRegisterForm(FlaskForm):
-#     full_name = StringField("Họ tên", validators=[DataRequired()])
-#     email = StringField("Email", validators=[DataRequired(), Email()])
-#     password = PasswordField("Mật khẩu", validators=[DataRequired()])
-#     confirm_password = PasswordField("Xác nhận mật khẩu", validators=[DataRequired(), EqualTo("password")])
-#     submit = SubmitField("Đăng ký")
-#
-# # EmployerRegisterForm
-# class EmployerRegisterForm(FlaskForm):
-#     company_name = StringField("Tên công ty", validators=[DataRequired()])
-#     email = StringField("Email", validators=[DataRequired(), Email()])
-#     password = PasswordField("Mật khẩu", validators=[DataRequired()])
-#     confirm_password = PasswordField("Xác nhận mật khẩu", validators=[DataRequired(), EqualTo("password")])
-#     submit = SubmitField("Đăng ký")
+class EmployerProfileForm(FlaskForm):
+    company_name = StringField("Tên công ty", validators=[DataRequired(), Length(max=200)])
+    phone = StringField("Số điện thoại", validators=[Optional(), Length(max=20)])
+    industry = StringField("Ngành nghề", validators=[Optional(), Length(max=200)])
+    company_size = StringField("Quy mô công ty", validators=[Optional(), Length(max=50)])
+    address = StringField("Địa chỉ", validators=[Optional(), Length(max=200)])
+    city = StringField("Thành phố", validators=[Optional(), Length(max=100)])
+    website = StringField("Website", validators=[Optional(), URL(), Length(max=200)])
+    description = TextAreaField("Giới thiệu công ty", validators=[Optional(), Length(max=2000)])
+    founded_year = IntegerField("Năm thành lập", validators=[Optional(), NumberRange(min=1800, max=2100)])
+    tax_code = StringField("Mã số thuế", validators=[Optional(), Length(max=100)])
+    logo = FileField("Logo công ty (jpg, png)", validators=[Optional(), FileAllowed(['jpg','jpeg','png','gif'], 'Images only!')])
+    submit = SubmitField("Lưu")

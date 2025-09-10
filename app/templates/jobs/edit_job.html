@@ -1,46 +1,59 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container mt-4">
-    <h2>Chỉnh sửa tin tuyển dụng</h2>
-
+    <h2 class="mb-4">Sửa tin tuyển dụng</h2>
     <form method="POST">
         {{ form.hidden_tag() }}
 
+        <!-- Tiêu đề -->
         <div class="mb-3">
             {{ form.title.label(class="form-label") }}
             {{ form.title(class="form-control") }}
         </div>
 
+        <!-- Mô tả -->
         <div class="mb-3">
             {{ form.description.label(class="form-label") }}
-            {{ form.description(class="form-control", rows="5") }}
+            {{ form.description(class="form-control", rows=4) }}
         </div>
 
+        <!-- Yêu cầu -->
         <div class="mb-3">
             {{ form.requirements.label(class="form-label") }}
-            {{ form.requirements(class="form-control", rows="4") }}
+            {{ form.requirements(class="form-control", rows=3) }}
         </div>
 
+        <!-- Quyền lợi -->
         <div class="mb-3">
             {{ form.benefits.label(class="form-label") }}
-            {{ form.benefits(class="form-control", rows="3") }}
+            {{ form.benefits(class="form-control", rows=3) }}
         </div>
 
+        <!-- Loại công việc -->
+        <div class="mb-3">
+            {{ form.job_type.label(class="form-label") }}
+            {{ form.job_type(class="form-select") }}
+        </div>
+
+        <!-- Lương -->
         <div class="row">
             <div class="col-md-6 mb-3">
-                {{ form.job_type.label(class="form-label") }}
-                {{ form.job_type(class="form-select") }}
-            </div>
-            <div class="col-md-3 mb-3">
                 {{ form.salary_min.label(class="form-label") }}
                 {{ form.salary_min(class="form-control") }}
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-md-6 mb-3">
                 {{ form.salary_max.label(class="form-label") }}
                 {{ form.salary_max(class="form-control") }}
             </div>
         </div>
 
+        <!-- Đơn vị tiền -->
+        <div class="mb-3">
+            {{ form.currency.label(class="form-label") }}
+            {{ form.currency(class="form-select") }}
+        </div>
+
+        <!-- Địa chỉ -->
         <div class="row">
             <div class="col-md-4 mb-3">
                 {{ form.city.label(class="form-label") }}
@@ -56,6 +69,7 @@
             </div>
         </div>
 
+        <!-- Thời gian làm việc -->
         <div class="row">
             <div class="col-md-6 mb-3">
                 {{ form.work_start_time.label(class="form-label") }}
@@ -67,28 +81,33 @@
             </div>
         </div>
 
+        <!-- Ngày làm việc -->
         <div class="mb-3">
             {{ form.working_days.label(class="form-label") }}
             {{ form.working_days(class="form-control") }}
         </div>
 
+        <!-- Deadline -->
         <div class="mb-3">
             {{ form.deadline.label(class="form-label") }}
             {{ form.deadline(class="form-control") }}
         </div>
 
+        <!-- Remote -->
         <div class="mb-3">
             {{ form.remote_option.label(class="form-label") }}
-            {{ form.remote_option(class="form-select") }}
+            {{ form.remote_option(class="form-check-input") }}
         </div>
 
+        <!-- Ngày phỏng vấn -->
         <div class="mb-3">
             {{ form.interview_date.label(class="form-label") }}
             {{ form.interview_date(class="form-control") }}
         </div>
 
-        <button type="submit" class="btn btn-primary">Cập nhật</button>
-        <a href="{{ url_for('job.manage_jobs') }}" class="btn btn-secondary">Hủy</a>
+        <!-- Submit -->
+        <button type="submit" class="btn btn-success">💾 Cập nhật</button>
+        <a href="{{ url_for('employer.dashboard') }}" class="btn btn-secondary">❌ Huỷ</a>
     </form>
 </div>
 {% endblock %}

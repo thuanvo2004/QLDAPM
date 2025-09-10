@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, redirect, url_for, flash
+from flask import Blueprint, render_template, redirect, url_for, flash,current_app
 from flask_login import login_required, current_user
 from app.models import Job, Application
 from app.extensions import db
-from app.forms import JobForm
+from app.forms import JobForm,EmployerProfileForm
+from datetime import datetime
 
 employer_bp = Blueprint("employer", __name__, url_prefix="/employer")
 
@@ -13,7 +14,7 @@ def dashboard():
         flash("Chỉ nhà tuyển dụng mới xem dashboard", "danger")
         return redirect(url_for("job.list_jobs"))
     jobs = current_user.employer_profile.jobs
-    return render_template("employer/dashboard.html")
+    return render_template("employer/dashboard.html", jobs=jobs)
 
 @employer_bp.route("/job/<int:job_id>/applications")
 @login_required
@@ -83,3 +84,74 @@ def delete_job(job_id):
     db.session.commit()
     flash("Xóa công việc thành công", "success")
     return redirect(url_for("employer.dashboard"))
+
+
+def _save_logo_file(file_storage, employer_id):
+    """Lưu file logo (nếu có) vào static/uploads/employers/<employer_id>/ và trả về đường dẫn relative."""
+    filename = secure_filename(file_storage.filename)
+    upload_folder = os.path.join(current_app.root_path, "static", "uploads", "employers", str(employer_id))
+    os.makedirs(upload_folder, exist_ok=True)
+    filepath = os.path.join(upload_folder, filename)
+    file_storage.save(filepath)
+    # Trả lại đường dẫn để lưu vào DB (relative với static): ví dụ: /static/uploads/employers/1/logo.png
+    return f"/static/uploads/employers/{employer_id}/{filename}"
+
+@employer_bp.route("/profile")
+@login_required
+def profile():
+    if current_user.role != "employer":
+        flash("Chỉ nhà tuyển dụng mới truy cập hồ sơ này", "danger")
+        return redirect(url_for("main.index"))
+
+    employer = current_user.employer_profile
+    if not employer:
+        # nếu user có role employer nhưng chưa tạo profile, redirect sang edit để tạo
+        flash("Bạn chưa có hồ sơ công ty. Vui lòng hoàn thiện.", "warning")
+        return redirect(url_for("employer.edit_profile"))
+
+    return render_template("employer/profile.html", employer=employer)
+
+@employer_bp.route("/profile/edit", methods=["GET", "POST"])
+@login_required
+def edit_profile():
+    if current_user.role != "employer":
+        flash("Chỉ nhà tuyển dụng mới truy cập hồ sơ này", "danger")
+        return redirect(url_for("main.index"))
+
+    employer = current_user.employer_profile
+    # nếu chưa có hồ sơ thì tạo mới (liên kết user_id)
+    if not employer:
+        employer = Employer(user_id=current_user.id, company_name="")
+        db.session.add(employer)
+        db.session.commit()  # commit để có employer.id cho lưu logo
+
+    form = EmployerProfileForm(obj=employer)
+
+    if form.validate_on_submit():
+        # cập nhật fields
+        employer.company_name = form.company_name.data
+        employer.phone = form.phone.data
+        employer.industry = form.industry.data
+        employer.company_size = form.company_size.data
+        employer.address = form.address.data
+        employer.city = form.city.data
+        employer.website = form.website.data
+        employer.description = form.description.data
+        employer.founded_year = form.founded_year.data
+        employer.tax_code = form.tax_code.data
+        employer.updated_at = datetime.utcnow()
+
+        # xử lý logo nếu upload
+        if form.logo.data:
+            try:
+                logo_path = _save_logo_file(form.logo.data, employer.id)
+                employer.logo = logo_path
+            except Exception as e:
+                current_app.logger.exception("Lỗi khi lưu logo")
+                flash("Lưu logo thất bại.", "warning")
+
+        db.session.commit()
+        flash("Cập nhật hồ sơ công ty thành công.", "success")
+        return redirect(url_for("employer.profile"))
+
+    return render_template("employer/edit_profile.html", form=form, employer=employer)

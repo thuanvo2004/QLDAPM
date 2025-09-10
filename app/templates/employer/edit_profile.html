@@ -1,10 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h3>Chỉnh sửa hồ sơ công ty</h3>
+  <form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.company_name.label(class="form-label") }}
+      {{ form.company_name(class="form-control") }}
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        {{ form.phone.label(class="form-label") }}
+        {{ form.phone(class="form-control") }}
+      </div>
+      <div class="col-md-6 mb-3">
+        {{ form.website.label(class="form-label") }}
+        {{ form.website(class="form-control") }}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      {{ form.industry.label(class="form-label") }}
+      {{ form.industry(class="form-control") }}
+    </div>
+
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        {{ form.company_size.label(class="form-label") }}
+        {{ form.company_size(class="form-control") }}
+      </div>
+      <div class="col-md-4 mb-3">
+        {{ form.founded_year.label(class="form-label") }}
+        {{ form.founded_year(class="form-control") }}
+      </div>
+      <div class="col-md-4 mb-3">
+        {{ form.tax_code.label(class="form-label") }}
+        {{ form.tax_code(class="form-control") }}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      {{ form.address.label(class="form-label") }}
+      {{ form.address(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.city.label(class="form-label") }}
+      {{ form.city(class="form-control") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.description.label(class="form-label") }}
+      {{ form.description(class="form-control", rows=5) }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.logo.label(class="form-label") }}
+      {{ form.logo(class="form-control") }}
+      {% if employer.logo %}
+        <small class="form-text text-muted">Logo hiện tại: <a href="{{ employer.logo }}" target="_blank">Xem</a></small>
+      {% endif %}
+    </div>
+
+    <button class="btn btn-success">{{ form.submit.label.text }}</button>
+    <a href="{{ url_for('employer.profile') }}" class="btn btn-secondary">Hủy</a>
+  </form>
+</div>
+{% endblock %}
