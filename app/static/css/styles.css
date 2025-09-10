@@ -242,7 +242,7 @@ body{
 
 .search-btn {
     padding: 10px 18px;
-    border-radius: 6px;
+    border-radius: 8px;
     border: none;
     background: var(--primary-blue);
     color: #fff;
@@ -1153,7 +1153,7 @@ blockquote {
     background-color: var(--primary-blue);
     color: white;
     text-align: center;
-    border-radius: 6px;
+    border-radius: 8px;
     text-decoration: none;
     transition: background 0.2s ease;
     text-wrap: nowrap;

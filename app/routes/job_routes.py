@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from app.forms import JobForm
 from app.models import Job
 from app.extensions import db
+from datetime import datetime
 
 job_bp = Blueprint("job", __name__, url_prefix="/jobs")
 
@@ -64,7 +65,7 @@ def list_jobs():
 @job_bp.route("/<int:job_id>")
 def job_detail(job_id):
     job = Job.query.get_or_404(job_id)
-    return render_template("jobs/job_detail.html", job=job)
+    return render_template("jobs/job_detail.html", job=job, now=datetime.utcnow())
 
 # Quản lý job của employer
 @job_bp.route("/manage")
