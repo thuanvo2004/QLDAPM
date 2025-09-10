@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block title %}Công việc đã ứng tuyển - JobNest{% endblock %}
 
 {% block content %}
@@ -101,6 +102,65 @@
         <i class="fa-solid fa-magnifying-glass"></i> Khám phá việc làm
       </a>
     </div>
+
+{% block title %}Đơn Ứng Tuyển Của Tôi{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Đơn Ứng Tuyển Của Tôi</h2>
+
+  {% if applications %}
+    <div class="table-responsive shadow-sm rounded">
+      <table class="table table-hover align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>Công việc</th>
+            <th>Công ty</th>
+            <th>Ngày ứng tuyển</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for application in applications %}
+          <tr>
+            <td>
+              <strong>{{ application.job.title }}</strong><br>
+              <small class="text-muted">{{ application.job.city }}</small>
+            </td>
+            <td>{{ application.job.employer.company_name }}</td>
+            <td>{{ application.applied_at.strftime('%d/%m/%Y') }}</td>
+            <td>
+              {% if application.status == 'pending' %}
+                <span class="badge bg-warning text-dark">Đang chờ</span>
+              {% elif application.status == 'accepted' %}
+                <span class="badge bg-success">Đã duyệt</span>
+              {% elif application.status == 'rejected' %}
+                <span class="badge bg-danger">Bị từ chối</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ application.status }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <!-- Xem chi tiết công việc -->
+              <a href="{{ url_for('job.job_detail', job_id=application.job.id) }}"
+                 class="btn btn-sm btn-outline-primary me-1">
+                 Xem công việc
+              </a>
+              <!-- Chat với nhà tuyển dụng -->
+              <a href="{{ url_for('messages.chat_with_user', user_id=application.job.employer.user.id) }}"
+   class="btn btn-sm btn-outline-success">
+   Chat với {{ application.job.employer.company_name }}
+</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info">Bạn chưa ứng tuyển công việc nào.</div>
+
   {% endif %}
 </div>
 {% endblock %}
