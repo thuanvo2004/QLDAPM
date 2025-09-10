@@ -1,13 +1,258 @@
 {% extends "base.html" %}
 {% block title %}{{ job.title }}{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>{{ job.title }}</h2>
-    <p><strong>Mô tả:</strong> {{ job.description }}</p>
-    <p><strong>Yêu cầu:</strong> {{ job.requirements or 'Không yêu cầu' }}</p>
-    <p><strong>Quyền lợi:</strong> {{ job.benefits or 'Không có thông tin' }}</p>
-    <p><strong>Loại công việc:</strong> {{ job.job_type }}</p>
-    <p><strong>Địa điểm:</strong> {{ job.city }} {{ job.district }} {{ job.street_address }}</p>
-    <p><strong>Hạn nộp:</strong> {{ job.deadline.strftime('%d/%m/%Y') if job.deadline else 'Không có hạn' }}</p>
+<div class="min-h-screen bg-gray-50 py-12">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+      <div class="relative">
+        <div class="h-44 md:h-56 bg-gradient-to-r from-[#0046FF] to-[#001f78] rounded-b-2xl"></div>
+        <!-- Logo -->
+        <div class="absolute left-10 md:left-12 -bottom-12">
+          {% if job.employer and job.employer.logo %}
+            <img src="{{ url_for('static', filename='uploads/company_logos/' ~ job.employer.logo) }}"
+                 alt="{{ job.employer.company_name }}"
+                 class="h-28 w-28 md:h-32 md:w-32 rounded-full object-cover ring-4 ring-white shadow-lg bg-white">
+          {% else %}
+            <div class="h-28 w-28 md:h-32 md:w-32 rounded-full ring-4 ring-white shadow-lg bg-white flex items-center justify-center text-gray-300">
+              Logo
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Nội dung chính -->
+      <div class="px-6 md:px-10 pt-16 pb-12">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- LEFT COLUMN -->
+          <div class="lg:col-span-2">
+            <div class="border border-gray-200 bg-white rounded-2xl p-6 space-y-6">
+              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900">{{ job.title }}</h1>
+                  <p class="mt-2 text-gray-600 font-medium">{{ job.employer.company_name if job.employer else 'Công ty ẩn danh' }}</p>
+                  <p class="mt-2 text-sm text-text-[#6B7280] flex items-center gap-2">
+                    <i class="fa-solid fa-location-dot"></i>
+                    {{ job.street_address or 'Chưa xác định' }}{% if job.district %}, {{ job.district }}{% endif %}{% if job.city %}, {{ job.city }}{% endif %}
+                  </p>
+                </div>
+
+                <!-- Metadata -->
+                <div class="flex items-center gap-3 text-sm text-gray-550">
+                  <span class="px-2 py-0.5 bg-[var(--blue-bg)] text-[var(--primary-blue)] rounded-full">{{ job.job_type or 'Chưa xác định' }}</span>
+                  <span class="px-2 py-0.5 bg-[var(--blue-bg)] text-[var(--primary-blue)] rounded-full">{{ job.remote_option or 'On-Site' }}</span>
+                </div>
+              </div>
+
+              <!-- Website_PhoneNumber -->
+              <div class="flex flex-col md:flex-row md:items-center md:gap-6 text-2sm text-gray-600">
+                <div class="flex items-center gap-3">
+                  <i class="fa-solid fa-phone"></i>
+                  <span>{{ job.employer.phone if job.employer and job.employer.phone else 'Chưa cập nhật' }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <i class="fa-solid fa-globe"></i>
+                  {% if job.employer and job.employer.website %}
+                    <a href="{{ job.employer.website }}" target="_blank" rel="noopener" class="hover:underline">
+                      {{ job.employer.website }}
+                    </a>
+                  {% else %}
+                    <span>Chưa cập nhật</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div>
+                <h2 class="text-xl font-semibold text-gray-900 mb-3">Mô tả công việc</h2>
+                {% if job.description %}
+                  <div class="text-gray-700 space-y-3">
+                    {% for line in job.description.split('\n') if line.strip() %}
+                      <p>{{ line.strip() }}</p>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <p class="text-gray-700">Không có thông tin</p>
+                {% endif %}
+              </div>
+
+              <!-- Benefit + Requirement -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900 mb-2">Quyền lợi</h3>
+                  {% if job.benefits %}
+                    <ul class="list-disc ml-5 text-gray-700 space-y-2">
+                      {% for line in job.benefits.split('\n') if line.strip() %}
+                        <li>{{ line.strip() }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-gray-700">Không có thông tin</p>
+                  {% endif %}
+                </div>
+
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900 mb-2">Yêu cầu</h3>
+                  {% if job.requirements %}
+                    <ul class="list-disc ml-5 text-gray-700 space-y-2">
+                      {% for line in job.requirements.split('\n') if line.strip() %}
+                        <li>{{ line.strip() }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-gray-700">Không yêu cầu cụ thể</p>
+                  {% endif %}
+                </div>
+              </div>
+
+                <!-- Working time and Working day -->
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Thời gian làm việc</h3>
+                <p class="text-gray-700">
+                  <span class="font-medium">
+                    {{ job.work_start_time.strftime('%H:%M') if job.work_start_time else 'Chưa xác định' }}
+                    -
+                    {{ job.work_end_time.strftime('%H:%M') if job.work_end_time else 'Chưa xác định' }}
+                  </span>
+                  <span class="text-text-[#6B7280]"> | {{ job.working_days or 'Chưa xác định' }}</span>
+                </p>
+                {% if job.interview_date %}
+                  <p class="text-gray-700 mt-2">Ngày phỏng vấn: <span class="font-medium">{{ job.interview_date.strftime('%d/%m/%Y') }}</span></p>
+                {% endif %}
+              </div>
+
+              <!-- About the Employer) -->
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Thông tin công ty</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-gray-700">
+                  <div><strong>Tên:</strong> {{ job.employer.company_name if job.employer else 'Chưa cập nhật' }}</div>
+                  <div><strong>Ngành nghề:</strong> {{ job.employer.industry if job.employer and job.employer.industry else 'Chưa cập nhật' }}</div>
+                  <div><strong>Quy mô:</strong> {{ job.employer.company_size if job.employer and job.employer.company_size else 'Chưa cập nhật' }} nhân viên</div>
+                  <div><strong>Thành lập:</strong> {{ job.employer.founded_year if job.employer and job.employer.founded_year else 'Chưa cập nhật' }}</div>
+                  <div class="col-span-1 md:col-span-2"><strong>Mô tả:</strong> {{ job.employer.description if job.employer and job.employer.description else 'Chưa có thông tin' }}</div>
+                  <div><strong>Địa chỉ:</strong> {{ job.employer.address if job.employer }}, {{ job.city if job.city else '' }}</div>
+                  <div><strong>MST:</strong> {{ job.employer.tax_code if job.employer and job.employer.tax_code else 'Chưa cập nhật' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div class="lg:col-span-1">
+            <div class="sticky top-8">
+              <div class="bg-white border border-gray-200 rounded-xl p-6">
+                <div class="flex flex-col items-start justify-between gap-4">
+                  <div>
+                    <div class="text-sm text-[#6B7280]"><i class="fa-solid fa-location-dot text-[#6B7280]"></i> Địa điểm</div>
+                    <div class="font-semibold text-gray-800">{{ job.city or 'Chưa cập nhật' }}</div>
+                  </div>
+                  <div class="text-left">
+                    <div class="text-sm text-[#6B7280]">Mức lương</div>
+                    <div class="text-2xl font-bold text-[var(--primary-blue)]">
+                      {% if job.salary_min and job.salary_max %}
+                        {{ "{:,.0f}".format(job.salary_min) }} - {{ "{:,.0f}".format(job.salary_max) }} {{ job.currency or 'VND' }}
+                      {% elif job.salary_min %}
+                        Từ {{ "{:,.0f}".format(job.salary_min) }} {{ job.currency or 'VND' }}
+                      {% elif job.salary_max %}
+                        Đến {{ "{:,.0f}".format(job.salary_max) }} {{ job.currency or 'VND' }}
+                      {% else %}
+                        Thỏa thuận
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Contact/deadline -->
+                <div class="mt-4 border-y py-4 text-sm text-gray-600 space-y-3 flex flex-col col-span-2">
+                  <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-500">
+                      <i class="fa-solid fa-envelope"></i>
+                    </span>
+                    <div>
+                      {% if job.employer and job.employer.user and job.employer.user.email %}
+                        <div class="text-gray-800 font-semibold">{{ job.employer.user.email }}</div>
+                      {% elif job.employer and job.employer.phone %}
+                        <div class="text-gray-800 font-semibold">SĐT: {{ job.employer.phone }}</div>
+                      {% else %}
+                        <div class="text-gray-800 font-semibold">Chưa cập nhật</div>
+                      {% endif %}
+                      <div class="text-sm text-[#6B7280]">
+                        Liên hệ
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 text-gray-500">
+                      <i class="fa-solid fa-calendar-day"></i>
+                    </span>
+                    <div>
+                      <div class="text-gray-800 font-semibold">{{ job.deadline.strftime('%d/%m/%Y') if job.deadline else 'Không giới hạn' }}</div>
+                      <div class="text-sm text-[#6B7280]">Hạn nộp hồ sơ</div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-800 font-semibold">Đăng ngày:</div>
+                    <div class="text-sm text-gray-800">{{ job.created_at.strftime('%d/%m/%Y') if job.created_at else 'Chưa cập nhật' }}</div>
+                  </div>
+
+                  <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-800 font-semibold">Cập nhật:</div>
+                    <div class="text-sm text-gray-800">
+                      {% if job.updated_at and now %}
+                        {% set days = (now - job.updated_at).days %}
+                        {% if days <= 0 %}
+                          hôm nay
+                        {% elif days == 1 %}
+                          1 ngày trước
+                        {% else %}
+                          {{ days }} ngày trước
+                        {% endif %}
+                      {% elif job.updated_at %}
+                        {{ job.updated_at.strftime('%d/%m/%Y') }}
+                      {% else %}
+                        Chưa cập nhật
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-800 font-semibold">Ngành:</div>
+                    <div class="text-sm text-gray-800">{{ job.employer.industry if job.employer and job.employer.industry else 'Chưa cập nhật' }}</div>
+                  </div>
+                </div>
+
+                <!-- Nút Apply + Save -->
+                <div class="mt-4 space-y-3">
+                  <a href="{{ url_for('candidate.apply_job', job_id=job.id) }}"
+                     class="w-full inline-flex items-center justify-center gap-2
+                            bg-[var(--primary-blue)] text-white
+                            px-4 py-3 rounded-lg text-sm font-semibold
+                            hover:bg-[var(--primary-blue-hover)]
+                            transition-colors duration-200"
+                     aria-label="Ứng tuyển ngay">
+                    <i class="fa-solid fa-paper-plane"></i> Ứng tuyển ngay
+                  </a>
+
+                  <!-- Nút save job (secondary) -->
+                  <form action="{{ url_for('candidate.save_job', job_id=job.id) }}" method="post">
+                    <button type="submit"
+                            class="w-full inline-flex items-center justify-center gap-2
+                                   border !border-[var(--primary-blue)] text-[var(--primary-blue)]
+                                   px-4 py-3 rounded-lg text-sm font-semibold
+                                   hover:bg-[var(--primary-blue)] hover:text-white
+                                   transition-colors duration-200">
+                      <i class="fa-regular fa-bookmark"></i> Lưu công việc
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

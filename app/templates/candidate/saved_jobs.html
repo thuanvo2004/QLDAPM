@@ -65,10 +65,6 @@
               Hạn nộp hồ sơ: {{ job.deadline.strftime('%d/%m/%Y') }}
             </p>
           {% endif %}
-
-<!--          &lt;!&ndash; Save at &ndash;&gt;-->
-<!--          <p class="mt-2 text-[#6B7280] text-xs italic">Lưu vào {{ saved.saved_at.strftime('%d/%m/%Y') }}</p>-->
-
           <!-- Actions -->
           <div class="mt-auto pt-4 flex gap-2 font-semibold">
             <a href="{{ url_for('job.job_detail', job_id=job.id) }}"
