@@ -80,7 +80,7 @@
             {% elif current_user.role == "employer" %}
               <!-- Nhà tuyển dụng -->
               <div class="dropdown">
-                <a class="btn btn-outline-warning dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                <a class="border border-1 border-white p-2 rounded-lg text-sm dropdown-toggle transition hover:bg-[var(--primary-blue-hover)]" href="#" role="button" data-bs-toggle="dropdown">
                   <i class="fa-solid fa-building"></i> {{ current_user.employer_profile.company_name or current_user.email }}
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
