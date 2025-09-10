@@ -1,10 +1,66 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block content %}
+<div class="container mt-4">
+    <h3>Ứng viên đã ứng tuyển cho: <strong>{{ job.title }}</strong></h3>
+    <p>Công ty: <strong>{{ job.employer.company_name }}</strong></p>
+
+    {% if applications %}
+    <table class="table table-hover mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>Họ và tên</th>
+                <th>Email</th>
+                <th>Số điện thoại</th>
+                <th>Kinh nghiệm (năm)</th>
+                <th>Vị trí mong muốn</th>
+                <th>CV</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td>{{ app.candidate.full_name }}</td>
+                <td>{{ app.candidate.user.email }}</td>
+                <td>{{ app.candidate.phone or "Chưa cập nhật" }}</td>
+                <td>{{ app.candidate.experience_years }}</td>
+                <td>{{ app.candidate.expected_position or "Chưa cập nhật" }}</td>
+                <td>
+                    {% if app.cv_file %}
+                    <a href="{{ app.cv_file }}" target="_blank" class="btn btn-sm btn-primary">Xem CV</a>
+                    {% else %}
+                    Chưa có
+                    {% endif %}
+                </td>
+                <td>
+                    {% if app.status == "pending" %}
+                        <span class="badge bg-warning text-dark">Đang chờ</span>
+                    {% elif app.status == "accepted" %}
+                        <span class="badge bg-success">Đã duyệt</span>
+                    {% elif app.status == "rejected" %}
+                        <span class="badge bg-danger">Đã từ chối</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <!-- Duyệt/Từ chối -->
+                    {% if app.status == "pending" %}
+                    <a href="{{ url_for('employer.change_application_status', app_id=app.id, action='accept') }}" class="btn btn-sm btn-success">Duyệt</a>
+                    <a href="{{ url_for('employer.change_application_status', app_id=app.id, action='reject') }}" class="btn btn-sm btn-danger">Từ chối</a>
+                    {% endif %}
+
+                    <!-- Liên lạc (mở trang chat) -->
+                    <a href="{{ url_for('messages.chat_with_user', user_id=app.candidate.user.id) }}" class="btn btn-sm btn-info text-white">Nhắn</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Chưa có ứng viên nào ứng tuyển.</p>
+    {% endif %}
+
+    <a href="{{ url_for('employer.dashboard') }}" class="btn btn-secondary mt-3">Quay lại Dashboard</a>
+</div>
+{% endblock %}

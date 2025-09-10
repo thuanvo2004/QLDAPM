@@ -70,15 +70,48 @@ class EmployerRegisterForm(FlaskForm):
         submit = SubmitField("Đăng ký Nhà tuyển dụng")
 
 class EmployerProfileForm(FlaskForm):
-    company_name = StringField("Tên công ty", validators=[DataRequired(), Length(max=200)])
-    phone = StringField("Số điện thoại", validators=[Optional(), Length(max=20)])
-    industry = StringField("Ngành nghề", validators=[Optional(), Length(max=200)])
-    company_size = StringField("Quy mô công ty", validators=[Optional(), Length(max=50)])
-    address = StringField("Địa chỉ", validators=[Optional(), Length(max=200)])
-    city = StringField("Thành phố", validators=[Optional(), Length(max=100)])
-    website = StringField("Website", validators=[Optional(), URL(), Length(max=200)])
-    description = TextAreaField("Giới thiệu công ty", validators=[Optional(), Length(max=2000)])
-    founded_year = IntegerField("Năm thành lập", validators=[Optional(), NumberRange(min=1800, max=2100)])
-    tax_code = StringField("Mã số thuế", validators=[Optional(), Length(max=100)])
-    logo = FileField("Logo công ty (jpg, png)", validators=[Optional(), FileAllowed(['jpg','jpeg','png','gif'], 'Images only!')])
-    submit = SubmitField("Lưu")
+        company_name = StringField(
+            "Tên công ty",
+            validators=[DataRequired(), Length(max=200)]
+        )
+        phone = StringField(
+            "Số điện thoại",
+            validators=[Optional(), Length(max=20)]
+        )
+        industry = StringField(
+            "Ngành nghề",
+            validators=[Optional(), Length(max=200)]
+        )
+        company_size = StringField(
+            "Quy mô công ty",
+            validators=[Optional(), Length(max=50)]
+        )
+        address = StringField(
+            "Địa chỉ",
+            validators=[Optional(), Length(max=200)]
+        )
+        city = StringField(
+            "Thành phố",
+            validators=[Optional(), Length(max=100)]
+        )
+        website = StringField(
+            "Website",
+            validators=[Optional(), URL(), Length(max=200)]
+        )
+        description = TextAreaField(
+            "Giới thiệu công ty",
+            validators=[Optional(), Length(max=2000)]
+        )
+        founded_year = IntegerField(
+            "Năm thành lập",
+            validators=[Optional(), NumberRange(min=1800, max=2100)]
+        )
+        tax_code = StringField(
+            "Mã số thuế",
+            validators=[Optional(), Length(max=100)]
+        )
+        logo = FileField(
+            "Logo công ty (jpg, png, gif)",
+            validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Chỉ chấp nhận ảnh!')]
+        )
+        submit = SubmitField("Lưu hồ sơ")

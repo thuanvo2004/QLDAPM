@@ -1,57 +1,61 @@
 {% extends "base.html" %}
-{% block title %}Công việc đã ứng tuyển{% endblock %}
+{% block title %}Đơn Ứng Tuyển Của Tôi{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <h2 class="mb-4">Danh sách công việc đã ứng tuyển</h2>
+<div class="container mt-4">
+  <h2 class="mb-4">Đơn Ứng Tuyển Của Tôi</h2>
 
   {% if applications %}
-    <div class="list-group">
-      {% for app in applications %}
-        <div class="list-group-item list-group-item-action mb-3 shadow-sm">
-          <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">
-              <a href="{{ url_for('job.job_detail', job_id=app.job.id) }}">
-                {{ app.job.title }}
+    <div class="table-responsive shadow-sm rounded">
+      <table class="table table-hover align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>Công việc</th>
+            <th>Công ty</th>
+            <th>Ngày ứng tuyển</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for application in applications %}
+          <tr>
+            <td>
+              <strong>{{ application.job.title }}</strong><br>
+              <small class="text-muted">{{ application.job.city }}</small>
+            </td>
+            <td>{{ application.job.employer.company_name }}</td>
+            <td>{{ application.applied_at.strftime('%d/%m/%Y') }}</td>
+            <td>
+              {% if application.status == 'pending' %}
+                <span class="badge bg-warning text-dark">Đang chờ</span>
+              {% elif application.status == 'accepted' %}
+                <span class="badge bg-success">Đã duyệt</span>
+              {% elif application.status == 'rejected' %}
+                <span class="badge bg-danger">Bị từ chối</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ application.status }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <!-- Xem chi tiết công việc -->
+              <a href="{{ url_for('job.job_detail', job_id=application.job.id) }}"
+                 class="btn btn-sm btn-outline-primary me-1">
+                 Xem công việc
               </a>
-            </h5>
-            <small class="text-muted">
-              Nộp ngày {{ app.applied_at.strftime('%d/%m/%Y') }}
-            </small>
-          </div>
-
-          <p class="mb-1 text-muted">
-            <i class="fa-solid fa-building"></i> {{ app.job.employer.company_name }}
-            · <i class="fa-solid fa-location-dot"></i> {{ app.job.city or '-' }}
-          </p>
-
-          <p class="mb-1">
-            <strong>Trạng thái:</strong>
-            {% if app.status == "pending" %}
-              <span class="badge bg-secondary">Chờ duyệt</span>
-            {% elif app.status == "reviewed" %}
-              <span class="badge bg-info text-dark">Đang xem xét</span>
-            {% elif app.status == "accepted" %}
-              <span class="badge bg-success">Được chấp nhận</span>
-            {% elif app.status == "rejected" %}
-              <span class="badge bg-danger">Bị từ chối</span>
-            {% else %}
-              <span class="badge bg-light text-dark">{{ app.status }}</span>
-            {% endif %}
-          </p>
-
-          {% if app.feedback %}
-            <p class="small text-muted">
-              <i class="fa-solid fa-comment-dots"></i> Phản hồi: {{ app.feedback }}
-            </p>
-          {% endif %}
-        </div>
-      {% endfor %}
+              <!-- Chat với nhà tuyển dụng -->
+              <a href="{{ url_for('messages.chat_with_user', user_id=application.job.employer.user.id) }}"
+   class="btn btn-sm btn-outline-success">
+   Chat với {{ application.job.employer.company_name }}
+</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   {% else %}
-    <div class="alert alert-info">
-      Bạn chưa ứng tuyển công việc nào.
-    </div>
+    <div class="alert alert-info">Bạn chưa ứng tuyển công việc nào.</div>
   {% endif %}
 </div>
 {% endblock %}

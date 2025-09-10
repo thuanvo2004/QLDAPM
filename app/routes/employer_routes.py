@@ -87,15 +87,18 @@ def delete_job(job_id):
 
 
 def _save_logo_file(file_storage, employer_id):
-    """Lưu file logo (nếu có) vào static/uploads/employers/<employer_id>/ và trả về đường dẫn relative."""
-    filename = secure_filename(file_storage.filename)
+    """Lưu file logo vào static/uploads/employers/<employer_id>/"""
+    filename = f"{int(time.time())}_{secure_filename(file_storage.filename)}"
     upload_folder = os.path.join(current_app.root_path, "static", "uploads", "employers", str(employer_id))
     os.makedirs(upload_folder, exist_ok=True)
     filepath = os.path.join(upload_folder, filename)
     file_storage.save(filepath)
-    # Trả lại đường dẫn để lưu vào DB (relative với static): ví dụ: /static/uploads/employers/1/logo.png
     return f"/static/uploads/employers/{employer_id}/{filename}"
 
+
+# ----------------------
+# Xem profile
+# ----------------------
 @employer_bp.route("/profile")
 @login_required
 def profile():
@@ -105,12 +108,15 @@ def profile():
 
     employer = current_user.employer_profile
     if not employer:
-        # nếu user có role employer nhưng chưa tạo profile, redirect sang edit để tạo
-        flash("Bạn chưa có hồ sơ công ty. Vui lòng hoàn thiện.", "warning")
+        flash("Bạn chưa có hồ sơ công ty. Vui lòng tạo hồ sơ.", "warning")
         return redirect(url_for("employer.edit_profile"))
 
     return render_template("employer/profile.html", employer=employer)
 
+
+# ----------------------
+# Chỉnh sửa profile
+# ----------------------
 @employer_bp.route("/profile/edit", methods=["GET", "POST"])
 @login_required
 def edit_profile():
@@ -119,16 +125,16 @@ def edit_profile():
         return redirect(url_for("main.index"))
 
     employer = current_user.employer_profile
-    # nếu chưa có hồ sơ thì tạo mới (liên kết user_id)
     if not employer:
+        # tạo mới profile nếu chưa có
         employer = Employer(user_id=current_user.id, company_name="")
         db.session.add(employer)
-        db.session.commit()  # commit để có employer.id cho lưu logo
+        db.session.commit()  # để có employer.id cho lưu logo
 
     form = EmployerProfileForm(obj=employer)
 
     if form.validate_on_submit():
-        # cập nhật fields
+        # cập nhật thông tin
         employer.company_name = form.company_name.data
         employer.phone = form.phone.data
         employer.industry = form.industry.data
@@ -155,3 +161,26 @@ def edit_profile():
         return redirect(url_for("employer.profile"))
 
     return render_template("employer/edit_profile.html", form=form, employer=employer)
+
+@employer_bp.route("/application/<int:app_id>/<action>")
+@login_required
+def change_application_status(app_id, action):
+    application = Application.query.get_or_404(app_id)
+    job = application.job
+
+    if current_user.role != "employer" or job.employer_id != current_user.employer_profile.id:
+        flash("Không có quyền thực hiện hành động này.", "danger")
+        return redirect(url_for("employer.dashboard"))
+
+    if action == "accept":
+        application.status = "accepted"
+        flash("Đã duyệt ứng viên.", "success")
+    elif action == "reject":
+        application.status = "rejected"
+        flash("Đã từ chối ứng viên.", "warning")
+    else:
+        flash("Hành động không hợp lệ.", "danger")
+        return redirect(url_for("employer.view_applicants", job_id=job.id))
+
+    db.session.commit()
+    return redirect(url_for("employer.view_applicants", job_id=job.id))
