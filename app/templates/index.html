@@ -10,43 +10,52 @@
       <p>Tìm kiếm theo vị trí, mức lương và địa điểm. Hàng ngàn cơ hội từ nhà tuyển dụng uy tín.</p>
 
       <form id="main-search" class="search-bar" action="{{ url_for('main.index') }}" method="get" role="search">
-        <input type="text" name="keyword" placeholder="Vị trí, kỹ năng hoặc công ty" value="{{ search['keyword'] if search and 'keyword' in search else '' }}">
+        <div class="search-top">
+          <input type="text" class="keyword-input" name="keyword" placeholder="Vị trí, kỹ năng hoặc công ty" value="{{ search['keyword'] if search and 'keyword' in search else '' }}">
 
-<!--        Location select-->
-        <div class="location-select">
-          <input type="text" id="location-input" name="location" placeholder="Nhập Tỉnh/Thành phố" readonly value="{{ search.location }}">
-          <div class="location-dropdown" id="location-dropdown">
-            <div class="location-left">
-              <ul id="province-list"></ul>
-            </div>
-            <div class="location-right">
-              <p class="placeholder">Vui lòng chọn Tỉnh/Thành phố</p>
-              <ul id="district-list"></ul>
+          <!-- Location select -->
+          <div class="location-select">
+            <div id="location-input" class="location-input" tabindex="0" role="button" aria-haspopup="false"></div>
+            <input type="hidden" id="location-hidden" name="city" placeholder="Nhập Tỉnh/Thành phố" readonly value="{{ search.city if search and 'city' in search else '' }}">
+            <input type="hidden" id="location-hidden-quick" name="location_quick" value="">
+
+            <div class="location-dropdown" id="location-dropdown">
+              <div class="location">
+                <ul id="province-list"></ul>
+              </div>
             </div>
           </div>
         </div>
-        <input type="text" name="min_salary" id="min_salary" placeholder="Mức lương từ (VND)" value="{{ search.min_salary }}">
-        <input type="text" name="max_salary" id="max_salary" placeholder="Đến (VND)" value="{{ search.max_salary }}">
 
-        <select name="job_type">
-          <option value="">Loại công việc</option>
-          <option value="Full-time" {% if search.job_type =='Full-time' %}selected{% endif %}>Full-time</option>
-          <option value="Part-time" {% if search.job_type =='Part-time' %}selected{% endif %}>Part-time</option>
-          <option value="Contract" {% if search.job_type =='Contract' %}selected{% endif %}>Contract</option>
-          <option value="Intern" {% if search.job_type =='Intern' %}selected{% endif %}>Intern</option>
-        </select>
+        <div class="search-bottom">
+          <input type="text" name="salary_min" placeholder="Mức lương từ (VND)" value="{{ search.min_salary if search.min_salary else '' }}">
 
-        <select name="sort_by">
-          <option value="">Sắp xếp</option>
-          <option value="newest" {% if search.sort_by =='newest' %}selected{% endif %}>Mới nhất</option>
-          <option value="salary_desc" {% if search.sort_by =='salary_desc' %}selected{% endif %}>Lương cao nhất</option>
-          <option value="salary_asc" {% if search.sort_by =='salary_asc' %}selected{% endif %}>Lương thấp nhất</option>
-        </select>
+          <input type="text" name="salary_max" placeholder="Đến (VND)" value="{{ search.max_salary if search.max_salary else '' }}">
 
-        <button type="submit" class="btn search-btn">
-          <i class="fa-sharp fa-solid fa-magnifying-glass"></i>
-          Tìm kiếm
-        </button>
+          <select name="job_type" id="job_type_select">
+            <option value="">Loại công việc</option>
+            <option value="Full-time" {% if search.job_type == 'Full-time' %}selected{% endif %}>Full-time</option>
+            <option value="Part-time" {% if search.job_type == 'Part-time' %}selected{% endif %}>Part-time</option>
+            <option value="Contract" {% if search.job_type == 'Contract' %}selected{% endif %}>Contract</option>
+            <option value="Intern" {% if search.job_type == 'Intern' %}selected{% endif %}>Intern</option>
+          </select>
+
+          <select name="sort_by">
+            <option value="">Sắp xếp</option>
+            <option value="newest" {% if search.sort_by == 'newest' %}selected{% endif %}>Mới nhất</option>
+            <option value="salary_desc" {% if search.sort_by == 'salary_desc' %}selected{% endif %}>Lương cao nhất</option>
+            <option value="salary_asc" {% if search.sort_by == 'salary_asc' %}selected{% endif %}>Lương thấp nhất</option>
+          </select>
+
+          <button type="submit" class="search-btn">
+            <i class="fa-sharp fa-solid fa-magnifying-glass"></i>
+            Tìm kiếm
+          </button>
+        </div>
+
+        <!-- Hidden inputs for filters -->
+        <input type="hidden" id="job-type-hidden" name="job_type" value="{{ search.job_type if search.job_type else '' }}">
+        <input type="hidden" id="work-type-hidden" name="work_type" value="{{ search.work_types | join(',') if search and 'work_types' in search else '' }}">
       </form>
     </div>
   </div>
@@ -60,21 +69,20 @@
       <h3 class="filter-title">Bộ lọc</h3>
       <div class="filter-group">
         <h4 class="filter-subtitle">Loại công việc</h4>
-        <ul class="filter-list">
-          <li><label><input type="checkbox" name="job_type" value="All"> All</label></li>
-          <li><label><input type="checkbox" name="job_type" value="Full-Time"> Full-Time</label></li>
-          <li><label><input type="checkbox" name="job_type" value="Part-Time"> Part-Time</label></li>
-          <li><label><input type="checkbox" name="job_type" value="Remote"> Remote</label></li>
-          <li><label><input type="checkbox" name="job_type" value="Internship"> Internship</label></li>
-          <li><label><input type="checkbox" name="job_type" value="Contract"> Contract</label></li>
+        <ul class="filter-list" id="job-type-filter">
+          <li><label><input type="radio" name="job_type" value="" {% if not search.job_type or search.job_type == '' %}checked{% endif %}> All</label></li>
+          <li><label><input type="radio" name="job_type" value="Full-time" {% if search.job_type == 'Full-time' %}checked{% endif %}> Full-time</label></li>
+          <li><label><input type="radio" name="job_type" value="Part-time" {% if search.job_type == 'Part-time' %}checked{% endif %}> Part-time</label></li>
+          <li><label><input type="radio" name="job_type" value="Contract" {% if search.job_type == 'Contract' %}checked{% endif %}> Contract</label></li>
+          <li><label><input type="radio" name="job_type" value="Intern" {% if search.job_type == 'Intern' %}checked{% endif %}> Intern</label></li>
         </ul>
       </div>
       <div class="filter-group">
         <h4 class="filter-subtitle">Hình thức làm việc</h4>
-        <ul class="filter-list">
-          <li><label><input type="checkbox" name="work_type" value="On-Site"> On-Site</label></li>
-          <li><label><input type="checkbox" name="work_type" value="Remote"> Remote</label></li>
-          <li><label><input type="checkbox" name="work_type" value="Hybrid"> Hybrid</label></li>
+        <ul class="filter-list" id="work-type-filter">
+          <li><label><input type="checkbox" name="work_type" value="On-Site" {% if 'On-Site' in search.work_types %}checked{% endif %}> On-Site</label></li>
+          <li><label><input type="checkbox" name="work_type" value="Remote" {% if 'Remote' in search.work_types %}checked{% endif %}> Remote</label></li>
+          <li><label><input type="checkbox" name="work_type" value="Hybrid" {% if 'Hybrid' in search.work_types %}checked{% endif %}> Hybrid</label></li>
         </ul>
       </div>
     </aside>
@@ -86,14 +94,27 @@
           <article class="job-card">
             <div class="job-header">
               <div class="company-logo">🏢</div>
-              <button class="save-btn">
-                <i class="fa-regular fa-bookmark regular-icon"></i>
-                <i class="fa-solid fa-bookmark solid-icon"></i>
-              </button>
+              {% if current_user.is_authenticated and current_user.role == "candidate" %}
+                <form action="{{ url_for('candidate.save_job', job_id=job.id) }}" method="POST" style="display:inline;">
+                  <button type="submit" class="save-btn {% if job in current_user.candidate_profile.saved_jobs|map(attribute='job') %}saved{% endif %}" data-job-id="{{ job.id }}">
+                    <i class="fa-regular fa-bookmark regular-icon"></i>
+                    <i class="fa-solid fa-bookmark solid-icon"></i>
+                  </button>
+                </form>
+              {% else %}
+                <button type="button" class="save-btn unauthenticated" data-job-id="{{ job.id }}" data-login-url="{{ url_for('auth.login') }}">
+                  <i class="fa-regular fa-bookmark regular-icon"></i>
+                  <i class="fa-solid fa-bookmark solid-icon"></i>
+                </button>
+              {% endif %}
             </div>
             <h3 class="job-title">
               <a href="{{ url_for('job.job_detail', job_id=job.id) }}">{{ job.title }}</a>
             </h3>
+            <div class="job-company-location">
+              <p class="company-name"><i class="fa-solid fa-building"></i> {{ job.employer.company_name or 'Công ty ẩn danh' }}</p>
+              <p class="job-location"><i class="fa-solid fa-location-dot"></i> {{ job.city or 'Địa điểm ẩn danh' }}</p>
+            </div>
             <p class="job-description">{{ job.description | truncate(100, true) }}</p>
             <div class="job-tags">
               <span class="tag">{{ job.job_type or '-' }}</span>
