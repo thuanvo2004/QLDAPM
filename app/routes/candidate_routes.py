@@ -21,15 +21,15 @@ def apply_job(job_id):
     if current_user.role != "candidate":
         flash("Chỉ ứng viên mới nộp hồ sơ", "danger")
         return redirect(url_for("job.list_jobs"))
-    existing = applications.query.filter_by(candidate_id=current_user.candidate_profile.id, job_id=job.id).first()
+    existing = Application.query.filter_by(candidate_id=current_user.candidate_profile.id, job_id=job.id).first()
     if existing:
         flash("Bạn đã nộp hồ sơ trước đó", "warning")
         return redirect(url_for("job.job_detail", job_id=job.id))
-    application = applications(candidate_id=current_user.candidate_profile.id, job_id=job.id)
+    application = Application(candidate_id=current_user.candidate_profile.id, job_id=job.id)
     db.session.add(application)
     db.session.commit()
     flash("Ứng tuyển thành công", "success")
-    return redirect(url_for("candidate.profile"))
+    return redirect(url_for("candidate.applications"))
 
 @candidate_bp.route("/saved_jobs")
 @login_required

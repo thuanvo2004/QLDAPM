@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField, TextAreaField, IntegerField, DateField, TimeField, DateTimeField
@@ -8,6 +9,20 @@ from flask_wtf.file import FileField, FileAllowed
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, EmailField
 from wtforms.validators import DataRequired, Email, Length, EqualTo
+
+def strip_to_int(value):
+    if value is None:
+        return None
+    s = str(value).strip()
+    if s == '':
+        return None
+    digits = re.sub(r'[^\d]', '', s)
+    if digits == '':
+        return None
+    try:
+        return int(digits)
+    except ValueError:
+        return None
 
 # Load provinces from JSON file
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -68,8 +83,8 @@ class JobForm(FlaskForm):
         ("Onsite","Onsite"), ("Remote","Remote"), ("Hybrid","Hybrid")
     ], validators=[Optional()])
 
-    salary_min = IntegerField("Lương tối thiểu", validators=[Optional()])
-    salary_max = IntegerField("Lương tối đa", validators=[Optional()])
+    salary_min = IntegerField("Lương tối thiểu", validators=[Optional()], filters=[strip_to_int])
+    salary_max = IntegerField("Lương tối đa", validators=[Optional()], filters=[strip_to_int])
     currency = StringField("Đơn vị", default="VND", validators=[Optional()])
 
     city = StringField("Thành phố", validators=[Optional()])
@@ -84,6 +99,21 @@ class JobForm(FlaskForm):
     interview_date = DateField("Ngày phỏng vấn", format="%Y-%m-%d", validators=[Optional()])
 
     submit = SubmitField("Đăng tin")
+
+    def validate(self, extra_validators=None):
+        # Chạy validate mặc định trước
+        rv = super().validate(extra_validators=extra_validators)
+        if not rv:
+            return False
+
+        a = self.salary_min.data
+        b = self.salary_max.data
+        if a is not None and b is not None:
+            if a > b:
+                self.salary_min.errors.append('Lương tối thiểu không được lớn hơn lương tối đa')
+                self.salary_max.errors.append('Lương tối đa phải lớn hơn hoặc bằng lương tối thiểu')
+                return False
+        return True
 
 class EmployerRegisterForm(FlaskForm):
         email = StringField("Email", validators=[DataRequired(), Email()])

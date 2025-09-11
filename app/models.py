@@ -13,6 +13,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False)  # "candidate" | "employer" | "admin"
+    isPremiumActive = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Liên kết One-to-One với Candidate/Employer
@@ -245,6 +246,35 @@ class Message(db.Model):
 
     def __repr__(self):
         return f"<Message {self.sender_id} → {self.receiver_id}>"
+
+
+# ======================================================
+# Bảng Payment (thanh toán)
+# ======================================================
+class Payment(db.Model):
+    __tablename__ = "payments"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    gateway = db.Column(db.String(100), nullable=False)
+    transaction_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    account_number = db.Column(db.String(100), nullable=True)
+    sub_account = db.Column(db.String(250), nullable=True)
+    amount_in = db.Column(db.Numeric(20, 2), nullable=False, default=0.00)
+    amount_out = db.Column(db.Numeric(20, 2), nullable=False, default=0.00)
+    accumulated = db.Column(db.Numeric(20, 2), nullable=False, default=0.00)
+    code = db.Column(db.String(250), nullable=True)
+    transaction_content = db.Column(db.Text, nullable=True)
+    reference_number = db.Column(db.String(255), nullable=True)
+    body = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    # Foreign key to link payment with user (employer)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    user = db.relationship("User", backref="payments")
+
+    def __repr__(self):
+        return f"<Payment {self.id} - {self.gateway} - {self.amount_in}>"
+
 # bảng Skills
 class Skill(db.Model):
     __tablename__ = "skills"
