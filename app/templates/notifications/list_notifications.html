@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Thông báo - JobNest{% endblock %}
+
+{% block content %}
+<h3 class="mb-4">Thông báo của bạn</h3>
+<ul class="list-group">
+  {% for noti in notifications %}
+  <li class="list-group-item d-flex justify-content-between align-items-center {% if not noti.is_read %}list-group-item-warning{% endif %}">
+    {{ noti.message }}
+    <span class="text-muted">{{ noti.created_at.strftime('%d-%m-%Y %H:%M') }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

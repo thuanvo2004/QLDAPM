@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Quản lý tin tuyển dụng{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Tin tuyển dụng của bạn</h2>
+    <a href="{{ url_for('job.post_job') }}" class="btn btn-success mb-3">+ Đăng tin mới</a>
+    <ul class="list-group">
+        {% for job in jobs %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('job.job_detail', job_id=job.id) }}">{{ job.title }}</a>
+                <span class="badge bg-secondary">{{ job.created_at.strftime('%d/%m/%Y') }}</span>
+            </li>
+        {% else %}
+            <li class="list-group-item">Chưa có tin tuyển dụng nào</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

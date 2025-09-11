@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Chỉnh sửa hồ sơ - JobNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h4 class="card-title mb-4">Chỉnh sửa hồ sơ</h4>
+          
+          <!-- Form -->
+          <form method="POST" action="{{ url_for('candidate.edit_profile') }}" enctype="multipart/form-data">
+
+            <!-- Avatar -->
+            <div class="mb-3 text-center">
+              {% if candidate.avatar %}
+                <img src="{{ url_for('static', filename='uploads/' + candidate.avatar) }}"
+                     class="img-fluid rounded-circle mb-3"
+                     alt="Avatar"
+                     style="width: 120px; height: 120px; object-fit: cover;">
+              {% else %}
+                <img src="{{ url_for('static', filename='default-avatar.png') }}"
+                     class="img-fluid rounded-circle mb-3"
+                     alt="Default Avatar"
+                     style="width: 120px; height: 120px; object-fit: cover;">
+              {% endif %}
+              <input type="file" class="form-control mt-2" name="avatar">
+            </div>
+
+            <!-- Name -->
+            <div class="mb-3">
+              <label class="form-label">Họ tên</label>
+              <input type="text" class="form-control" name="name" value="{{ candidate.name }}">
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" name="email" value="{{ candidate.email }}" readonly>
+            </div>
+
+            <!-- Phone -->
+            <div class="mb-3">
+              <label class="form-label">Số điện thoại</label>
+              <input type="text" class="form-control" name="phone" value="{{ candidate.phone or '' }}">
+            </div>
+
+            <!-- Address -->
+            <div class="mb-3">
+              <label class="form-label">Địa chỉ</label>
+              <input type="text" class="form-control" name="address" value="{{ candidate.address or '' }}">
+            </div>
+
+            <!-- Skills -->
+            <div class="mb-3">
+              <label class="form-label">Kỹ năng</label>
+              <textarea class="form-control" name="skills" rows="2">{{ candidate.skills or '' }}</textarea>
+            </div>
+
+            <!-- Experience -->
+            <div class="mb-3">
+              <label class="form-label">Kinh nghiệm</label>
+              <textarea class="form-control" name="experience" rows="2">{{ candidate.experience or '' }}</textarea>
+            </div>
+
+            <!-- Bio -->
+            <div class="mb-3">
+              <label class="form-label">Giới thiệu bản thân</label>
+              <textarea class="form-control" name="bio" rows="3">{{ candidate.bio or '' }}</textarea>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex justify-content-between">
+              <a href="{{ url_for('candidate.profile') }}" class="btn btn-secondary">Quay lại</a>
+              <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

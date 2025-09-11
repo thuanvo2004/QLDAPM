@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Công việc đã ứng tuyển{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="mb-4">Danh sách công việc đã ứng tuyển</h2>
+
+  {% if applications %}
+    <div class="list-group">
+      {% for app in applications %}
+        <div class="list-group-item list-group-item-action mb-3 shadow-sm">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">
+              <a href="{{ url_for('job_detail', id=app.job.id) }}">
+                {{ app.job.title }}
+              </a>
+            </h5>
+            <small class="text-muted">
+              Nộp ngày {{ app.applied_at.strftime('%d/%m/%Y') }}
+            </small>
+          </div>
+
+          <p class="mb-1 text-muted">
+            <i class="fa-solid fa-building"></i> {{ app.job.employer.company_name }}
+            · <i class="fa-solid fa-location-dot"></i> {{ app.job.city or '-' }}
+          </p>
+
+          <p class="mb-1">
+            <strong>Trạng thái:</strong>
+            {% if app.status == "pending" %}
+              <span class="badge bg-secondary">Chờ duyệt</span>
+            {% elif app.status == "reviewed" %}
+              <span class="badge bg-info text-dark">Đang xem xét</span>
+            {% elif app.status == "accepted" %}
+              <span class="badge bg-success">Được chấp nhận</span>
+            {% elif app.status == "rejected" %}
+              <span class="badge bg-danger">Bị từ chối</span>
+            {% else %}
+              <span class="badge bg-light text-dark">{{ app.status }}</span>
+            {% endif %}
+          </p>
+
+          {% if app.feedback %}
+            <p class="small text-muted">
+              <i class="fa-solid fa-comment-dots"></i> Phản hồi: {{ app.feedback }}
+            </p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">
+      Bạn chưa ứng tuyển công việc nào.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

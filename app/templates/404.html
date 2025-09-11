@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Không tìm thấy trang{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h1 class="display-4 text-danger">404</h1>
+    <p class="lead">Xin lỗi, trang bạn yêu cầu không tồn tại.</p>
+    <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+        Quay về Trang chủ
+    </a>
+</div>
+{% endblock %}
