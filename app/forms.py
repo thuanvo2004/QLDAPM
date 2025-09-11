@@ -1,3 +1,6 @@
+import json
+import os
+
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField, TextAreaField, IntegerField, DateField, TimeField, DateTimeField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional,URL,NumberRange
@@ -5,6 +8,28 @@ from flask_wtf.file import FileField, FileAllowed
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, EmailField
 from wtforms.validators import DataRequired, Email, Length, EqualTo
+
+# Load provinces from JSON file
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(BASE_DIR,'static', 'data', 'provinces.json')
+try:
+    with open(json_path, 'r', encoding='utf-8') as f:
+        provinces_data = json.load(f)
+        if not isinstance(provinces_data, dict) or 'provinces' not in provinces_data:
+            raise ValueError("provinces.json must contain a 'provinces' key with a list of province names")
+        PROVINCE_CHOICES = [(province, province) for province in provinces_data['provinces']]
+except FileNotFoundError:
+    PROVINCE_CHOICES = [("Unknown", "Unknown")]  # Fallback
+except json.JSONDecodeError as e:
+    print(f"Error decoding JSON: {e}")
+    PROVINCE_CHOICES = [("Unknown", "Unknown")]  # Fallback
+except KeyError:
+    print("Error: 'provinces' key not found in JSON")
+    PROVINCE_CHOICES = [("Unknown", "Unknown")]  # Fallback
+except ValueError as e:
+    print(f"Error: {e}")
+    PROVINCE_CHOICES = [("Unknown", "Unknown")]  # Fallback
+
 
 
 # Form đăng nhập
@@ -65,8 +90,18 @@ class EmployerRegisterForm(FlaskForm):
         password = PasswordField("Mật khẩu", validators=[DataRequired(), Length(min=6)])
         confirm_password = PasswordField("Xác nhận mật khẩu", validators=[DataRequired(), EqualTo("password")])
         company_name = StringField("Tên công ty", validators=[DataRequired()])
+        phone = StringField("Số điện thoại", validators=[DataRequired()])
         address = StringField("Địa chỉ công ty", validators=[DataRequired()])
+        industry = StringField("Ngành nghề", validators=[DataRequired()])
+        company_size = StringField("Quy mô công ty", validators=[Optional()])
+        website = StringField("Website công ty", validators=[Optional(), URL()])
+        city = SelectField("Thành phố", choices=PROVINCE_CHOICES, validators=[DataRequired()])
+        founded_year = IntegerField("Năm thành lập", validators=[Optional()])
+        tax_code = StringField("Mã số thuế", validators=[Optional()])
         description = TextAreaField("Mô tả công ty")
+
+
+
         submit = SubmitField("Đăng ký Nhà tuyển dụng")
 
 class EmployerProfileForm(FlaskForm):

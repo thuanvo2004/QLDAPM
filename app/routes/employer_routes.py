@@ -1,9 +1,14 @@
-from flask import Blueprint, render_template, redirect, url_for, flash,current_app
+import os
+
+from flask import Blueprint, render_template, redirect, url_for, flash, current_app, request
 from flask_login import login_required, current_user
-from app.models import Job, Application
+from sqlalchemy import func, case, or_, and_
+from werkzeug.utils import secure_filename
+
+from app.models import Job, Application, Employer
 from app.extensions import db
 from app.forms import JobForm,EmployerProfileForm
-from datetime import datetime
+from datetime import datetime, date, time
 
 employer_bp = Blueprint("employer", __name__, url_prefix="/employer")
 
@@ -13,6 +18,89 @@ def dashboard():
     if current_user.role != "employer":
         flash("Chỉ nhà tuyển dụng mới xem dashboard", "danger")
         return redirect(url_for("job.list_jobs"))
+
+    employer = current_user.employer_profile
+    if not employer:
+        return "No employer profile", 404
+
+    q = request.args.get('q', '').strip()
+    status_filter = request.args.get('status', '').strip()
+    page = int(request.args.get('page', 1))
+    per_page = 9
+
+    base = Job.query.filter(Job.employer_id == employer.id)
+
+    if q:
+        like = f"%{q}%"
+        base = base.filter(or_(Job.title.ilike(like),
+                               Job.description.ilike(like),
+                               Job.city.ilike(like)))
+
+    now = date.today()
+    if status_filter == 'active':
+        base = base.filter(
+            or_(
+                Job.deadline == None,
+                Job.deadline >= now
+            )
+        )
+    elif status_filter == 'expired':
+        base = base.filter(
+            and_(
+                Job.deadline != None,
+                Job.deadline < now
+            )
+        )
+
+    # Subquery to count applications and pending applications
+    subq = db.session.query(
+        Application.job_id.label('job_id'),
+        func.count(Application.id).label('cnt'),
+        func.sum(case((Application.status == 'pending', 1), else_=0)).label('pending_cnt')
+    ).group_by(Application.job_id).subquery()
+
+    jobs_query = base.outerjoin(subq, Job.id == subq.c.job_id) \
+        .with_entities(Job, subq.c.cnt, subq.c.pending_cnt) \
+        .order_by(Job.created_at.desc())
+
+    pagination = jobs_query.paginate(page=page, per_page=per_page, error_out=False)
+
+    # Convert rows to job objects with attributes
+    items = []
+    for row in pagination.items:
+        job = row[0]
+        cnt = row[1] or 0  # Total applicants
+        pending_cnt = row[2] or 0  # Pending applicants
+        job.applicants_count = cnt
+        job.pending_applicants = pending_cnt
+        job.is_active = (job.deadline is None) or (job.deadline >= now)
+        items.append(job)
+
+    pagination.items = items
+
+    # Stats
+    total_jobs = Job.query.filter(Job.employer_id == employer.id).count()
+    active_jobs = Job.query.filter(
+        Job.employer_id == employer.id,
+        or_(Job.deadline == None, Job.deadline >= now)
+    ).count()
+    pending_applicants = db.session.query(func.count(Application.id)).join(Job, Application.job_id == Job.id).filter(
+        Job.employer_id == employer.id,
+        Application.status == 'pending'
+    ).scalar() or 0
+
+    # Debugging output (remove in production)
+    print(f"Total Jobs: {total_jobs}")
+    print(f"Active Jobs: {active_jobs}")
+    print(f"Pending Applicants: {pending_applicants}")
+
+    return render_template('employer/dashboard.html',
+                           jobs=pagination,
+                           total_jobs=total_jobs,
+                           is_active=active_jobs,  # Renamed to match template
+                           pending_applicants=pending_applicants,
+                           now=now)
+
     jobs = current_user.employer_profile.jobs
     return render_template("employer/dashboard.html", jobs=jobs)
 

@@ -86,7 +86,7 @@
                 Xem chi tiết
               </a>
               <a href="{{ url_for('messages.chat_with_user', user_id=job.employer.user.id) }}"
-                 class="flex-1 inline-block text-center px-3 py-2 text-sm text-green-600 border border-green-600 rounded-lg hover:bg-green-600 hover:text-white transition font-semibold">
+                 class="flex-1 inline-block text-center px-3 py-2 text-sm text-[var(--primary-blue)] border border-[var(--primary-blue)] rounded-lg hover:bg-[var(--primary-blue)] hover:text-white transition font-semibold">
                 Chat
               </a>
             </div>
@@ -104,7 +104,7 @@
       </div>
       <h5 class="text-gray-600 font-medium">Bạn chưa ứng tuyển công việc nào.</h5>
       <a href="{{ url_for('job.list_jobs') }}"
-         class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+         class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-[var(--primary-blue)] text-white rounded-lg hover:bg-[var(--primary-blue-hover)] transition">
         <i class="fa-solid fa-magnifying-glass"></i> Khám phá việc làm
       </a>
     </div>
