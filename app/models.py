@@ -254,6 +254,7 @@ class Message(db.Model):
 
     sender = db.relationship("User", foreign_keys=[sender_id], backref="sent_messages")
     receiver = db.relationship("User", foreign_keys=[receiver_id], backref="received_messages")
+    conversation = db.relationship("Conversation", back_populates="messages")
 
     def __repr__(self):
         return f"<Message {self.sender_id} → {self.receiver_id}>"
@@ -310,3 +311,22 @@ candidate_language = db.Table(
     db.Column("candidate_id", db.Integer, db.ForeignKey("candidates.id"), primary_key=True),
     db.Column("language_id", db.Integer, db.ForeignKey("languages.id"), primary_key=True)
 )
+
+
+# ======================================================
+# Bảng Conversation (hội thoại giữa 2 user)
+# ======================================================
+class Conversation(db.Model):
+    __tablename__ = "conversations"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user1_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user2_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user1 = db.relationship("User", foreign_keys=[user1_id])
+    user2 = db.relationship("User", foreign_keys=[user2_id])
+    messages = db.relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<Conversation {self.user1_id} ↔ {self.user2_id}>"
