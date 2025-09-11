@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Tin nhắn{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+    <!-- Sidebar: danh sách hội thoại -->
+    <div class="col-md-4 border-end" style="height: 600px; overflow-y: auto;">
+      <h5 class="mb-3">💬 Hội thoại</h5>
+      <ul class="list-group" id="conversation-list">
+        {% for convo in conversations %}
+          {% set other_user = convo.user1_id == current_user.id and convo.user2 or convo.user1 %}
+          <li class="list-group-item list-group-item-action convo-item"
+              data-user-id="{{ other_user.id }}">
+            <div class="d-flex justify-content-between">
+              <strong>{{ other_user.username }}</strong>
+              {% if convo.messages %}
+                <small class="text-muted">
+                  {{ convo.messages[-1].created_at.strftime("%H:%M") }}
+                </small>
+              {% endif %}
+            </div>
+            <div class="text-muted" style="font-size: 0.9em;">
+              {% if convo.messages %}
+                {{ convo.messages[-1].content[:40] ~ ("..." if convo.messages[-1].content|length > 40 else "") }}
+              {% else %}
+                (Chưa có tin nhắn)
+              {% endif %}
+            </div>
+          </li>
+        {% else %}
+          <li class="list-group-item">Bạn chưa có hội thoại nào.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Main chat window -->
+    <div class="col-md-8 d-flex flex-column" style="height: 600px;">
+      <div class="border-bottom p-2">
+        <h5 id="chat-header">Chọn một hội thoại</h5>
+      </div>
+
+      <!-- khung tin nhắn -->
+      <div id="chat-box"
+           class="flex-grow-1 border rounded p-3 mb-2"
+           style="overflow-y: auto; background: #f8f9fa;">
+        <!-- Tin nhắn load qua AJAX -->
+      </div>
+
+      <!-- form gửi -->
+      <form id="chat-form" class="input-group" style="display: none;">
+        <input type="text" id="chat-input" name="content"
+               class="form-control" placeholder="Nhập tin nhắn..." required>
+        <button type="submit" class="btn btn-primary">Gửi</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+const chatBox = document.getElementById("chat-box");
+const chatForm = document.getElementById("chat-form");
+const chatInput = document.getElementById("chat-input");
+let activeUserId = null;
+
+// Bấm vào hội thoại
+document.querySelectorAll(".convo-item").forEach(item => {
+  item.addEventListener("click", () => {
+    activeUserId = item.dataset.userId;
+    document.getElementById("chat-header").innerText = "Chat với " + item.querySelector("strong").innerText;
+    chatForm.style.display = "flex";
+    loadMessages();
+  });
+});
+
+// Hàm load tin nhắn
+function loadMessages() {
+  if (!activeUserId) return;
+  fetch(`/messages/get/${activeUserId}`)
+    .then(res => res.json())
+    .then(data => {
+      chatBox.innerHTML = "";
+      data.messages.forEach(msg => {
+        const div = document.createElement("div");
+        div.className = "mb-2 " + (msg.sender_id == {{ current_user.id }} ? "text-end" : "");
+        div.innerHTML = `
+          <small class="text-muted">
+            ${msg.sender_id == {{ current_user.id }} ? "Bạn" : msg.sender}
+            (${msg.created_at})
+          </small><br>
+          <span class="p-2 rounded ${msg.sender_id == {{ current_user.id }} ? "bg-primary text-white" : "bg-light"}">
+            ${msg.content}
+          </span>
+        `;
+        chatBox.appendChild(div);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+}
+
+// Auto refresh
+setInterval(loadMessages, 2000);
+
+// Gửi tin nhắn
+chatForm.addEventListener("submit", function(e) {
+  e.preventDefault();
+  if (!activeUserId) return;
+  fetch(`/messages/send/${activeUserId}`, {
+    method: "POST",
+    body: new FormData(chatForm)
+  }).then(() => {
+    chatInput.value = "";
+    loadMessages();
+  });
+});
+</script>
+{% endblock %}

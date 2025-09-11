@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Danh sách hội thoại</h2>
+    <ul class="list-group">
+        {% for convo in conversations %}
+        <a href="{{ url_for('messages.chat_with_user',
+                            user_id=(convo.user2.id if convo.user1_id == current_user.id else convo.user1.id)) }}"
+           class="list-group-item list-group-item-action">
+            <div class="d-flex justify-content-between">
+                <strong>
+                    {% if convo.user1_id == current_user.id %}
+                        {{ convo.user2.username }}
+                    {% else %}
+                        {{ convo.user1.username }}
+                    {% endif %}
+                </strong>
+                <small>
+                    {% if convo.last_message %}
+                        {{ convo.last_message.created_at.strftime("%H:%M %d/%m") }}
+                    {% endif %}
+                </small>
+            </div>
+            <div>
+                {% if convo.last_message %}
+                    {{ convo.last_message.content[:30] ~ ("..." if convo.last_message.content|length > 30 else "") }}
+                {% else %}
+                    <em>Chưa có tin nhắn</em>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
