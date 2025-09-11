@@ -16,7 +16,7 @@ def post_job():
         return redirect(url_for("job.list_jobs"))
 
     form = JobForm()
-
+    print(f"Form fields: {form._fields.keys()}")
     if form.validate_on_submit():
         try:
             job = Job(

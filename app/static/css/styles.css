@@ -1188,8 +1188,8 @@ blockquote {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #eef6ff;
-    color: #0f1724;
+    background: var(--blue-bg);
+    color: var(--primary-blue);
     padding: 4px 8px;
     border-radius: 999px;
     margin: 3px;
