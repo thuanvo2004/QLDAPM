@@ -1,7 +1,9 @@
+from datetime import datetime
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models import User, Candidate, Employer
-from app.extensions import db
+from app.models import User, Candidate, Employer, Message
+from app.extensions import db, mail
 from app.forms import RegisterForm, LoginForm, EmployerRegisterForm
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -70,6 +72,11 @@ def register_candidate():
 @auth_bp.route("/register/employer", methods=["GET", "POST"])
 def register_employer():
     form = EmployerRegisterForm()
+
+    if User.query.filter_by(email=form.email.data).first():
+        flash("Email đã được đăng ký!", "danger")
+        return render_template("auth/register_employer.html", form=form)
+
     if form.validate_on_submit():
         # 1. Tạo user với role employer
         user = User(email=form.email.data, role="employer")
@@ -81,8 +88,18 @@ def register_employer():
         employer = Employer(
             user_id=user.id,
             company_name=form.company_name.data,
+            phone=form.phone.data,
+            industry=form.industry.data,
+            company_size=form.company_size.data,
             address=form.address.data,
-            description=form.description.data
+            city=form.city.data,
+            website=form.website.data,
+            description=form.description.data,
+            founded_year=form.founded_year.data,
+            tax_code=form.tax_code.data,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+
         )
         db.session.add(employer)
         db.session.commit()

@@ -37,7 +37,7 @@
             <option value="Full-time" {% if search.job_type == 'Full-time' %}selected{% endif %}>Full-time</option>
             <option value="Part-time" {% if search.job_type == 'Part-time' %}selected{% endif %}>Part-time</option>
             <option value="Contract" {% if search.job_type == 'Contract' %}selected{% endif %}>Contract</option>
-            <option value="Intern" {% if search.job_type == 'Intern' %}selected{% endif %}>Intern</option>
+            <option value="Internship" {% if search.job_type == 'Intern' %}selected{% endif %}>Internship</option>
           </select>
 
           <select name="sort_by">
@@ -74,13 +74,13 @@
           <li><label><input type="radio" name="job_type" value="Full-time" {% if search.job_type == 'Full-time' %}checked{% endif %}> Full-time</label></li>
           <li><label><input type="radio" name="job_type" value="Part-time" {% if search.job_type == 'Part-time' %}checked{% endif %}> Part-time</label></li>
           <li><label><input type="radio" name="job_type" value="Contract" {% if search.job_type == 'Contract' %}checked{% endif %}> Contract</label></li>
-          <li><label><input type="radio" name="job_type" value="Intern" {% if search.job_type == 'Intern' %}checked{% endif %}> Intern</label></li>
+          <li><label><input type="radio" name="job_type" value="Internship" {% if search.job_type == 'Internship' %}checked{% endif %}> Intern</label></li>
         </ul>
       </div>
       <div class="filter-group">
         <h4 class="filter-subtitle">Hình thức làm việc</h4>
         <ul class="filter-list" id="work-type-filter">
-          <li><label><input type="checkbox" name="work_type" value="On-Site" {% if 'On-Site' in search.work_types %}checked{% endif %}> On-Site</label></li>
+          <li><label><input type="checkbox" name="work_type" value="Onsite" {% if 'Onsite' in search.work_types %}checked{% endif %}> Onsite</label></li>
           <li><label><input type="checkbox" name="work_type" value="Remote" {% if 'Remote' in search.work_types %}checked{% endif %}> Remote</label></li>
           <li><label><input type="checkbox" name="work_type" value="Hybrid" {% if 'Hybrid' in search.work_types %}checked{% endif %}> Hybrid</label></li>
         </ul>
