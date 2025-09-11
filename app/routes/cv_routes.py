@@ -1,14 +1,14 @@
 import os
 import uuid
 from datetime import datetime
-from flask import Blueprint, current_app, request, jsonify, send_file
+from flask import Blueprint, current_app, request, jsonify, send_file, flash, url_for
 from flask_login import login_required, current_user
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont  # Chỉ cần này cho TrueType
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.rl_config import warnOnMissingFontGlyphs  # Để tắt warning missing glyphs
-from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename, redirect
 from io import BytesIO
 from app.extensions import db
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
@@ -21,11 +21,12 @@ class CVHistory(db.Model):
     __tablename__ = 'cv_history'
     id = Column(Integer, primary_key=True)
     candidate_id = Column(Integer, ForeignKey('candidates.id'), nullable=False)
+    cv_name = Column(String(100), nullable=False)
     filename = Column(String(255), nullable=False)
     template = Column(String(50))
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    candidate = relationship('Candidate', backref='cv_history')
+    candidate = relationship('Candidate', backref=db.backref('cvs', order_by="desc(CVHistory.created_at)"))
 
 def ensure_dirs():
     uploads = os.path.join(current_app.root_path, 'static', 'uploads')
@@ -167,3 +168,47 @@ def download_latest_cv():
     except Exception:
         current_app.logger.exception('download_latest error')
         return jsonify({'message': 'Lỗi khi tải CV'}), 500
+
+@cv_bp.route('/view/<int:cv_id>')
+@login_required
+def view(cv_id):
+    cv = CVHistory.query.get_or_404(cv_id)
+    # Kiểm tra quyền: chỉ owner mới xem
+    if cv.candidate_id != current_user.candidate_profile.id:
+        flash("Không có quyền xem CV này", "danger")
+        return redirect(url_for('candidate.profile'))
+    file_path = os.path.join(current_app.root_path, 'static', 'cvs', cv.filename)
+    if not os.path.exists(file_path):
+        flash("File CV không tồn tại", "danger")
+        return redirect(url_for('candidate.profile'))
+    return send_file(file_path, as_attachment=False)  # False để mở trực tiếp trong browser
+
+@cv_bp.route('/download/<int:cv_id>')
+@login_required
+def download(cv_id):
+    cv = CVHistory.query.get_or_404(cv_id)
+    if cv.candidate_id != current_user.candidate_profile.id:
+        flash("Không có quyền tải CV này", "danger")
+        return redirect(url_for('candidate.profile'))
+    file_path = os.path.join(current_app.root_path, 'static', 'cvs', cv.filename)
+    if not os.path.exists(file_path):
+        flash("File CV không tồn tại", "danger")
+        return redirect(url_for('candidate.profile'))
+    return send_file(file_path, as_attachment=True, download_name=cv.filename)
+
+@cv_bp.route('/delete/<int:cv_id>', methods=['POST'])
+@login_required
+def delete(cv_id):
+    cv = CVHistory.query.get_or_404(cv_id)
+    if cv.candidate_id != current_user.candidate_profile.id:
+        flash("Không có quyền xóa CV này", "danger")
+        return redirect(url_for('candidate.profile'))
+    # Xóa file
+    file_path = os.path.join(current_app.root_path, 'static', 'cvs', cv.filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    # Xóa record DB
+    db.session.delete(cv)
+    db.session.commit()
+    flash("Xóa CV thành công", "success")
+    return redirect(url_for('candidate.profile'))

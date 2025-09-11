@@ -53,6 +53,7 @@ class Candidate(db.Model):
     education = db.Column(db.String(200))  # học vấn cao nhất
     major = db.Column(db.String(200))      # ngành học
     experience_years = db.Column(db.Integer, default=0)
+    experience_months = db.Column(db.Integer, default=0)
     current_position = db.Column(db.String(200))
     expected_position = db.Column(db.String(200))
     expected_salary = db.Column(db.Integer)
@@ -68,6 +69,18 @@ class Candidate(db.Model):
     applications = db.relationship("Application", back_populates="candidate")
     saved_jobs = db.relationship("SavedJob", back_populates="candidate")
     notifications = db.relationship("Notification", back_populates="candidate")
+
+    @property
+    def experience_str(self):
+        """Trả về chuỗi kinh nghiệm dạng 'X năm Y tháng'"""
+        years = self.experience_years or 0
+        months = self.experience_months or 0
+        parts = []
+        if years > 0:
+            parts.append(f"{years} năm")
+        if months > 0:
+            parts.append(f"{months} tháng")
+        return " ".join(parts) if parts else "-"
 
     def __repr__(self):
         return f"<Candidate {self.full_name}>"
@@ -208,7 +221,6 @@ job_category_association = db.Table(
     db.Column("category_id", db.Integer, db.ForeignKey("job_categories.id"), primary_key=True)
 )
 
-
 # ======================================================
 # Bảng Notification (thông báo)
 # ======================================================
@@ -245,7 +257,6 @@ class Message(db.Model):
 
     def __repr__(self):
         return f"<Message {self.sender_id} → {self.receiver_id}>"
-
 
 # ======================================================
 # Bảng Payment (thanh toán)

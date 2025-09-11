@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
+from sqlalchemy.orm import joinedload
+
 from app.extensions import db
-from app.models import Job, Application, SavedJob
+from app.models import Job, Application, SavedJob, Candidate
 from werkzeug.utils import secure_filename
 candidate_bp = Blueprint("candidate", __name__, url_prefix="/candidate")
 import os
@@ -12,7 +14,14 @@ def profile():
     if current_user.role != "candidate":
         flash("Chỉ ứng viên mới xem profile này", "danger")
         return redirect(url_for("job.list_jobs"))
-    return render_template("candidate/profile.html", candidate=current_user.candidate_profile)
+    # candidate = current_user.candidate_profile
+    candidate = (
+        Candidate.query
+        .options(joinedload(Candidate.cvs))  # dùng attribute class-bound
+        .filter_by(id=current_user.candidate_profile.id)
+        .first()
+    )
+    return render_template("candidate/profile.html", candidate=current_user.candidate_profile, users=current_user)
 
 @candidate_bp.route("/apply/<int:job_id>")
 @login_required
@@ -145,3 +154,27 @@ def check_saved(job_id):
 
     saved = SavedJob.query.filter_by(candidate_id=current_user.candidate_profile.id, job_id=job_id).first()
     return jsonify({"success": True, "is_saved": bool(saved)})
+
+@candidate_bp.route("/upload-avatar", methods=["POST"])
+@login_required
+def upload_avatar():
+    if current_user.role != "candidate":
+        return jsonify({"success": False, "message": "Chỉ ứng viên mới upload ảnh"}), 403
+
+    if "avatar" not in request.files:
+        return jsonify({"success": False, "message": "Không tìm thấy file"}), 400
+
+    file = request.files["avatar"]
+    if file.filename == "":
+        return jsonify({"success": False, "message": "Tên file trống"}), 400
+
+    filename = secure_filename(file.filename)
+    upload_path = os.path.join("app", "static", "uploads", filename)
+    file.save(upload_path)
+
+    # Lưu vào user profile
+    candidate = current_user.candidate_profile
+    candidate.avatar = filename
+    db.session.commit()
+
+    return jsonify({"success": True, "message": "Upload thành công", "filename": filename})
