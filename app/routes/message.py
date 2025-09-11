@@ -45,3 +45,25 @@ def send_message(user_id):
 
     # Redirect về lại trang chat
     return redirect(url_for("messages.chat_with_user", user_id=other_user.id))
+@messages_bp.route("/chat/<int:user_id>/messages")
+@login_required
+def get_messages(user_id):
+    other_user = User.query.get_or_404(user_id)
+
+    chat_messages = Message.query.filter(
+        ((Message.sender_id == current_user.id) & (Message.receiver_id == other_user.id)) |
+        ((Message.sender_id == other_user.id) & (Message.receiver_id == current_user.id))
+    ).order_by(Message.created_at.asc()).all()
+
+    return {
+        "messages": [
+            {
+                "id": m.id,
+                "sender_id": m.sender_id,
+                "receiver_id": m.receiver_id,
+                "content": m.content,
+                "created_at": m.created_at.strftime("%H:%M:%S %d-%m-%Y")
+            }
+            for m in chat_messages
+        ]
+    }

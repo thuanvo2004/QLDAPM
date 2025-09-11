@@ -10,8 +10,10 @@ from .routes.cv_routes import cv_bp
 from .models import User
 from .routes.main import main_bp
 from .routes.message import messages_bp
+from flask_migrate import Migrate
 
 
+migrate = Migrate()
 def create_app():
     """Tạo và cấu hình Flask app"""
     app = Flask(__name__)
@@ -24,6 +26,8 @@ def create_app():
     # Khởi tạo extensions
     db.init_app(app)
     login_manager.init_app(app)
+
+    migrate.init_app(app, db)
 
     # Cấu hình Flask-Login
     login_manager.login_view = "auth.login"
