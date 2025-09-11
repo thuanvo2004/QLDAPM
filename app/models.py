@@ -227,15 +227,26 @@ class Notification(db.Model):
     candidate = db.relationship("Candidate", back_populates="notifications")
     employer = db.relationship("Employer", back_populates="notifications")
 
-# ======================================================
-# Bảng Message (chat ứng viên ↔ nhà tuyển dụng)
-# ======================================================
+
+class Conversation(db.Model):
+    __tablename__ = "conversations"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user1_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user2_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user1 = db.relationship("User", foreign_keys=[user1_id])
+    user2 = db.relationship("User", foreign_keys=[user2_id])
+    messages = db.relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
+
 class Message(db.Model):
     __tablename__ = "messages"
 
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     receiver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    conversation_id = db.Column(db.Integer, db.ForeignKey("conversations.id"), nullable=False)  # <-- thêm
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     attachment_url = db.Column(db.String(255))
@@ -302,20 +313,4 @@ candidate_language = db.Table(
 )
 
 
-# ======================================================
-# Bảng Conversation (hội thoại giữa 2 user)
-# ======================================================
-class Conversation(db.Model):
-    __tablename__ = "conversations"
 
-    id = db.Column(db.Integer, primary_key=True)
-    user1_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    user2_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    user1 = db.relationship("User", foreign_keys=[user1_id])
-    user2 = db.relationship("User", foreign_keys=[user2_id])
-    messages = db.relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f"<Conversation {self.user1_id} ↔ {self.user2_id}>"

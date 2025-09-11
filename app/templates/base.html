@@ -34,10 +34,55 @@
           <a href="#">Doanh nghiệp</a>
         </nav>
 
+        <!-- Nút thông báo -->
+          <div class="dropdown me-3">
+            <a class="relative text-gray-700 hover:text-blue-600" href="#"
+               id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-regular fa-bell text-xl"></i>
+              {% if current_user.notifications|length > 0 %}
+              <!-- Badge số lượng thông báo -->
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+        {{ current_user.notifications|length }}
+      </span>
+              {% endif %}
+            </a>
+
+            <!-- Dropdown thông báo -->
+            <ul class="dropdown-menu dropdown-menu-end w-80 bg-white rounded-lg shadow-lg border border-gray-200"
+                aria-labelledby="notifDropdown"
+                style="max-height: 300px; overflow-y: auto;">
+
+              {% if current_user.notifications %}
+              {% for notif in current_user.notifications[:5] %}
+              <li>
+                <div class="px-3 py-2 hover:bg-gray-100 cursor-pointer">
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-800">{{ notif.message }}</span>
+                    <small class="text-xs text-gray-500">
+                      {{ notif.created_at.strftime("%H:%M %d/%m") }}
+                    </small>
+                  </div>
+                </div>
+              </li>
+              {% endfor %}
+              <li>
+                <a href="{{ url_for('notifications.index') }}"
+                   class="block text-center px-3 py-2 text-blue-600 hover:bg-gray-100 font-medium">
+                  Xem tất cả
+                </a>
+              </li>
+              {% else %}
+              <li class="text-center text-gray-500 py-3">Không có thông báo</li>
+              {% endif %}
+            </ul>
+          </div>
+
         <div class="header-actions">
           {% if current_user.is_authenticated %}
 
             {% if current_user.role == "candidate" %}
+
+
               <!-- Ứng viên -->
               <div class="dropdown">
                 <a class="border border-1 border-white p-2 rounded-lg text-sm dropdown-toggle transition hover:bg-[var(--primary-blue-hover)]" href="#" role="button" data-bs-toggle="dropdown">
@@ -68,6 +113,13 @@
                       <i class="fa-regular fa-file w-5 text-gray-500"></i> CV của tôi
                     </a>
                   </li>
+                  <li>
+                    <a href="{{ url_for('messages.index') }}"
+                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+                      <i class="fa-regular fa-comments w-5 text-gray-500"></i> Tin nhắn
+                    </a>
+                  </li>
+
                   <li><hr class="dropdown-divider border-t border-gray-200 my-2"></li>
                   <li>
                     <a href="{{ url_for('auth.logout') }}"
@@ -101,6 +153,13 @@
                     </a>
                   </li>
                   <li>
+                    <a href="{{ url_for('messages.index') }}"
+                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+                      <i class="fa-regular fa-comments w-5 text-gray-500"></i> Tin nhắn
+                    </a>
+                  </li>
+
+                  <li>
                     <a href="{{ url_for('employer.profile') }}"
                        class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
                       <i class="fa-regular fa-id-badge w-5 text-gray-500"></i> Hồ sơ công ty
@@ -131,7 +190,7 @@
                     </a>
                   </li>
                   <li><hr class="dropdown-divider border-t border-gray-200 my-2"></li>
-                  <li>
+
                     <a href="{{ url_for('auth.logout') }}"
                        class="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 transition">
                       <i class="fa-solid fa-right-from-bracket w-5 text-red-500"></i> Đăng xuất
