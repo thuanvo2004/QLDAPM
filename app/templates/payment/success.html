@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Thanh toán thành công{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    
+                    <h2 class="text-success mb-3">Thanh toán thành công!</h2>
+                    
+                    <div class="alert alert-success">
+                        <h5><i class="fas fa-crown"></i> Tài khoản Premium đã được kích hoạt</h5>
+                        <p class="mb-0">Bạn có thể đăng không giới hạn tin tuyển dụng.</p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('job.post_job') }}" class="btn btn-primary btn-lg me-3">
+                            <i class="fas fa-plus"></i>
+                            Đăng tin tuyển dụng
+                        </a>
+                        
+                        <a href="{{ url_for('job.manage_jobs') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-list"></i>
+                            Quản lý tin đã đăng
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

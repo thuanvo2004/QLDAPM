@@ -7,6 +7,7 @@ from .routes.job_routes import job_bp
 from .routes.candidate_routes import candidate_bp
 from .routes.employer_routes import employer_bp
 from .routes.cv_routes import cv_bp
+from .routes.payment_routes import payment_bp
 from .models import User
 from .routes.main import main_bp
 from .routes.message import messages_bp
@@ -50,6 +51,7 @@ def create_app():
     app.register_blueprint(cv_bp,url_prefix='/cv')
     app.register_blueprint(main_bp,url_prefix='/')
     app.register_blueprint(messages_bp,url_prefix='/messages')
+    app.register_blueprint(payment_bp, url_prefix='/payment')
 
     # Tạo bảng nếu chưa có (chỉ dùng dev, không dùng production)
     with app.app_context():

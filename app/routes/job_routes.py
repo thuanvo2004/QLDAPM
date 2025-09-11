@@ -13,7 +13,13 @@ job_bp = Blueprint("job", __name__, url_prefix="/jobs")
 def post_job():
     if current_user.role != "employer":
         flash("Chỉ nhà tuyển dụng được tạo job", "danger")
-        return redirect(url_for("job.list_jobs"))
+        return redirect(url_for("main.index"))
+
+        # Check if employer has more than 1 post and is not premium
+    employer_jobs_count = Job.query.filter_by(employer_id=current_user.employer_profile.id).count()
+    if employer_jobs_count >= 1 and not current_user.isPremiumActive:
+        flash("Bạn cần nâng cấp tài khoản Premium để đăng thêm tin tuyển dụng", "warning")
+        return redirect(url_for("payment.payment_view"))
 
     form = JobForm()
     print(f"Form fields: {form._fields.keys()}")
