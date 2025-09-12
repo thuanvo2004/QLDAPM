@@ -44,12 +44,20 @@
         <li>
           <span class="font-semibold text-gray-900">Kỹ năng:</span>
           <div class="mt-2 flex flex-wrap gap-2">
-            {% for skill in candidate.skills.split(',') %}
-              <span class="bg-[var(--blue-bg)] text-[var(--primary-blue)] text-xs font-medium px-3 py-1 rounded-full">{{ skill.strip() }}</span>
+            {% if candidate.skills %}
+            {% for skill in (candidate.skills or "").split(",") %}
+            {% if skill.strip() %}
+            <span class="bg-[var(--blue-bg)] text-[var(--primary-blue)] text-xs font-medium px-3 py-1 rounded-full">
+            {{ skill.strip() }}
+          </span>
+            {% endif %}
             {% endfor %}
+            {% else %}
+            <p><i>Chưa có kỹ năng</i></p>
+            {% endif %}
           </div>
-
         </li>
+
         <li><span class="font-semibold text-gray-900">Kinh nghiệm:</span>
           <span class="block mt-1">{{ candidate.experience_str }}</span>
         </li>
