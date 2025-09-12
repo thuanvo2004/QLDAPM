@@ -93,7 +93,18 @@
         {% for job in jobs %}
           <article class="job-card">
             <div class="job-header">
-              <div class="company-logo">🏢</div>
+              <div class="company-logo-wrapper">
+                {% if job.employer and job.employer.logo %}
+                  <img src="{{ job.employer.logo }}"
+                       alt="{{ job.employer.company_name }}"
+                       class="company-logo-img h-12 w-12 rounded-md object-cover border" />
+                {% else %}
+                  <div class="company-logo h-12 w-12 rounded-md bg-gray-100 flex items-center justify-center text-gray-400">
+                    🏢
+                  </div>
+                {% endif %}
+              </div>
+
               {% if current_user.is_authenticated and current_user.role == "candidate" %}
                 <form action="{{ url_for('candidate.save_job', job_id=job.id) }}" method="POST" style="display:inline;">
                   <button type="submit" class="save-btn {% if job in current_user.candidate_profile.saved_jobs|map(attribute='job') %}saved{% endif %}" data-job-id="{{ job.id }}">

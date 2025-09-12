@@ -18,7 +18,7 @@
         </div>
 
         <!-- Employer Registration Form -->
-        <form method="POST" class="space-y-6" novalidate>
+        <form method="POST" enctype="multipart/form-data" class="space-y-6" novalidate>
             {{ form.hidden_tag() }}
 
             <!-- Email and Password -->
@@ -136,9 +136,15 @@
                 {% for error in form.description.errors %}
                     <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
                 {% endfor %}
-            </div>
 
-            <div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Logo</label>
+                        {{ form.logo(class="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer bg-gray-50") }}
+                        {% for error in form.logo.errors %}
+                            <span class="text-red-500 text-xs">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+
                 {{ form.submit(class="w-full bg-[var(--primary-blue)] text-white px-6 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all duration-200 shadow-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:ring-opacity-50") }}
             </div>
         </form>
