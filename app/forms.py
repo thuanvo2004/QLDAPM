@@ -73,10 +73,10 @@ class JobForm(FlaskForm):
     benefits = TextAreaField("Quyền lợi", validators=[Optional()])
 
     job_type = SelectField("Loại công việc", choices=[
-        ("full-time","Full-time"),
-        ("part-time","Part-time"),
-        ("internship","Internship"),
-        ("remote","Remote")
+        ("Full-time","Full-time"),
+        ("Part-time","Part-time"),
+        ("Internship","Internship"),
+        ("Remote","Remote")
     ], validators=[Optional()])
 
     remote_option = SelectField("Hình thức", choices=[
@@ -87,7 +87,7 @@ class JobForm(FlaskForm):
     salary_max = IntegerField("Lương tối đa", validators=[Optional()], filters=[strip_to_int])
     currency = StringField("Đơn vị", default="VND", validators=[Optional()])
 
-    city = StringField("Thành phố", validators=[Optional()])
+    city = StringField("Thành phố", validators=[DataRequired()])
     district = StringField("Quận/Huyện", validators=[Optional()])
     street_address = StringField("Địa chỉ", validators=[Optional()])
 
@@ -95,8 +95,8 @@ class JobForm(FlaskForm):
     work_end_time = TimeField("Giờ kết thúc", format="%H:%M", validators=[Optional()])
     working_days = StringField("Ngày làm việc", validators=[Optional()])
 
-    deadline = DateField("Hạn nộp", format="%Y-%m-%d", validators=[Optional()])
-    interview_date = DateField("Ngày phỏng vấn", format="%Y-%m-%d", validators=[Optional()])
+    deadline = DateField("Hạn nộp", format="%Y-%m-%d", validators=[DataRequired()])
+    interview_date = DateField("Ngày phỏng vấn", format="%Y-%m-%d", validators=[DataRequired()])
 
     submit = SubmitField("Đăng tin")
 
@@ -124,6 +124,10 @@ class EmployerRegisterForm(FlaskForm):
         address = StringField("Địa chỉ công ty", validators=[DataRequired()])
         industry = StringField("Ngành nghề", validators=[DataRequired()])
         company_size = StringField("Quy mô công ty", validators=[Optional()])
+        logo = FileField(
+            "Logo công ty",
+            validators=[FileAllowed(['jpg', 'jpeg', 'png'], "Chỉ chấp nhận ảnh JPG/PNG!")]
+        )
         website = StringField("Website công ty", validators=[Optional(), URL()])
         city = SelectField("Thành phố", choices=PROVINCE_CHOICES, validators=[DataRequired()])
         founded_year = IntegerField("Năm thành lập", validators=[Optional()])

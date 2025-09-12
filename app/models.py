@@ -161,8 +161,6 @@ class Job(db.Model):
     def __repr__(self):
         return f"<Job {self.title}>"
 
-
-
 # ======================================================
 # Bảng Application (Hồ sơ ứng tuyển)
 # ======================================================

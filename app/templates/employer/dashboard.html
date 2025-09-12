@@ -8,7 +8,7 @@
   <div class="bg-white rounded-2xl border p-6 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
     <div class="flex items-center gap-4">
       {% if current_user.employer_profile.logo %}
-        <img src="{{ url_for('static', filename='uploads/company_logos/' ~ current_user.employer_profile.logo) }}"
+        <img src=" {{  current_user.employer_profile.logo }} "
              alt="{{ current_user.employer_profile.company_name }}"
              class="h-14 w-14 rounded-md object-cover border" />
       {% else %}

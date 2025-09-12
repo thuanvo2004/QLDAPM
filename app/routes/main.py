@@ -112,13 +112,19 @@ def index():
         "per_page": per_page
     }
 
+    logo = None
+    if current_user.is_authenticated and current_user.role == "employer":
+        logo = current_user.employer_profile.logo
+
+
     return render_template(
         "index.html",
         jobs=jobs_page,
         search=search_params,
         total_pages=pagination.pages,
         page=pagination.page,
-        user=current_user
+        user=current_user,
+        logo=logo
     )
 
 @main_bp.route("/provinces")

@@ -506,6 +506,7 @@ body{
     font-weight: 600;
     color: #1e293b;
     margin-bottom: 12px;
+    margin-top: 10px;
 }
 
 .job-title a {
@@ -1001,8 +1002,8 @@ blockquote {
 
 /* Company Logo */
 .company-logo {
-    width: 65px;
-    height: 65px;
+    width: 85px;
+    height: 85px;
     border-radius: 8px;
     background-color: #f3f6fb;
     display: flex;
