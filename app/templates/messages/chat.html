@@ -5,62 +5,28 @@
 {% block content %}
 <div class="container mt-4">
     <h3>💬 Chat với {{ other_user.username }}</h3>
-    <div id="chat-box" class="chat-box border rounded p-3 mb-3" style="height: 400px; overflow-y: auto;">
-        <!-- Tin nhắn sẽ được load bằng AJAX -->
+    <div class="chat-box border rounded p-3 mb-3" style="height: 400px; overflow-y: auto;">
+        {% for msg in chat_messages %}
+            <div class="mb-2 {% if msg.sender_id == current_user.id %}text-end{% endif %}">
+                <small class="text-muted">
+                    {{ "Bạn" if msg.sender_id == current_user.id else msg.sender.username }}
+                    ({{ msg.created_at.strftime("%H:%M:%S %d-%m-%Y") }})
+                </small><br>
+                <span class="p-2 rounded {% if msg.sender_id == current_user.id %}bg-primary text-white{% else %}bg-light{% endif %}">
+                    {{ msg.content }}
+                </span>
+            </div>
+        {% else %}
+            <p class="text-muted">Chưa có tin nhắn nào.</p>
+        {% endfor %}
     </div>
 
     <!-- Form gửi tin nhắn -->
-    <form id="chat-form" method="POST" action="{{ url_for('messages.send_message', user_id=other_user.id) }}">
+    <form method="POST" action="{{ url_for('messages.send_message_user', user_id=other_user.id) }}">
         <div class="input-group">
-            <input type="text" id="chat-input" name="content" class="form-control" placeholder="Nhập tin nhắn..." required>
+            <input type="text" name="content" class="form-control" placeholder="Nhập tin nhắn..." required>
             <button type="submit" class="btn btn-primary">Gửi</button>
         </div>
     </form>
 </div>
-
-<script>
-    const chatBox = document.getElementById("chat-box");
-    const chatForm = document.getElementById("chat-form");
-    const chatInput = document.getElementById("chat-input");
-
-    // Hàm load tin nhắn
-    function loadMessages() {
-        fetch("{{ url_for('messages.get_messages', user_id=other_user.id) }}")
-            .then(res => res.json())
-            .then(data => {
-                chatBox.innerHTML = "";
-                data.messages.forEach(msg => {
-                    const div = document.createElement("div");
-                    div.className = "mb-2 " + (msg.sender_id == {{ current_user.id }} ? "text-end" : "");
-                    div.innerHTML = `
-                        <small class="text-muted">
-                          ${msg.sender_id == {{ current_user.id }} ? "Bạn" : msg.sender}
-                          (${msg.created_at})
-                        </small><br>
-                        <span class="p-2 rounded ${msg.sender_id == {{ current_user.id }} ? "bg-primary text-white" : "bg-light"}">
-                          ${msg.content}
-                        </span>
-                    `;
-                    chatBox.appendChild(div);
-                });
-                chatBox.scrollTop = chatBox.scrollHeight; // auto scroll xuống cuối
-            });
-    }
-
-    // Auto refresh 2s/lần
-    setInterval(loadMessages, 2000);
-    loadMessages();
-
-    // Gửi tin nhắn bằng AJAX thay vì reload cả trang
-    chatForm.addEventListener("submit", function(e) {
-        e.preventDefault();
-        fetch(chatForm.action, {
-            method: "POST",
-            body: new FormData(chatForm)
-        }).then(() => {
-            chatInput.value = "";
-            loadMessages();
-        });
-    });
-</script>
 {% endblock %}
