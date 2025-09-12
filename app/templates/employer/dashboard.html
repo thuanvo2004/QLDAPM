@@ -91,7 +91,7 @@
           <div class="p-5 flex flex-col h-full">
             <div class="flex items-start gap-4">
               {% if job.employer and job.employer.logo %}
-                <img src="{{ url_for('static', filename='uploads/company_logos/' ~ job.employer.logo) }}"
+                <img src="{{ job.employer.logo }}"
                      alt="{{ job.employer.company_name }}"
                      class="w-12 h-12 rounded-md object-cover border">
               {% else %}

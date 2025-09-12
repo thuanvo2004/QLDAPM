@@ -1,59 +1,73 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
-  <div class="row align-items-center">
-    <!-- Logo công ty -->
-    <div class="col-md-3 text-center mb-3">
-      {% if employer.logo %}
-        <img src="{{ employer.logo }}" alt="{{ employer.company_name }} Logo" class="img-fluid rounded shadow-sm">
-      {% else %}
-        <div class="border rounded d-flex align-items-center justify-content-center" style="width:150px; height:150px; background-color:#f0f0f0;">
-          <span class="text-muted">Chưa có logo</span>
+<div class="max-w-5xl mx-auto px-4 py-10">
+  <!-- Card chính -->
+  <div class="bg-white rounded-2xl overflow-hidden border border-gray-200">
+    <div class="flex flex-col md:flex-row items-start md:items-center gap-6 p-6">
+      <!-- Logo công ty -->
+      <div class="flex-shrink-0 self-center">
+        {% if employer.logo %}
+          <img src="{{ employer.logo }}"
+               alt="{{ employer.company_name }} Logo"
+               class="h-32 w-32 object-contain rounded-lg border border-gray-200 bg-white p-2">
+        {% else %}
+          <div class="h-32 w-32 flex items-center justify-center bg-gray-100 text-gray-400 rounded-lg border border-gray-200">
+            <span class="text-md">Chưa có logo</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Thông tin công ty -->
+      <div class="flex-1">
+        <h2 class="text-2xl font-bold text-gray-900">{{ employer.company_name }}</h2>
+        <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-gray-700">
+          {% if employer.industry %}
+            <p><span class="font-semibold">Ngành nghề:</span> {{ employer.industry }}</p>
+          {% endif %}
+          {% if employer.company_size %}
+            <p><span class="font-semibold">Quy mô:</span> {{ employer.company_size }}</p>
+          {% endif %}
+          {% if employer.founded_year %}
+            <p><span class="font-semibold">Năm thành lập:</span> {{ employer.founded_year }}</p>
+          {% endif %}
+          {% if employer.tax_code %}
+            <p><span class="font-semibold">Mã số thuế:</span> {{ employer.tax_code }}</p>
+          {% endif %}
+          {% if employer.address %}
+            <p><span class="font-semibold">Địa chỉ:</span> {{ employer.address }}</p>
+          {% endif %}
+          {% if employer.city %}
+            <p><span class="font-semibold">Thành phố:</span> {{ employer.city }}</p>
+          {% endif %}
+          {% if employer.phone %}
+            <p><span class="font-semibold">Điện thoại:</span> {{ employer.phone }}</p>
+          {% endif %}
+          {% if employer.website %}
+            <p><span class="font-semibold">Website:</span>
+              <a href="{{ employer.website }}" target="_blank" class="text-blue-600 hover:underline">
+                {{ employer.website }}
+              </a>
+            </p>
+          {% endif %}
         </div>
-      {% endif %}
+      </div>
     </div>
 
-    <!-- Thông tin công ty -->
-    <div class="col-md-9">
-      <h2>{{ employer.company_name }}</h2>
-      {% if employer.industry %}
-        <p class="mb-1"><strong>Ngành nghề:</strong> {{ employer.industry }}</p>
-      {% endif %}
-      {% if employer.company_size %}
-        <p class="mb-1"><strong>Quy mô:</strong> {{ employer.company_size }}</p>
-      {% endif %}
-      {% if employer.founded_year %}
-        <p class="mb-1"><strong>Năm thành lập:</strong> {{ employer.founded_year }}</p>
-      {% endif %}
-      {% if employer.tax_code %}
-        <p class="mb-1"><strong>Mã số thuế:</strong> {{ employer.tax_code }}</p>
-      {% endif %}
-      {% if employer.address %}
-        <p class="mb-1"><strong>Địa chỉ:</strong> {{ employer.address }}</p>
-      {% endif %}
-      {% if employer.city %}
-        <p class="mb-1"><strong>Thành phố:</strong> {{ employer.city }}</p>
-      {% endif %}
-      {% if employer.phone %}
-        <p class="mb-1"><strong>Điện thoại:</strong> {{ employer.phone }}</p>
-      {% endif %}
-      {% if employer.website %}
-        <p class="mb-1"><strong>Website:</strong> <a href="{{ employer.website }}" target="_blank">{{ employer.website }}</a></p>
-      {% endif %}
+    <!-- Giới thiệu công ty -->
+    {% if employer.description %}
+    <div class="border-t border-gray-100 p-6 bg-gray-50">
+      <h4 class="text-lg font-semibold text-gray-900 mb-2">Giới thiệu công ty</h4>
+      <p class="text-gray-700 leading-relaxed">{{ employer.description }}</p>
     </div>
+    {% endif %}
   </div>
-
-  <!-- Giới thiệu công ty -->
-  {% if employer.description %}
-  <div class="mt-4">
-    <h4>Giới thiệu công ty</h4>
-    <p class="border rounded p-3" style="background-color:#fafafa;">{{ employer.description }}</p>
-  </div>
-  {% endif %}
 
   <!-- Nút chỉnh sửa -->
-  <div class="mt-4">
-    <a href="{{ url_for('employer.edit_profile') }}" class="btn btn-primary">Chỉnh sửa hồ sơ</a>
+  <div class="mt-6 text-right">
+    <a href="{{ url_for('employer.edit_profile') }}"
+       class="inline-flex items-center px-5 py-2.5 rounded-lg bg-[var(--primary-blue)] text-white font-medium hover:bg-[var(--primary-blue-hover)] transition">
+      Chỉnh sửa hồ sơ
+    </a>
   </div>
 </div>
 {% endblock %}

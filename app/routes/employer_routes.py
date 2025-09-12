@@ -9,6 +9,7 @@ from app.models import Job, Application, Employer
 from app.extensions import db
 from app.forms import JobForm,EmployerProfileForm
 from datetime import datetime, date, time
+from cloudinary.uploader import upload
 
 employer_bp = Blueprint("employer", __name__, url_prefix="/employer")
 
@@ -237,15 +238,11 @@ def edit_profile():
 
         # xử lý logo nếu upload
         if form.logo.data:
-            try:
-                logo_path = _save_logo_file(form.logo.data, employer.id)
-                employer.logo = logo_path
-            except Exception as e:
-                current_app.logger.exception("Lỗi khi lưu logo")
-                flash("Lưu logo thất bại.", "warning")
+            result = upload(form.logo.data, folder="jobnest/logos")
+            employer.logo = result.get("secure_url")  # lưu URL vào DB
 
         db.session.commit()
-        flash("Cập nhật hồ sơ công ty thành công.", "success")
+        flash("Cập nhật hồ sơ thành công!", "success")
         return redirect(url_for("employer.profile"))
 
     return render_template("employer/edit_profile.html", form=form, employer=employer)
