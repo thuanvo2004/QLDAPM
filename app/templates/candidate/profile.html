@@ -48,8 +48,12 @@
             {% else %}
               <span>-</span>
             {% endfor %}
+            {% else %}
+            <p><i>Chưa có kỹ năng</i></p>
+            {% endif %}
           </div>
         </li>
+
         <li><span class="font-semibold text-gray-900">Kinh nghiệm:</span>
           <span class="block mt-1">{{ candidate.experience_str or '-' }}</span>
         </li>
