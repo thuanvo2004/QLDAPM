@@ -7,7 +7,7 @@ from sqlalchemy import case, or_, func, and_
 from app.forms import JobForm
 from app.models import Job, Employer
 from app.extensions import db
-from datetime import datetime
+from datetime import datetime, date
 
 job_bp = Blueprint("job", __name__, url_prefix="/jobs")
 
@@ -151,6 +151,10 @@ def list_jobs():
     pagination = q.paginate(page=page, per_page=per_page, error_out=False)
     jobs_page = pagination.items
 
+    now = date.today()
+    for job in pagination.items:
+        job.is_active = (job.deadline is None) or (job.deadline >= now)
+
     search_params = {
         "keyword": keyword,
         "city": location_raw,
@@ -174,13 +178,17 @@ def list_jobs():
         total_pages=pagination.pages,
         page=pagination.page,
         user=current_user,
-        logo=logo
+        logo=logo,
+        now=now
     )
 
 # Chi tiết job
 @job_bp.route("/<int:job_id>")
 def job_detail(job_id):
     job = Job.query.get_or_404(job_id)
+    now = date.today()
+    job.is_active = (job.deadline is None) or (job.deadline >= now)
+
     return render_template("jobs/job_detail.html", job=job, now=datetime.utcnow())
 
 # Quản lý job của employer

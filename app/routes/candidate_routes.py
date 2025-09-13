@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 
 import cloudinary
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
@@ -35,31 +36,19 @@ def profile():
     form = CsrfForm()  # Instantiate CSRF form
     return render_template("candidate/profile.html", candidate=candidate, users=current_user, form=form)
 
-# APLLY CŨ
-
-# @candidate_bp.route("/apply/<int:job_id>")
-# @login_required
-# def apply_job(job_id):
-#     job = Job.query.get_or_404(job_id)
-#     if current_user.role != "candidate":
-#         flash("Chỉ ứng viên mới nộp hồ sơ", "danger")
-#         return redirect(url_for("job.list_jobs"))
-#     existing = Application.query.filter_by(candidate_id=current_user.candidate_profile.id, job_id=job.id).first()
-#     if existing:
-#         flash("Bạn đã nộp hồ sơ trước đó", "warning")
-#         return redirect(url_for("job.job_detail", job_id=job.id))
-#     application = Application(candidate_id=current_user.candidate_profile.id, job_id=job.id)
-#     db.session.add(application)
-#     db.session.commit()
-#     flash("Ứng tuyển thành công", "success")
-#     return redirect(url_for("candidate.applications"))
-
 @candidate_bp.route("/apply/<int:job_id>", methods=["GET", "POST"])
 @login_required
 def apply_job(job_id):
     job = Job.query.get_or_404(job_id)
+    now = date.today()
+    job.is_active = (job.deadline is None) or (job.deadline >= now)
+
     if current_user.role != "candidate":
         flash("Chỉ ứng viên mới nộp hồ sơ", "danger")
+        return redirect(url_for("job.list_jobs"))
+
+    if not job.is_active:
+        flash("Công việc này đã hết hạn, không thể ứng tuyển.", "danger")
         return redirect(url_for("job.list_jobs"))
 
     existing = Application.query.filter_by(candidate_id=current_user.candidate_profile.id, job_id=job.id).first()

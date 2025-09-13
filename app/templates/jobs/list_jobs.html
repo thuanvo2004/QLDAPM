@@ -80,14 +80,22 @@
                 <div class="h-12 w-12 rounded-md bg-gray-100 flex items-center justify-center text-gray-400">🏢</div>
               {% endif %}
 
-              <button type="button"
+              <div class="flex items-end space-x-2">
+                {% if job.is_active %}
+                  <span class="font-medium bg-green-200 text-green-600 text-xs p-1 rounded-full">Đang mở</span>
+                {% else %}
+                  <span class="font-medium bg-red-200 text-red-600 text-xs p-1 rounded-full">Đã hết hạn</span>
+                {% endif %}
+
+                <button type="button"
                       class="save-btn text-[var(--primary-blue)] hover:text-[var(--primary-blue-hover)] transition
                       {% if current_user.is_authenticated and job in current_user.candidate_profile.saved_jobs|map(attribute='job') %} saved {% endif %}
                       {% if not current_user.is_authenticated or current_user.role != 'candidate' %} unauthenticated {% endif %}"
                       data-job-id="{{ job.id }}"
                       data-login-url="{{ url_for('auth.login') }}">
-                <i class="{% if current_user.is_authenticated and job in current_user.candidate_profile.saved_jobs|map(attribute='job') %} fa-solid fa-bookmark {% else %} fa-regular fa-bookmark {% endif %}"></i>
-              </button>
+                  <i class="{% if current_user.is_authenticated and job in current_user.candidate_profile.saved_jobs|map(attribute='job') %} fa-solid fa-bookmark {% else %} fa-regular fa-bookmark {% endif %}"></i>
+                </button>
+              </div>
             </div>
 
             <h3 class="mt-4 text-lg font-semibold text-gray-800 hover:text-blue-600">
@@ -105,6 +113,9 @@
               <span class="px-3 py-1 text-xs bg-[var(--blue-bg)] text-[var(--primary-blue)] rounded-full">{{ job.job_type or '-' }}</span>
               <span class="px-3 py-1 text-xs bg-[var(--blue-bg)] text-[var(--primary-blue)] rounded-full">{{ job.remote_option or 'On-Site' }}</span>
               <span class="px-3 py-1 text-xs bg-[var(--blue-bg)] text-[var(--primary-blue)] rounded-full">{{ format_salary_range(job.salary_min, job.salary_max) }}</span>
+            <div class="job-status">
+          </div>
+
             </div>
 
             <div class="mt-4 flex gap-3">
