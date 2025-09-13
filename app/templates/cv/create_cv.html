@@ -55,10 +55,11 @@
 </div>
 
 <!-- Loading overlay -->
-<div id="loading" class="fixed inset-0 bg-gray-800 bg-opacity-50 hidden items-center justify-center">
-  <div class="bg-white p-6 rounded-lg border border-gray-300 text-center">
-    <div class="w-12 h-12 mx-auto mb-4 animate-spin border-4 border-blue-500 border-t-transparent rounded-full"></div>
+<div id="loading" class="fixed inset-0 bg-gray-800 bg-opacity-50 hidden flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg border border-gray-300 text-center max-w-md w-11/12 sm:w-auto">
+    <div role="status" aria-label="Đang tải" class="w-12 h-12 mx-auto mb-4 animate-spin border-4 border-blue-500 border-t-transparent rounded-full"></div>
     <div class="text-gray-700 font-semibold">Đang tạo CV...</div>
+    <div class="text-sm text-gray-500 mt-2">Quá trình có thể mất vài giây. Vui lòng không đóng tab.</div>
   </div>
 </div>
 

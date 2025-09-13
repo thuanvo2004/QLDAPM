@@ -181,6 +181,7 @@ class Application(db.Model):
 
     candidate = db.relationship("Candidate", back_populates="applications")
     job = db.relationship("Job", back_populates="applications")
+    cv = db.relationship("CVHistory", backref="applications")
 
     def __repr__(self):
         return f"<Application Candidate={self.candidate_id} Job={self.job_id}>"
