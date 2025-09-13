@@ -24,6 +24,15 @@
       <div class="bg-white rounded-xl shadow-sm border hover:shadow-md transform transition-transform duration-300 hover:-translate-y-2 transition flex flex-col">
         <div class="p-5 flex flex-col flex-grow">
           <!-- Job title -->
+          {% if job.employer and job.employer.logo %}
+              <img src="{{ job.employer.logo }}"
+                   alt="{{ job.employer.company_name }}"
+                   class="w-10 h-10 rounded-lg border object-contain" />
+            {% else %}
+              <div class="w-10 h-10 rounded-lg border flex items-center justify-center text-gray-400 text-sm bg-gray-100">
+                <i class="fa-solid fa-building"></i>
+              </div>
+            {% endif %}
           <h3 class="text-lg font-semibold text-black mb-2">
             {{ job.title }}
           </h3>

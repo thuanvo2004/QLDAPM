@@ -81,7 +81,6 @@ def register_employer():
     form = EmployerRegisterForm()
 
     if form.validate_on_submit():
-        current_app.logger.debug("Form validated successfully. Processing employer registration.")
         if User.query.filter_by(email=form.email.data).first():
             flash("Email đã được đăng ký!", "danger")
             return render_template("auth/register_employer.html", form=form)
@@ -90,7 +89,6 @@ def register_employer():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        current_app.logger.debug("User created with ID: %s", user.id)
 
         logo_url = None
         if form.logo.data:

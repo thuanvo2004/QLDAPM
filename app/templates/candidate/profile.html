@@ -5,11 +5,10 @@
 
 {% block content %}
 <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-
   <div class="bg-white rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-8 border-t-8 border-[#0046FF]">
     <div class="relative w-28 h-28 md:w-32 md:h-32 flex-shrink-0">
       {% if candidate.avatar %}
-        <img src="{{ url_for('static', filename='uploads/' + candidate.avatar) }}" alt="Avatar" class="w-full h-full rounded-full object-cover">
+        <img src="{{ url_for('static', filename='Uploads/' + candidate.avatar) }}" alt="Avatar" class="w-full h-full rounded-full object-cover">
       {% else %}
         <img src="{{ url_for('static', filename='default-avatar.png') }}" alt="No Avatar" class="w-full h-full rounded-full object-cover">
       {% endif %}
@@ -44,14 +43,15 @@
         <li>
           <span class="font-semibold text-gray-900">Kỹ năng:</span>
           <div class="mt-2 flex flex-wrap gap-2">
-            {% for skill in candidate.skills.split(',') %}
+            {% for skill in candidate.skills.split(',') if candidate.skills %}
               <span class="bg-[var(--blue-bg)] text-[var(--primary-blue)] text-xs font-medium px-3 py-1 rounded-full">{{ skill.strip() }}</span>
+            {% else %}
+              <span>-</span>
             {% endfor %}
           </div>
-
         </li>
         <li><span class="font-semibold text-gray-900">Kinh nghiệm:</span>
-          <span class="block mt-1">{{ candidate.experience_str }}</span>
+          <span class="block mt-1">{{ candidate.experience_str or '-' }}</span>
         </li>
         <li><span class="font-semibold text-gray-900">Giới thiệu:</span> <span class="block mt-1">{{ candidate.career_objective or '-' }}</span></li>
       </ul>
@@ -80,20 +80,22 @@
             {% for cv in candidate.cvs %}
             <tr class="hover:bg-gray-50">
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ cv.cv_name }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">{{ cv.template }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">{{ cv.template or '-' }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">{{ cv.created_at.strftime('%d/%m/%Y') }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
-                {% if cv.status == 'draft' %}
-                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Nháp</span>
-                {% else %}
+                {% if cv.is_used() %}
                   <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Đang dùng</span>
+                {% else %}
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Chưa dùng</span>
                 {% endif %}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex justify-end gap-2">
-                  <a href="{{ url_for('cv.view', cv_id=cv.id) }}" class="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-50 transition"><i class="fa-solid fa-eye"></i></a>
-                  <a href="{{ url_for('cv.download', cv_id=cv.id) }}" class="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition"><i class="fa-solid fa-download"></i></a>
-                  <a href="{{ url_for('cv.delete', cv_id=cv.id) }}" class="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition"><i class="fa-solid fa-trash-can"></i></a>
+                  <a href="{{ url_for('cv.download', cv_id=cv.id) }}" class="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition" download><i class="fa-solid fa-download"></i></a>
+                  <form method="POST" action="{{ url_for('cv.delete', cv_id=cv.id) }}" style="display:inline;">
+                    {{ form.hidden_tag() }}
+                    <button type="submit" class="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition" onclick="return confirm('Bạn có chắc muốn xóa CV này?')"><i class="fa-solid fa-trash-can"></i></button>
+                  </form>
                 </div>
               </td>
             </tr>
@@ -104,7 +106,6 @@
     </div>
   </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
@@ -122,7 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const img = avatarInput.closest('div').querySelector('img');
     img.src = URL.createObjectURL(file);
 
-    const fd = new FormData(); fd.append('avatar', file);
+    const fd = new FormData();
+    fd.append('avatar', file);
     try {
       const res = await fetch('{{ url_for("candidate.upload_avatar") }}', {method:'POST', body: fd});
       const j = await res.json();

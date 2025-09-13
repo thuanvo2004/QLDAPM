@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng tuyển công việc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 p-10 font-sans">
+    <div class="max-w-xl mx-auto bg-white shadow-md rounded-lg p-6">
+        <h1 class="text-2xl font-bold mb-4">Ứng tuyển: {{ job.title }}</h1>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="mb-4">
+                <label class="block font-medium">Chọn CV đã tạo</label>
+                <select name="cv_id" class="w-full border p-2 rounded">
+                    <option value="">-- Chọn CV --</option>
+                    {% for cv in cvs %}
+                        <option value="{{ cv.id }}">{{ cv.cv_name }} ({{ 'Đang dùng' if cv.is_used() else 'Chưa dùng' }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block font-medium">Hoặc tải CV mới</label>
+                <input type="file" name="cv_upload" accept=".pdf" class="w-full border p-2 rounded">
+            </div>
+            <div class="mb-4">
+                <a href="{{ url_for('cv.create_cv') }}" class="text-blue-600 hover:underline">Tạo CV mới</a>
+            </div>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center">
+                <i class="fa-solid fa-paper-plane mr-2"></i> Nộp hồ sơ
+            </button>
+        </form>
+    </div>
+</body>
+</html>

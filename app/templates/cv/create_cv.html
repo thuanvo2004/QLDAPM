@@ -1,67 +1,70 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tạo CV</title>
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 p-10 font-sans">
+{% extends "base.html" %}
 
-<div class="max-w-xl mx-auto bg-white shadow-md rounded-lg p-6">
-  <h1 class="text-2xl font-bold mb-4">Tạo CV mới</h1>
-  <form action="{{ url_for('cv.create_cv') }}" method="POST">
-    <div class="mb-4">
-      <label class="block font-medium">Họ và tên</label>
-      <input type="text" name="full_name" class="w-full border p-2 rounded" required>
+{% block title %}Tạo CV | JobNest{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto bg-white rounded-lg overflow-hidden flex flex-col md:flex-row border border-gray-200 mt-4 mb-4">
+
+  <!-- Cột trái: câu dẫn -->
+  <div class="md:w-1/3 bg-gradient-to-br from-blue-600 to-blue-800 text-white p-8 flex flex-col justify-center">
+    <h2 class="text-3xl font-bold mb-4">Tạo CV chuyên nghiệp trong vài phút</h2>
+    <p class="text-blue-100 mb-6">
+      Hãy để JobNest giúp bạn có một CV đẹp, ấn tượng, và sẵn sàng chinh phục nhà tuyển dụng.
+    </p>
+    <ul class="space-y-2 text-blue-100">
+      <li class="flex items-start"><i class="fa-solid fa-check mr-2 mt-1"></i> Giao diện hiện đại, dễ sử dụng</li>
+      <li class="flex items-start"><i class="fa-solid fa-check mr-2 mt-1"></i> Nhiều mẫu CV đẹp để lựa chọn</li>
+      <li class="flex items-start"><i class="fa-solid fa-check mr-2 mt-1"></i> Xuất file nhanh chóng</li>
+    </ul>
+    <div class="mt-8 text-sm text-blue-200">
+      “Một CV chỉn chu có thể thay đổi sự nghiệp của bạn.”
     </div>
-    <div class="mb-4">
-      <label class="block font-medium">Email</label>
-      <input type="email" name="email" class="w-full border p-2 rounded">
-    </div>
-    <div class="mb-4">
-      <label class="block font-medium">Điện thoại</label>
-      <input type="text" name="phone" class="w-full border p-2 rounded">
-    </div>
-    <div class="mb-4">
-      <label class="block font-medium">Địa chỉ</label>
-      <input type="text" name="address" class="w-full border p-2 rounded">
-    </div>
-    <div class="mb-4">
-      <label class="block font-medium">Mục tiêu nghề nghiệp</label>
-      <textarea name="career_objective" class="w-full border p-2 rounded"></textarea>
-    </div>
-    <div class="mb-4">
-      <label class="block font-medium">Kinh nghiệm</label>
-      <textarea name="experience" class="w-full border p-2 rounded"></textarea>
-    </div>
-    <div class="mb-4">
-      <label class="block font-medium">Học vấn</label>
-      <textarea name="education" class="w-full border p-2 rounded"></textarea>
-    </div>
-    <div class="mb-4">
-      <label class="block font-medium">Kỹ năng (ngăn cách bằng dấu , )</label>
-      <input type="text" name="skills" class="w-full border p-2 rounded">
-    </div>
-    <div class="mb-4">
-      <label class="block font-medium">Chứng chỉ</label>
-      <input type="text" name="certifications" class="w-full border p-2 rounded">
-    </div>
-    <div class="mb-4">
-      <label class="block font-medium">Sở thích</label>
-      <input type="text" name="hobbies" class="w-full border p-2 rounded">
-    </div>
-    <div class="mb-4">
-      <label class="block font-medium">Template</label>
-      <select name="template" class="w-full border p-2 rounded">
-        <option value="modern">Modern</option>
-        <option value="professional">Professional</option>
-        <option value="classic">Classic</option>
-      </select>
-    </div>
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Tạo CV</button>
-  </form>
+  </div>
+
+  <!-- Cột phải: form -->
+  <div class="md:w-2/3 p-8">
+    <h1 class="text-2xl font-bold mb-6 text-gray-800">Thông tin của bạn</h1>
+    <form id="cv_form" action="{{ url_for('cv.create_cv') }}" method="POST" class="space-y-5">
+
+      <input type="text" name="full_name" placeholder="Họ và tên" class="w-full border border-gray-300 p-3 rounded focus:ring-2 focus:ring-blue-600" required>
+      <input type="email" name="email" placeholder="Email" class="w-full border border-gray-300 p-3 rounded focus:ring-2 focus:ring-blue-600">
+      <input type="text" name="phone" placeholder="Điện thoại" class="w-full border border-gray-300 p-3 rounded focus:ring-2 focus:ring-blue-600">
+      <input type="text" name="address" placeholder="Địa chỉ" class="w-full border border-gray-300 p-3 rounded focus:ring-2 focus:ring-blue-600">
+
+      <textarea name="career_objective" placeholder="Mục tiêu nghề nghiệp" class="w-full border border-gray-300 p-3 rounded focus:ring-2 focus:ring-blue-600"></textarea>
+      <textarea name="experience" placeholder="Kinh nghiệm" class="w-full border border-gray-300 p-3 rounded focus:ring-2 focus:ring-blue-600"></textarea>
+      <textarea name="education" placeholder="Học vấn" class="w-full border border-gray-300 p-3 rounded focus:ring-2 focus:ring-blue-600"></textarea>
+
+      <input type="text" name="skills" placeholder="Kỹ năng (ngăn cách bằng , )" class="w-full border border-gray-300 p-3 rounded focus:ring-2 focus:ring-blue-600">
+      <input type="text" name="certifications" placeholder="Chứng chỉ" class="w-full border border-gray-300 p-3 rounded focus:ring-2 focus:ring-blue-600">
+      <input type="text" name="hobbies" placeholder="Sở thích" class="w-full border border-gray-300 p-3 rounded focus:ring-2 focus:ring-blue-600">
+
+      <div>
+        <label class="block mb-2 font-medium text-gray-700">Chọn Template</label>
+        <select name="template" class="w-full border border-gray-300 p-3 rounded focus:ring-2 focus:ring-blue-600">
+          <option value="modern">Modern</option>
+          <option value="classic">Classic</option>
+        </select>
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition">
+        <i class="fa-solid fa-file-circle-plus mr-2"></i> Tạo CV
+      </button>
+    </form>
+  </div>
 </div>
 
-</body>
-</html>
+<!-- Loading overlay -->
+<div id="loading" class="fixed inset-0 bg-gray-800 bg-opacity-50 hidden items-center justify-center">
+  <div class="bg-white p-6 rounded-lg border border-gray-300 text-center">
+    <div class="w-12 h-12 mx-auto mb-4 animate-spin border-4 border-blue-500 border-t-transparent rounded-full"></div>
+    <div class="text-gray-700 font-semibold">Đang tạo CV...</div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('cv_form').addEventListener('submit', function() {
+    document.getElementById('loading').classList.remove('hidden');
+  });
+</script>
+{% endblock %}

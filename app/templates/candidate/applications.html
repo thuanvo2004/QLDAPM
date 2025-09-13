@@ -31,11 +31,11 @@
             <!-- Header with logo + title -->
             <div class="flex items-center gap-3 mb-3">
               {% if job.employer and job.employer.logo %}
-                <img src="{{ url_for('static', filename='uploads/company_logos/' ~ job.employer.logo) }}"
+                <img src="{{ job.employer.logo }}"
                      alt="{{ job.employer.company_name }}"
-                     class="w-10 h-10 rounded-full border object-contain" />
+                     class="w-10 h-10 rounded-lg border object-contain" />
               {% else %}
-                <div class="w-10 h-10 rounded-full border flex items-center justify-center text-gray-400 text-sm bg-gray-100">
+                <div class="w-10 h-10 rounded-lg border flex items-center justify-center text-gray-400 text-sm bg-gray-100">
                   <i class="fa-solid fa-building"></i>
                 </div>
               {% endif %}
