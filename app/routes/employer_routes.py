@@ -269,3 +269,86 @@ def change_application_status(app_id, action):
 
     db.session.commit()
     return redirect(url_for("employer.view_applicants", job_id=job.id))
+
+@employer_bp.route('/employers')
+def list_employers():
+    # Lấy tham số tìm kiếm và phân trang
+    keyword = request.args.get('keyword', '').strip()
+    city = request.args.get('city', '').strip()
+    page = int(request.args.get('page', 1))
+    per_page = 9
+
+    # Xây dựng truy vấn cơ bản
+    base_query = Employer.query
+
+    # Tìm kiếm theo tên công ty và địa điểm
+    if keyword:
+        like = f"%{keyword}%"
+        base_query = base_query.filter(or_(
+            Employer.company_name.ilike(like),
+            Employer.city.ilike(like)
+        ))
+
+    if city:
+        base_query = base_query.filter(Employer.city.ilike(f"%{city}%"))
+
+    # Subquery để đếm số công việc đang mở
+    now = date.today()
+    subquery = db.session.query(
+        Job.employer_id.label('employer_id'),
+        func.count(Job.id).label('active_jobs_count')
+    ).filter(
+        or_(Job.deadline == None, Job.deadline >= now)
+    ).group_by(Job.employer_id).subquery()
+
+    # Join với subquery để lấy số công việc đang mở
+    employers_query = base_query.outerjoin(
+        subquery, Employer.id == subquery.c.employer_id
+    ).with_entities(
+        Employer, subquery.c.active_jobs_count
+    ).order_by(Employer.company_name.asc())
+
+    # Phân trang
+    pagination = employers_query.paginate(page=page, per_page=per_page, error_out=False)
+
+    # Xử lý items để thêm active_jobs_count
+    items = []
+    for row in pagination.items:
+        employer = row[0]
+        employer.active_jobs_count = row[1] or 0
+        items.append(employer)
+
+    pagination.items = items
+
+    # Chuẩn bị dữ liệu tìm kiếm cho template
+    search = {
+        'keyword': keyword,
+        'city': city
+    }
+
+    return render_template(
+        'employer/list_employers.html',
+        employers=pagination,
+        total_pages=pagination.pages,
+        page=page,
+        search=search,
+        now=now
+    )
+
+@employer_bp.route('/employers/<int:employer_id>')
+def employer_detail(employer_id):
+    employer = Employer.query.get_or_404(employer_id)
+    now = date.today()  # Current date: 2025-09-13
+
+    # Fetch active jobs for the employer
+    jobs = Job.query.filter(
+        Job.employer_id == employer_id,
+        or_(Job.deadline == None, Job.deadline >= now)
+    ).all()
+
+    return render_template(
+        'employer/detail.html',  # Template to display employer details
+        employer=employer,
+        jobs=jobs,
+        now=now
+    )
