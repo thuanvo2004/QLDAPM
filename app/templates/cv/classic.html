@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{{ cv.full_name or "CV" }} - CV Cổ Điển</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --base-size: 16px; /* chung cho toàn bộ văn bản */
+            --muted: #6b7280;
+            --accent: #4299e1;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #fff; /* trắng toàn trang */
+            font-family: 'Roboto', sans-serif;
+            font-size: var(--base-size);
+            -webkit-print-color-adjust: exact;
+            color: #111827;
+        }
+
+        /* container full-width (chiếm trang) */
+        .container {
+            width: 100%;
+            max-width: none;
+            min-height: 100vh;
+            box-sizing: border-box;
+            padding: 32px 48px; /* khoảng cách bên trong trang */
+            background: #fff;
+            border-radius: 0; /* không bo góc nếu in */
+        }
+
+        /* bỏ shadow hoàn toàn */
+        .no-shadow { box-shadow: none !important; }
+
+        /* tiêu đề / section dùng cùng kích thước font nhưng khác weight */
+        .text-base-fixed { font-size: var(--base-size); }
+        .title-fixed { font-size: var(--base-size); font-weight:700; line-height:1.15; }
+        .section-title {
+            font-size: var(--base-size);
+            font-weight:700;
+            color: #2D3748;
+            border-bottom: 2px solid #E2E8F0;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+
+        .muted { color: var(--muted); }
+
+        /* cải thiện hiển thị địa chỉ dài */
+        .break-addr { word-break: break-word; white-space: normal; }
+
+        /* in ấn chuẩn A4 */
+        @page { size: A4; margin: 18mm; }
+        @media print {
+            body { background: #fff; }
+            .container { padding: 18mm; }
+        }
+    </style>
+</head>
+<body>
+    <!-- container full-page, no shadow -->
+    <div class="container no-shadow">
+
+        <!-- Header và Thông tin liên hệ (cỡ chữ đồng đều) -->
+        <div class="text-center space-y-2">
+            <h1 class="title-fixed">{{ cv.full_name or "NGUYỄN VĂN A" }}</h1>
+
+            {% if cv.title %}
+            <p class="text-base-fixed muted">{{ cv.title }}</p>
+            {% endif %}
+
+            <div class="flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-6 mt-4 muted text-base-fixed">
+                {% if cv.email %}
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-envelope text-gray-500"></i>
+                    <a href="mailto:{{ cv.email }}" class="hover:underline">{{ cv.email }}</a>
+                </div>
+                {% endif %}
+                {% if cv.phone %}
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-phone-alt text-gray-500"></i>
+                    <p>{{ cv.phone }}</p>
+                </div>
+                {% endif %}
+                {% if cv.address %}
+                <div class="flex items-start space-x-2 break-addr max-w-lg text-center md:text-left">
+                    <i class="fas fa-map-marker-alt text-gray-500 mt-1"></i>
+                    <p class="">{{ cv.address }}</p>
+                </div>
+                {% endif %}
+                {% if cv.linkedin %}
+                <div class="flex items-center space-x-2">
+                    <i class="fab fa-linkedin text-gray-500"></i>
+                    <a href="{{ cv.linkedin }}" class="hover:underline">{{ cv.linkedin }}</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Tóm tắt cá nhân -->
+        {% if cv.career_objective %}
+        <div class="mt-6">
+            <h2 class="section-title">Tóm tắt cá nhân</h2>
+            <p class="text-base-fixed muted leading-relaxed">
+                {{ cv.career_objective }}
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Kinh nghiệm làm việc -->
+        {% if cv.experience %}
+        <div class="mt-6">
+            <h2 class="section-title">Kinh nghiệm làm việc</h2>
+            {% if cv.experience_is_html %}
+            <div class="text-base-fixed leading-relaxed">{{ cv.experience | safe }}</div>
+            {% else %}
+            <p class="text-base-fixed leading-relaxed whitespace-pre-line">{{ cv.experience }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Học vấn -->
+        {% if cv.education %}
+        <div class="mt-6">
+            <h2 class="section-title">Học vấn</h2>
+            <p class="text-base-fixed">{{ cv.education }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Kỹ năng -->
+        {% if cv.skills %}
+        <div class="mt-6">
+            <h2 class="section-title">Kỹ năng</h2>
+            <ul class="list-disc list-inside space-y-2 text-base-fixed">
+                {% for s in cv.skills.split(',') %}
+                    <li>{{ s.strip() }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Thông tin cá nhân (nếu được phép) -->
+        {% if cv.show_sensitive %}
+        <div class="mt-6">
+            <h2 class="section-title">Thông tin cá nhân</h2>
+            <ul class="list-inside list-disc text-base-fixed">
+                {% if cv.birthdate %}<li>Ngày sinh: {{ cv.birthdate }}</li>{% endif %}
+                {% if cv.gender %}<li>Giới tính: {{ cv.gender }}</li>{% endif %}
+                {% if cv.nationality %}<li>Quốc tịch: {{ cv.nationality }}</li>{% endif %}
+            </ul>
+        </div>
+        {% endif %}
+
+    </div>
+</body>
+</html>

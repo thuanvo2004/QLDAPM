@@ -31,15 +31,6 @@ def create_app():
     """Tạo và cấu hình Flask app"""
     app = Flask(__name__)
 
-    # Configure logging
-    logging.basicConfig(level=logging.DEBUG)
-    app.logger.setLevel(logging.DEBUG)
-
-    # Log Cloudinary configuration
-    app.logger.debug("Cloudinary config: cloud_name=%s, api_key=%s",
-                    os.getenv("CLOUDINARY_CLOUD_NAME"),
-                    os.getenv("CLOUDINARY_API_KEY"))
-
     # Cấu hình cơ bản
     app.config['SECRET_KEY'] = "423a03ab3b1aaedc668243332aec4eb92b1fcbcd032702a4fa60f3bfe0f53fba"
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:admin@localhost:3306/job?charset=utf8mb4'

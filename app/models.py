@@ -170,16 +170,18 @@ class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     candidate_id = db.Column(db.Integer, db.ForeignKey("candidates.id"), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey("jobs.id"), nullable=False)
+    cv_id = db.Column(db.Integer, db.ForeignKey('cv_history.id'), nullable=True)
 
     status = db.Column(db.String(20), default="pending")  # pending, reviewed, accepted, rejected
     cover_letter = db.Column(db.Text)
-    cv_file = db.Column(db.String(255))
+
     applied_at = db.Column(db.DateTime, default=datetime.utcnow)
     feedback = db.Column(db.Text)
     interview_scheduled_at = db.Column(db.DateTime)
 
     candidate = db.relationship("Candidate", back_populates="applications")
     job = db.relationship("Job", back_populates="applications")
+    cv = db.relationship("CVHistory", backref="applications")
 
     def __repr__(self):
         return f"<Application Candidate={self.candidate_id} Job={self.job_id}>"
