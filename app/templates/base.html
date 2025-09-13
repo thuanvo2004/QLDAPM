@@ -30,15 +30,15 @@
 
         <nav class="main-nav">
           <a href="{{ url_for('main.index') }}">Trang chủ</a>
-          <a href="#">Việc làm</a>
+          <a href="{{ url_for('job.list_jobs') }}">Việc làm</a>
           <a href="#">Doanh nghiệp</a>
         </nav>
 
         <!-- Nút thông báo -->
           <div class="dropdown me-3">
-            <a class="relative text-gray-700 hover:text-blue-600" href="#"
+            <a class="relative text-white transition-transform duration-200 hover:scale-125" href="#"
                id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="fa-regular fa-bell text-xl"></i>
+              <i class="fa-regular fa-bell text-xl transition-transform duration-200 hover:scale-105"></i>
               {% if current_user.notifications|length > 0 %}
               <!-- Badge số lượng thông báo -->
               <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">

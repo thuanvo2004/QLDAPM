@@ -103,7 +103,7 @@ def index():
     search_params = {
         "keyword": keyword,
         "city": location_raw,
-        "job_type": job_type_raw,  # Single value
+        "job_type": job_type_raw,
         "work_types": work_type_raw.split(",") if work_type_raw else [],
         "job_types": [job_type_raw] if job_type_raw else [],  # Đảm bảo là list
         "sort_by": sort_by,
@@ -115,7 +115,6 @@ def index():
     logo = None
     if current_user.is_authenticated and current_user.role == "employer":
         logo = current_user.employer_profile.logo
-
 
     return render_template(
         "index.html",
