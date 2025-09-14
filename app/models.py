@@ -272,6 +272,7 @@ class Message(db.Model):
 # ======================================================
 # Bảng Payment (thanh toán)
 # ======================================================
+### Thai work
 class Payment(db.Model):
     __tablename__ = "payments"
 
