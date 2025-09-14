@@ -1,9 +1,7 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from sqlalchemy.orm import joinedload
-
 from app.extensions import db
-from app.models import Job, Application, SavedJob, Candidate
+from app.models import Job, Application, SavedJob
 from werkzeug.utils import secure_filename
 candidate_bp = Blueprint("candidate", __name__, url_prefix="/candidate")
 import os
@@ -14,14 +12,7 @@ def profile():
     if current_user.role != "candidate":
         flash("Chỉ ứng viên mới xem profile này", "danger")
         return redirect(url_for("job.list_jobs"))
-    # candidate = current_user.candidate_profile
-    candidate = (
-        Candidate.query
-        .options(joinedload(Candidate.cvs))  # dùng attribute class-bound
-        .filter_by(id=current_user.candidate_profile.id)
-        .first()
-    )
-    return render_template("candidate/profile.html", candidate=current_user.candidate_profile, users=current_user)
+    return render_template("candidate/profile.html", candidate=current_user.candidate_profile)
 
 @candidate_bp.route("/apply/<int:job_id>")
 @login_required
@@ -38,22 +29,15 @@ def apply_job(job_id):
     db.session.add(application)
     db.session.commit()
     flash("Ứng tuyển thành công", "success")
-    return redirect(url_for("candidate.applications"))
+    return redirect(url_for("candidate.profile"))
 
 @candidate_bp.route("/saved_jobs")
 @login_required
 def saved_jobs():
-    if current_user.role != "candidate":
-        flash("Chỉ ứng viên mới xem công việc đã lưu", "danger")
-        return redirect(url_for("job.list_jobs"))
+    jobs = [sj.job for sj in current_user.candidate_profile.saved_jobs]
+    return render_template("candidate/saved_jobs.html", jobs=jobs)
 
-    # saved_jobs = SavedJob.query.filter_by(candidate_id=current_user.candidate_profile.id).order_by(SavedJob.saved_at.desc()).all()
-    # jobs = [sj.job for sj in current_user.candidate_profile.saved_jobs]
 
-    saved_jobs = SavedJob.query.filter_by(candidate_id=current_user.candidate_profile.id) \
-        .order_by(SavedJob.saved_at.desc()).all()
-
-    return render_template("candidate/saved_jobs.html", saved_jobs=saved_jobs)
 
 @candidate_bp.route("/applications")
 @login_required
@@ -90,91 +74,3 @@ def edit_profile():
         return redirect(url_for("candidate.profile"))
 
     return render_template("candidate/edit_profile.html", candidate=candidate)
-
-@candidate_bp.route("/save_job/<int:job_id>", methods=["POST"])
-@login_required
-def save_job(job_id):
-    if current_user.role != "candidate":
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': False, 'message': 'Chỉ ứng viên mới lưu công việc'}), 403
-        flash("Chỉ ứng viên mới lưu công việc", "danger")
-        return redirect(url_for("job.list_jobs"))
-
-    job = Job.query.get_or_404(job_id)
-    existing = SavedJob.query.filter_by(candidate_id=current_user.candidate_profile.id, job_id=job.id).first()
-    if existing:
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': False, 'message': 'Công việc đã được lưu trước đó'}), 400
-        flash("Công việc đã được lưu trước đó", "warning")
-        return redirect(request.referrer or url_for("main.index"))
-
-    saved_job = SavedJob(candidate_id=current_user.candidate_profile.id, job_id=job.id)
-    db.session.add(saved_job)
-    db.session.commit()
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify({'success': True,
-                        'message': 'Lưu công việc thành công',
-                        'action': 'saved'
-        })
-    flash("Lưu công việc thành công", "success")
-    return redirect(request.referrer or url_for("main.index"))
-
-@candidate_bp.route("/unsave_job/<int:job_id>", methods=["POST"])
-@login_required
-def unsave_job(job_id):
-    if current_user.role != "candidate":
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': False, 'message': 'Chỉ ứng viên mới bỏ lưu công việc'}), 403
-        flash("Chỉ ứng viên mới bỏ lưu công việc", "danger")
-        return redirect(url_for("job.list_jobs"))
-
-    saved_job = SavedJob.query.filter_by(candidate_id=current_user.candidate_profile.id, job_id=job_id).first()
-    if not saved_job:
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': False, 'message': 'Công việc không được lưu trước đó'}), 400
-        flash("Công việc không được lưu trước đó", "warning")
-        return redirect(url_for("candidate.saved_jobs"))
-
-    db.session.delete(saved_job)
-    db.session.commit()
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify({'success': True,
-                        'message': 'Bỏ lưu công việc thành công',
-                        'action': 'unsaved'})
-    flash("Bỏ lưu công việc thành công", "success")
-    return redirect(url_for("candidate.saved_jobs"))
-
-
-
-@candidate_bp.route("/check_saved/<int:job_id>", methods=["GET"])
-@login_required
-def check_saved(job_id):
-    if current_user.role != "candidate":
-        return jsonify({"success": False, "is_saved": False, "message": "Chỉ ứng viên mới dùng chức năng này"}), 403
-
-    saved = SavedJob.query.filter_by(candidate_id=current_user.candidate_profile.id, job_id=job_id).first()
-    return jsonify({"success": True, "is_saved": bool(saved)})
-
-@candidate_bp.route("/upload-avatar", methods=["POST"])
-@login_required
-def upload_avatar():
-    if current_user.role != "candidate":
-        return jsonify({"success": False, "message": "Chỉ ứng viên mới upload ảnh"}), 403
-
-    if "avatar" not in request.files:
-        return jsonify({"success": False, "message": "Không tìm thấy file"}), 400
-
-    file = request.files["avatar"]
-    if file.filename == "":
-        return jsonify({"success": False, "message": "Tên file trống"}), 400
-
-    filename = secure_filename(file.filename)
-    upload_path = os.path.join("app", "static", "uploads", filename)
-    file.save(upload_path)
-
-    # Lưu vào user profile
-    candidate = current_user.candidate_profile
-    candidate.avatar = filename
-    db.session.commit()
-
-    return jsonify({"success": True, "message": "Upload thành công", "filename": filename})

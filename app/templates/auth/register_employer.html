@@ -1,266 +1,42 @@
 {% extends "base.html" %}
 
-{% block title %}Đăng ký Nhà tuyển dụng - JobNest{% endblock %}
+{% block title %}Đăng ký Nhà tuyển dụng{% endblock %}
 
 {% block content %}
-<div class="flex items-center justify-center min-h-screen bg-gray-100 p-4">
-    <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-200">
-        <!-- Header -->
-        <div class="text-center mb-10 bg-[var(--primary-blue)] py-6 px-4 rounded-xl text-white">
-            <div class="flex items-center justify-center gap-4 mb-6">
-                <div class="w-14 h-14 bg-white rounded-xl flex items-center justify-center transition-colors duration-300">
-                    <span class="text-3xl font-extrabold text-[var(--primary-blue)]">JN</span>
-                </div>
-                <h2 class="text-4xl sm:text-5xl font-black text-white tracking-tight">JobNest</h2>
-            </div>
-            <h1 class="text-3xl sm:text-4xl font-bold text-white">Đăng ký Nhà tuyển dụng</h1>
-            <p class="text-white mt-3 text-sm sm:text-base max-w-md mx-auto">Hãy bắt đầu thu hút <br>nhân tài cho doanh nghiệp của bạn!</p>
+<div class="container mt-4">
+    <h2 class="text-center">Đăng ký Nhà tuyển dụng</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.confirm_password.label(class="form-label") }}
+            {{ form.confirm_password(class="form-control") }}
         </div>
 
-        <!-- Employer Registration Form -->
-        <form method="POST" enctype="multipart/form-data" class="space-y-6" novalidate>
-            {{ form.hidden_tag() }}
-
-            <!-- Email and Password -->
-            <div class="grid grid-cols-1 gap-6">
-                <div>
-                    {{ form.email.label(class="block text-2sm font-semibold text-gray-700 mb-1") }}
-                    {{ form.email(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:border-transparent transition-all duration-200 placeholder-gray-400", placeholder="Email") }}
-                    {% for error in form.email.errors %}
-                        <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
-                    {% endfor %}
-                </div>
-
-            </div>
-            <div class="grid grid-cols-2 gap-6">
-                <div>
-                    {{ form.password.label(class="block text-2sm font-semibold text-gray-700 mb-1") }}
-                    {{ form.password(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:border-transparent transition-all duration-200 placeholder-gray-400", placeholder="Mật khẩu") }}
-                    {% for error in form.password.errors %}
-                        <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
-                    {% endfor %}
-                </div>
-
-                <div>
-                    {{ form.confirm_password.label(class="block text-2sm font-semibold text-gray-700 mb-1") }}
-                    {{ form.confirm_password(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:border-transparent transition-all duration-200 placeholder-gray-400", placeholder="Xác nhận mật khẩu") }}
-                    {% for error in form.confirm_password.errors %}
-                        <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Company Name and Phone -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                    {{ form.company_name.label(class="block text-2sm font-semibold text-gray-700 mb-1") }}
-                    {{ form.company_name(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:border-transparent transition-all duration-200 placeholder-gray-400", placeholder="Tên công ty") }}
-                    {% for error in form.company_name.errors %}
-                        <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
-                    {% endfor %}
-                </div>
-                <div>
-                    {{ form.phone.label(class="block text-2sm font-semibold text-gray-700 mb-1") }}
-                    {{ form.phone(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:border-transparent transition-all duration-200 placeholder-gray-400", placeholder="Số điện thoại") }}
-                    {% for error in form.phone.errors %}
-                        <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Industry and Company Size -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                    {{ form.industry.label(class="block text-2sm font-semibold text-gray-700 mb-1") }}
-                    {{ form.industry(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:border-transparent transition-all duration-200 placeholder-gray-400", placeholder="Ngành nghề") }}
-                    {% for error in form.industry.errors %}
-                        <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
-                    {% endfor %}
-                </div>
-                <div>
-                    {{ form.company_size.label(class="block text-2sm font-semibold text-gray-700 mb-1") }}
-                    {{ form.company_size(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:border-transparent transition-all duration-200 placeholder-gray-400", placeholder="Quy mô công ty") }}
-                    {% for error in form.company_size.errors %}
-                        <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Address and City -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                    {{ form.address.label(class="block text-2sm font-semibold text-gray-700 mb-1") }}
-                    {{ form.address(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:border-transparent transition-all duration-200 placeholder-gray-400", placeholder="Địa chỉ công ty") }}
-                    {% for error in form.address.errors %}
-                        <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
-                    {% endfor %}
-                </div>
-                <div>
-                    {{ form.city.label(class="block text-2sm font-semibold text-gray-700 mb-1") }}
-                    {{ form.city(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:border-transparent transition-all duration-200 placeholder-gray-400", placeholder="Thành phố") }}
-                    {% for error in form.city.errors %}
-                        <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Website and Founded Year -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                    {{ form.website.label(class="block text-2sm font-semibold text-gray-700 mb-1") }}
-                    {{ form.website(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:border-transparent transition-all duration-200 placeholder-gray-400", placeholder="Website") }}
-                    {% for error in form.website.errors %}
-                        <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
-                    {% endfor %}
-                </div>
-                <div>
-                    {{ form.founded_year.label(class="block text-2sm font-semibold text-gray-700 mb-1") }}
-                    {{ form.founded_year(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:border-transparent transition-all duration-200 placeholder-gray-400", placeholder="Năm thành lập") }}
-                    {% for error in form.founded_year.errors %}
-                        <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div>
-                {{ form.tax_code.label(class="block text-2sm font-semibold text-gray-700 mb-1") }}
-                {{ form.tax_code(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:border-transparent transition-all duration-200 placeholder-gray-400", placeholder="Mã số thuế") }}
-                {% for error in form.tax_code.errors %}
-                    <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
-                {% endfor %}
-            </div>
-
-            <div>
-                {{ form.description.label(class="block text-2sm font-semibold text-gray-700 mb-1") }}
-                {{ form.description(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:border-transparent transition-all duration-200 placeholder-gray-400", rows="3", placeholder="Mô tả về công ty") }}
-                {% for error in form.description.errors %}
-                    <span class="text-red-500 text-xs mt-1 block">{{ error }}</span>
-                {% endfor %}
-
-            <!-- Upload component -->
-            <div class="space-y-2">
-            <label for="logo-input" class="block text-2sm font-semibold text-gray-700">Logo</label>
-
-            <div id="logo-drop" class="group relative flex items-center gap-4 p-3 border-2 border-dashed border-gray-200 rounded-lg bg-white hover:border-gray-300 transition">
-              <div id="logo-preview" class="flex-shrink-0 h-20 w-20 rounded-md bg-gray-100 overflow-hidden flex items-center justify-center text-gray-400">
-                <span id="logo-default" class="text-2sm text-center">PREVIEW LOGO</span>
-                <img id="logo-img" src="" alt="Logo preview" class="hidden h-full w-full object-cover" />
-              </div>
-
-            <div class="flex-1">
-                <div class="flex items-center gap-3">
-                  <label for="logo-input" class="inline-flex items-center gap-2 px-3 py-2 bg-[var(--primary-blue)] text-white text-sm font-medium rounded-md cursor-pointer hover:bg-[var(--primary-blue-hover)] transition">
-                    <i class="fa-solid fa-upload"></i>
-                    Chọn hoặc kéo thả file
-                  </label>
-
-                  <div class="flex items-center gap-2 text-sm text-gray-600" id="logo-filename">Chưa có file</div>
-                  <button type="button" id="logo-remove" class="hidden text-sm text-red-500 hover:underline">Xóa</button>
-                </div>
-
-                {{ form.logo(id="logo-input", class="sr-only", accept="image/png, image/jpeg, image/webp") }}
-
-                <p id="logo-client-error" class="mt-2 text-xs text-red-500" aria-live="polite"></p>
-
-                {% for error in form.logo.errors %}
-                  <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-                {% endfor %}
-            </div>
-
-            </div>
-                {{ form.submit(class="w-full bg-[var(--primary-blue)] text-white px-6 py-3 rounded-xl font-bold hover:bg-[var(--primary-blue-hover)] transition-all duration-200 shadow-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] focus:ring-opacity-50") }}
-            </div>
-
-          </div>
-        </form>
-
-        <div class="mt-8 text-center">
-            <p class="text-sm text-gray-600">
-                Đã có tài khoản?
-                <a href="{{ url_for('auth.login') }}" class="text-[var(--primary-blue)] font-medium hover:underline">Đăng nhập</a>
-            </p>
+        <div class="mb-3">
+            {{ form.company_name.label(class="form-label") }}
+            {{ form.company_name(class="form-control") }}
         </div>
-    </div>
+        <div class="mb-3">
+            {{ form.address.label(class="form-label") }}
+            {{ form.address(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control", rows=3) }}
+        </div>
+
+        <div class="d-grid">
+            {{ form.submit(class="btn btn-primary btn-lg") }}
+        </div>
+    </form>
 </div>
-{% endblock %}
-
-
-{% block scripts %}
-  {{ super() }}
-  <script>
-    (function(){
-      // guard: nếu không có input thì thoát (tránh lỗi khi include script trang khác)
-      const input = document.getElementById("logo-input");
-      if (!input) return;
-
-      const img = document.getElementById("logo-img");
-      const defaultIcon = document.getElementById("logo-default");
-      const filenameEl = document.getElementById("logo-filename");
-      const removeBtn = document.getElementById("logo-remove");
-      const clientError = document.getElementById("logo-client-error");
-      const dropZone = document.getElementById("logo-drop");
-
-      const MAX_BYTES = 5 * 1024 * 1024; // 5MB
-      const ALLOWED = ["image/jpeg", "image/png", "image/webp"];
-
-      function resetPreview() {
-        if (img) { img.src = ""; img.classList.add("hidden"); }
-        if (defaultIcon) defaultIcon.classList.remove("hidden");
-        if (filenameEl) filenameEl.textContent = "Chưa có file";
-        if (removeBtn) removeBtn.classList.add("hidden");
-        if (clientError) clientError.textContent = "";
-      }
-
-      function showFile(file) {
-        if (clientError) clientError.textContent = "";
-        if (!ALLOWED.includes(file.type)) {
-          if (clientError) clientError.textContent = "Định dạng không hợp lệ. Chỉ JPG / PNG / WEBP.";
-          input.value = "";
-          return resetPreview();
-        }
-        if (file.size > MAX_BYTES) {
-          if (clientError) clientError.textContent = "Kích thước quá lớn (tối đa 5MB).";
-          input.value = "";
-          return resetPreview();
-        }
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          if (img) { img.src = e.target.result; img.classList.remove("hidden"); }
-          if (defaultIcon) defaultIcon.classList.add("hidden");
-        };
-        reader.readAsDataURL(file);
-        if (filenameEl) filenameEl.textContent = file.name;
-        if (removeBtn) removeBtn.classList.remove("hidden");
-      }
-
-      input.addEventListener("change", function () {
-        const file = input.files && input.files[0];
-        if (file) showFile(file); else resetPreview();
-      });
-
-      if (removeBtn) {
-        removeBtn.addEventListener("click", function () {
-          input.value = "";
-          resetPreview();
-        });
-      }
-
-      // drag & drop UX
-      if (dropZone) {
-        dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("bg-gray-50"); });
-        dropZone.addEventListener("dragleave", e => { dropZone.classList.remove("bg-gray-50"); });
-        dropZone.addEventListener("drop", function (e) {
-          e.preventDefault();
-          dropZone.classList.remove("bg-gray-50");
-          const f = e.dataTransfer.files && e.dataTransfer.files[0];
-          if (f) {
-            const dt = new DataTransfer();
-            dt.items.add(f);
-            input.files = dt.files;
-            showFile(f);
-          }
-        });
-      }
-    })();
-  </script>
 {% endblock %}

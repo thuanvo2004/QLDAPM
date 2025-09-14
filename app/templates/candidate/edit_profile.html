@@ -3,79 +3,83 @@
 {% block title %}Chỉnh sửa hồ sơ - JobNest{% endblock %}
 
 {% block content %}
-<div class="container mx-auto py-6">
-  <div class="max-w-2xl mx-auto">
-    <div class="bg-white shadow-lg rounded-lg p-6">
-      <h4 class="text-2xl font-bold mb-6 text-center text-gray-800">Chỉnh sửa hồ sơ</h4>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h4 class="card-title mb-4">Chỉnh sửa hồ sơ</h4>
+          
+          <!-- Form -->
+          <form method="POST" action="{{ url_for('candidate.edit_profile') }}" enctype="multipart/form-data">
 
-      <!-- Form -->
-      <form method="POST" action="{{ url_for('candidate.edit_profile') }}" enctype="multipart/form-data" class="space-y-6">
-        <!-- Avatar -->
-        <div class="text-center">
-          {% if candidate.avatar %}
-            <img src="{{ url_for('static', filename='uploads/' + candidate.avatar) }}"
-                 class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-2 border-gray-200"
-                 alt="Avatar">
-          {% else %}
-            <img src="{{ url_for('static', filename='default-avatar.png') }}"
-                 class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-2 border-gray-200"
-                 alt="Default Avatar">
-          {% endif %}
-          <input type="file" name="avatar" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-        </div>
+            <!-- Avatar -->
+            <div class="mb-3 text-center">
+              {% if candidate.avatar %}
+                <img src="{{ url_for('static', filename='uploads/' + candidate.avatar) }}"
+                     class="img-fluid rounded-circle mb-3"
+                     alt="Avatar"
+                     style="width: 120px; height: 120px; object-fit: cover;">
+              {% else %}
+                <img src="{{ url_for('static', filename='default-avatar.png') }}"
+                     class="img-fluid rounded-circle mb-3"
+                     alt="Default Avatar"
+                     style="width: 120px; height: 120px; object-fit: cover;">
+              {% endif %}
+              <input type="file" class="form-control mt-2" name="avatar">
+            </div>
 
-        <!-- Name -->
-        <div>
-          <label for="name" class="block text-sm font-medium text-gray-700">Họ tên</label>
-          <input type="text" id="name" name="name" value="{{ candidate.name }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-        </div>
+            <!-- Name -->
+            <div class="mb-3">
+              <label class="form-label">Họ tên</label>
+              <input type="text" class="form-control" name="name" value="{{ candidate.name }}">
+            </div>
 
-        <!-- Email -->
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-          <input type="email" id="email" name="email" value="{{ candidate.email }}" readonly class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 cursor-not-allowed">
-        </div>
+            <!-- Email -->
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" name="email" value="{{ candidate.email }}" readonly>
+            </div>
 
-        <!-- Phone -->
-        <div>
-          <label for="phone" class="block text-sm font-medium text-gray-700">Số điện thoại</label>
-          <input type="text" id="phone" name="phone" value="{{ candidate.phone or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-        </div>
+            <!-- Phone -->
+            <div class="mb-3">
+              <label class="form-label">Số điện thoại</label>
+              <input type="text" class="form-control" name="phone" value="{{ candidate.phone or '' }}">
+            </div>
 
-        <!-- Address -->
-        <div>
-          <label for="address" class="block text-sm font-medium text-gray-700">Địa chỉ</label>
-          <input type="text" id="address" name="address" value="{{ candidate.address or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-        </div>
+            <!-- Address -->
+            <div class="mb-3">
+              <label class="form-label">Địa chỉ</label>
+              <input type="text" class="form-control" name="address" value="{{ candidate.address or '' }}">
+            </div>
 
-        <!-- Skills -->
-        <div>
-          <label for="skills" class="block text-sm font-medium text-gray-700">Kỹ năng</label>
-          <textarea id="skills" name="skills" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">{{ candidate.skills or '' }}</textarea>
-        </div>
+            <!-- Skills -->
+            <div class="mb-3">
+              <label class="form-label">Kỹ năng</label>
+              <textarea class="form-control" name="skills" rows="2">{{ candidate.skills or '' }}</textarea>
+            </div>
 
-        <!-- Experience -->
-        <div>
-          <label for="experience" class="block text-sm font-medium text-gray-700">Kinh nghiệm</label>
-          <textarea id="experience" name="experience" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">{{ candidate.experience or '' }}</textarea>
-        </div>
+            <!-- Experience -->
+            <div class="mb-3">
+              <label class="form-label">Kinh nghiệm</label>
+              <textarea class="form-control" name="experience" rows="2">{{ candidate.experience or '' }}</textarea>
+            </div>
 
-        <!-- Bio -->
-        <div>
-          <label for="bio" class="block text-sm font-medium text-gray-700">Giới thiệu bản thân</label>
-          <textarea id="bio" name="bio" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">{{ candidate.bio or '' }}</textarea>
-        </div>
+            <!-- Bio -->
+            <div class="mb-3">
+              <label class="form-label">Giới thiệu bản thân</label>
+              <textarea class="form-control" name="bio" rows="3">{{ candidate.bio or '' }}</textarea>
+            </div>
 
-        <!-- Actions -->
-        <div class="flex justify-between">
-          <a href="{{ url_for('candidate.profile') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            Quay lại
-          </a>
-          <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-            Lưu thay đổi
-          </button>
+            <!-- Actions -->
+            <div class="d-flex justify-content-between">
+              <a href="{{ url_for('candidate.profile') }}" class="btn btn-secondary">Quay lại</a>
+              <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+            </div>
+          </form>
+
         </div>
-      </form>
+      </div>
     </div>
   </div>
 </div>

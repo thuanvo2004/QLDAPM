@@ -1,13 +1,67 @@
 import re
-from flask import Blueprint, render_template, request, send_from_directory
+from flask import Blueprint, render_template, request, redirect, url_for, send_from_directory
 from flask_login import current_user
-from app.models import Job, Employer, db
-from sqlalchemy import or_, and_, func, desc, asc, case
+from app.models import Job, db   # nhớ import db nếu cần
 
 # ============================
 # Blueprint
 # ============================
 main_bp = Blueprint("main", __name__)
+
+# ============================
+# Trang chủ
+# ============================
+@main_bp.route("/")
+def index():
+    # phân trang
+    page = request.args.get("page", 1, type=int)
+    per_page = 12
+    jobs_query = Job.query.paginate(page=page, per_page=per_page)
+
+    # lọc
+    keyword = request.args.get("keyword", "")
+    location = request.args.get("location", "")
+    job_type = request.args.get("job_type", "")
+    sort_by = request.args.get("sort_by", "")
+    min_salary_raw = request.args.get("min_salary", "")
+    max_salary_raw = request.args.get("max_salary", "")
+
+    min_salary = parse_int_from_str(min_salary_raw)
+    max_salary = parse_int_from_str(max_salary_raw)
+
+    # lọc + sắp xếp từ jobs_query.items (list các Job)
+    filtered = filter_jobs(
+        jobs_query.items,
+        keyword=keyword,
+        location=location,
+        min_salary=min_salary,
+        max_salary=max_salary,
+        job_type=job_type,
+        sort_by=sort_by,
+    )
+
+    hot_jobs = [j for j in filtered if getattr(j, "featured", False)]
+    other_jobs = [j for j in filtered if not getattr(j, "featured", False)]
+
+    search_params = {
+        "keyword": keyword,
+        "location": location,
+        "job_type": job_type,
+        "sort_by": sort_by,
+        "min_salary": min_salary_raw,
+        "max_salary": max_salary_raw
+    }
+
+    return render_template(
+        "index.html",
+        hot_jobs=hot_jobs,
+        other_jobs=other_jobs,
+        jobs=filtered,
+        search=search_params,
+        total_pages=jobs_query.pages,
+        page=jobs_query.page,
+        user=current_user
+    )
 
 # ============================
 # Hàm trích xuất số nguyên từ chuỗi
@@ -20,117 +74,83 @@ def parse_int_from_str(s):
         return None
     return int(digits)
 
-@main_bp.route("/")
-def index():
-    # pagination params
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 9, type=int)
+# ============================
+# Hàm lọc và sắp xếp Job
+# ============================
+def filter_jobs(job_list, keyword=None, location=None,
+                min_salary=None, max_salary=None,
+                job_type=None, sort_by=None):
 
-    keyword = (request.args.get("keyword", "") or "").strip()
+    k = (keyword or "").strip().lower()
+    filtered = []
 
-    location_raw = request.args.get("city", "")
-    job_type_raw = (request.args.get("job_type", "") or "").strip()  # Single value
-    work_type_raw = (request.args.get("work_type", "") or "").strip()
-    sort_by = request.args.get("sort_by", "")
+    for j in job_list:
+        # tìm theo từ khóa
+        if k:
+            title = (j.title or "").lower()
+            company = (j.company or "").lower()
+            if k not in title and k not in company:
+                continue
 
-    min_salary_raw = request.args.get("salary_min") or request.args.get("min_salary") or request.args.get("min")
-    max_salary_raw = request.args.get("salary_max") or request.args.get("max_salary") or request.args.get("max")
+        # location
+        if location and location.strip():
+            if (j.location or "").lower() != location.strip().lower():
+                continue
 
-    min_salary = parse_int_from_str(min_salary_raw)
-    max_salary = parse_int_from_str(max_salary_raw)
+        # job type
+        if job_type and job_type.strip():
+            if not j.job_type or j.job_type.lower() != job_type.strip().lower():
+                continue
 
-    q = Job.query.outerjoin(Employer)
-
-    # --- KEYWORD---
-    if keyword:
-        kw_like = f"%{keyword}%"
-        q = q.filter(or_(
-            Job.title.ilike(kw_like),
-            Job.description.ilike(kw_like),
-            Employer.company_name.ilike(kw_like)
-        ))
-
-    # --- LOCATION ---
-    if location_raw:
-        locs = [s.strip() for s in location_raw.split(",") if s.strip()]
-        if locs:
-            locs_lower = [l.lower() for l in locs]
-            q = q.filter(func.lower(Job.city).in_(locs_lower))
-
-    # --- JOB TYPE ---
-    if job_type_raw and job_type_raw.lower() != "all":
-        q = q.filter(func.lower(Job.job_type) == job_type_raw.lower())
-
-    # --- WORK TYPE ---
-    if work_type_raw:
-        work_types = [s.strip().lower() for s in work_type_raw.split(",") if s.strip()]
-        if work_types and "all" not in work_types:
-            q = q.filter(func.lower(Job.remote_option).in_(work_types))
-
-    # --- SALARY FILTER ---
-    if min_salary is not None and max_salary is not None:
-        q = q.filter(
-            and_(
-                Job.salary_max >= min_salary,
-                Job.salary_min <= max_salary
-            )
-        )
-    else:
+        # min_salary
         if min_salary is not None:
-            q = q.filter(Job.salary_min >= min_salary)
+            if not getattr(j, "salary", None) or j.salary < min_salary:
+                continue
+
+        # max_salary
         if max_salary is not None:
-            q = q.filter(Job.salary_max <= max_salary)
+            if not getattr(j, "salary", None) or j.salary > max_salary:
+                continue
 
-    # --- SORT ---
+        filtered.append(j)
+
+    # sắp xếp
     if sort_by == "salary_desc":
-        q = q.order_by(
-            case((Job.salary_max == None, 1), else_=0),
-            Job.salary_max.desc()
-        )
+        filtered.sort(key=lambda x: (x.salary or 0), reverse=True)
     elif sort_by == "salary_asc":
-        q = q.order_by(
-            case((Job.salary_min == None, 1), else_=0),
-            Job.salary_min.asc()
-        )
+        filtered.sort(key=lambda x: (x.salary or 0))
     elif sort_by == "newest":
-        q = q.order_by(Job.created_at.desc())
-    else:
-        q = q.order_by(Job.created_at.desc())
+        filtered.sort(key=lambda x: x.id, reverse=True)
 
-    pagination = q.paginate(page=page, per_page=per_page, error_out=False)
-    jobs_page = pagination.items
+    return filtered
 
-    search_params = {
-        "keyword": keyword,
-        "city": location_raw,
-        "job_type": job_type_raw,  # Single value
-        "work_types": work_type_raw.split(",") if work_type_raw else [],
-        "job_types": [job_type_raw] if job_type_raw else [],  # Đảm bảo là list
-        "sort_by": sort_by,
-        "min_salary": min_salary_raw or "",
-        "max_salary": max_salary_raw or "",
-        "per_page": per_page
-    }
+# ============================
+# Định dạng lương cho template
+# ============================
+def format_salary_for_template(value):
+    if value is None or value == "":
+        return "Thương lượng"
+    try:
+        if isinstance(value, int):
+            return "{:,}".format(value)
+        s = str(value).strip()
+        digits = re.sub(r"[^\d]", "", s)
+        if digits:
+            return "{:,}".format(int(digits))
+        return s
+    except Exception:
+        return str(value)
 
-    logo = None
-    if current_user.is_authenticated and current_user.role == "employer":
-        logo = current_user.employer_profile.logo
-
-
-    return render_template(
-        "index.html",
-        jobs=jobs_page,
-        search=search_params,
-        total_pages=pagination.pages,
-        page=pagination.page,
-        user=current_user,
-        logo=logo
-    )
-
+# ============================
+# File JSON tỉnh thành
+# ============================
 @main_bp.route("/provinces")
 def provinces():
     return send_from_directory("static/data", "provinces.json")
 
+# ============================
+# Định dạng lương dạng "triệu"
+# ============================
 @main_bp.app_template_global()
 def format_salary_range(min_salary, max_salary):
     def to_mil(v):

@@ -53,7 +53,6 @@ class Candidate(db.Model):
     education = db.Column(db.String(200))  # học vấn cao nhất
     major = db.Column(db.String(200))      # ngành học
     experience_years = db.Column(db.Integer, default=0)
-    experience_months = db.Column(db.Integer, default=0)
     current_position = db.Column(db.String(200))
     expected_position = db.Column(db.String(200))
     expected_salary = db.Column(db.Integer)
@@ -69,18 +68,6 @@ class Candidate(db.Model):
     applications = db.relationship("Application", back_populates="candidate")
     saved_jobs = db.relationship("SavedJob", back_populates="candidate")
     notifications = db.relationship("Notification", back_populates="candidate")
-
-    @property
-    def experience_str(self):
-        """Trả về chuỗi kinh nghiệm dạng 'X năm Y tháng'"""
-        years = self.experience_years or 0
-        months = self.experience_months or 0
-        parts = []
-        if years > 0:
-            parts.append(f"{years} năm")
-        if months > 0:
-            parts.append(f"{months} tháng")
-        return " ".join(parts) if parts else "-"
 
     def __repr__(self):
         return f"<Candidate {self.full_name}>"
@@ -130,7 +117,7 @@ class Job(db.Model):
     description = db.Column(db.Text, nullable=False)
     requirements = db.Column(db.Text)
     benefits = db.Column(db.Text)
-    job_type = db.Column(db.String(50))
+    job_type = db.Column(db.String(50))       # full-time, part-time, remote, internship
     salary_min = db.Column(db.Integer)
     salary_max = db.Column(db.Integer)
     currency = db.Column(db.String(10), default="VND")
@@ -160,6 +147,8 @@ class Job(db.Model):
 
     def __repr__(self):
         return f"<Job {self.title}>"
+
+
 
 # ======================================================
 # Bảng Application (Hồ sơ ứng tuyển)
@@ -219,6 +208,7 @@ job_category_association = db.Table(
     db.Column("category_id", db.Integer, db.ForeignKey("job_categories.id"), primary_key=True)
 )
 
+
 # ======================================================
 # Bảng Notification (thông báo)
 # ======================================================
@@ -238,36 +228,25 @@ class Notification(db.Model):
     employer = db.relationship("Employer", back_populates="notifications")
 
 
-class Conversation(db.Model):
-    __tablename__ = "conversations"
-
-    id = db.Column(db.Integer, primary_key=True)
-    user1_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    user2_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    user1 = db.relationship("User", foreign_keys=[user1_id])
-    user2 = db.relationship("User", foreign_keys=[user2_id])
-    messages = db.relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
-
+# ======================================================
+# Bảng Message (chat ứng viên ↔ nhà tuyển dụng)
+# ======================================================
 class Message(db.Model):
     __tablename__ = "messages"
 
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     receiver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    conversation_id = db.Column(db.Integer, db.ForeignKey("conversations.id"), nullable=False)  # <-- thêm
     content = db.Column(db.Text, nullable=False)
-    conversation_id = db.Column(db.Integer, db.ForeignKey("conversations.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     attachment_url = db.Column(db.String(255))
 
     sender = db.relationship("User", foreign_keys=[sender_id], backref="sent_messages")
     receiver = db.relationship("User", foreign_keys=[receiver_id], backref="received_messages")
-    conversation = db.relationship("Conversation", back_populates="messages")
 
     def __repr__(self):
         return f"<Message {self.sender_id} → {self.receiver_id}>"
+
 
 # ======================================================
 # Bảng Payment (thanh toán)
@@ -288,13 +267,14 @@ class Payment(db.Model):
     reference_number = db.Column(db.String(255), nullable=True)
     body = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
+    
     # Foreign key to link payment with user (employer)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     user = db.relationship("User", backref="payments")
 
     def __repr__(self):
         return f"<Payment {self.id} - {self.gateway} - {self.amount_in}>"
+
 
 # bảng Skills
 class Skill(db.Model):
@@ -321,6 +301,3 @@ candidate_language = db.Table(
     db.Column("candidate_id", db.Integer, db.ForeignKey("candidates.id"), primary_key=True),
     db.Column("language_id", db.Integer, db.ForeignKey("languages.id"), primary_key=True)
 )
-
-
-

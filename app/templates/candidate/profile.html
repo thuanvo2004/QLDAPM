@@ -1,143 +1,53 @@
-{# templates/candidate/profile.html #}
 {% extends "base.html" %}
 
 {% block title %}Hồ sơ ứng viên - JobNest{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-
-  <div class="bg-white rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-8 border-t-8 border-[#0046FF]">
-    <div class="relative w-28 h-28 md:w-32 md:h-32 flex-shrink-0">
+<div class="container py-5">
+  <div class="row">
+    <!-- Cột trái: avatar -->
+    <div class="col-md-4 text-center">
       {% if candidate.avatar %}
-        <img src="{{ url_for('static', filename='uploads/' + candidate.avatar) }}" alt="Avatar" class="w-full h-full rounded-full object-cover">
+        <img src="{{ url_for('static', filename='uploads/' + candidate.avatar) }}"
+             class="img-fluid rounded-circle mb-3"
+             alt="Avatar"
+             style="width: 180px; height: 180px; object-fit: cover;">
       {% else %}
-        <img src="{{ url_for('static', filename='default-avatar.png') }}" alt="No Avatar" class="w-full h-full rounded-full object-cover">
+        <img src="{{ url_for('static', filename='default-avatar.png') }}"
+             class="img-fluid rounded-circle mb-3"
+             alt="Default Avatar"
+             style="width: 180px; height: 180px; object-fit: cover;">
       {% endif %}
-      <label class="absolute bottom-0 right-0 bg-[#0046FF] text-white w-8 h-8 flex items-center justify-center rounded-full cursor-pointer hover:bg-[#0037CC] transition-colors">
-        <i class="fa-solid fa-camera text-sm"></i>
-        <input type="file" class="hidden" id="avatar-upload">
-      </label>
+      <h4 class="mt-2">{{ candidate.name }}</h4>
+      <p class="text-muted">{{ candidate.email }}</p>
+      <a href="{{ url_for('candidate.edit_profile') }}" class="btn btn-outline-primary btn-sm">
+        <i class="fa-solid fa-pen"></i> Chỉnh sửa hồ sơ
+      </a>
     </div>
 
-    <div class="flex-1 text-center md:text-left">
-      <h1 class="text-3xl font-extrabold text-[#212529]">{{ candidate.full_name or "Chưa cập nhật" }}</h1>
-      <p class="text-gray-500 text-lg mt-1">{{ candidate.title or "Ứng viên" }} • {{ candidate.city or "-" }}</p>
-      <div class="mt-5 flex flex-wrap justify-center md:justify-start gap-4">
-        <a href="{{ url_for('candidate.edit_profile') }}" class="px-5 py-2 bg-[var(--primary-blue)] border border-[var(--primary-blue)] text-white font-medium rounded-lg hover:bg-[var(--primary-blue-hover)] transition-colors">
-          Chỉnh sửa hồ sơ
-        </a>
-      </div>
-    </div>
-
-    <div class="mt-4 md:mt-0 text-gray-500 text-sm">
-      <p>Ngày tham gia: <span class="font-medium">{{ candidate.created_at.strftime('%d/%m/%Y') if candidate.created_at else '-' }}</span></p>
-    </div>
-  </div>
-
-  <div class="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <div class="lg:col-span-1 bg-white p-6 md:p-8 rounded-2xl">
-      <h2 class="text-xl font-bold text-[#212529] mb-4 border-b pb-3">Thông tin cá nhân</h2>
-      <ul class="space-y-4 text-gray-700">
-        <li><span class="font-semibold text-gray-900">Email:</span> <span class="block mt-1">{{ users.email or '-' }}</span></li>
-        <li><span class="font-semibold text-gray-900">Điện thoại:</span> <span class="block mt-1">{{ candidate.phone or '-' }}</span></li>
-        <li><span class="font-semibold text-gray-900">Địa chỉ:</span> <span class="block mt-1">{{ candidate.address or '-' }}</span></li>
-        <li>
-          <span class="font-semibold text-gray-900">Kỹ năng:</span>
-          <div class="mt-2 flex flex-wrap gap-2">
-            {% if candidate.skills %}
-            {% for skill in (candidate.skills or "").split(",") %}
-            {% if skill.strip() %}
-            <span class="bg-[var(--blue-bg)] text-[var(--primary-blue)] text-xs font-medium px-3 py-1 rounded-full">
-            {{ skill.strip() }}
-          </span>
-            {% endif %}
-            {% endfor %}
-            {% else %}
-            <p><i>Chưa có kỹ năng</i></p>
-            {% endif %}
-          </div>
-        </li>
-
-        <li><span class="font-semibold text-gray-900">Kinh nghiệm:</span>
-          <span class="block mt-1">{{ candidate.experience_str }}</span>
-        </li>
-        <li><span class="font-semibold text-gray-900">Giới thiệu:</span> <span class="block mt-1">{{ candidate.career_objective or '-' }}</span></li>
-      </ul>
-    </div>
-
-    <div class="lg:col-span-2 space-y-6">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-2xl font-bold text-[#212529] uppercase">Các CV đã tạo</h2>
-        <a href="{{ url_for('cv.create_cv') }}" class="px-5 py-2 bg-[#0046FF] text-white rounded-lg font-medium hover:bg-[#0037CC]">
-          <i class="fa-solid fa-plus-circle mr-2"></i>Tạo CV mới
-        </a>
+    <!-- Cột phải: thông tin chi tiết -->
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Thông tin cá nhân</h5>
+          <ul class="list-unstyled">
+            <li><strong>Họ tên:</strong> {{ candidate.name or "Chưa cập nhật" }}</li>
+            <li><strong>Email:</strong> {{ candidate.email }}</li>
+            <li><strong>Số điện thoại:</strong> {{ candidate.phone or "Chưa cập nhật" }}</li>
+            <li><strong>Địa chỉ:</strong> {{ candidate.address or "Chưa cập nhật" }}</li>
+            <li><strong>Kỹ năng:</strong> {{ candidate.skills or "Chưa cập nhật" }}</li>
+            <li><strong>Kinh nghiệm:</strong> {{ candidate.experience or "Chưa cập nhật" }}</li>
+          </ul>
+        </div>
       </div>
 
-      <div class="bg-white rounded-2xl overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tên CV</th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Template</th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Ngày tạo</th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Trạng thái</th>
-              <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Hành động</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            {% for cv in candidate.cvs %}
-            <tr class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ cv.cv_name }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">{{ cv.template }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">{{ cv.created_at.strftime('%d/%m/%Y') }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                {% if cv.status == 'draft' %}
-                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Nháp</span>
-                {% else %}
-                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Đang dùng</span>
-                {% endif %}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex justify-end gap-2">
-                  <a href="{{ url_for('cv.view', cv_id=cv.id) }}" class="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-50 transition"><i class="fa-solid fa-eye"></i></a>
-                  <a href="{{ url_for('cv.download', cv_id=cv.id) }}" class="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition"><i class="fa-solid fa-download"></i></a>
-                  <a href="{{ url_for('cv.delete', cv_id=cv.id) }}" class="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition"><i class="fa-solid fa-trash-can"></i></a>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="card shadow-sm mt-4">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Giới thiệu bản thân</h5>
+          <p>{{ candidate.bio or "Bạn chưa thêm phần giới thiệu." }}</p>
+        </div>
       </div>
     </div>
   </div>
 </div>
-
-{% endblock %}
-
-{% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const avatarInput = document.getElementById('avatar-upload');
-  if(!avatarInput) return;
-
-  avatarInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if(!file) return;
-    if(!file.type.startsWith('image/')) return alert('Vui lòng chọn file ảnh');
-    if(file.size > 2*1024*1024) return alert('Kích thước tối đa 2MB');
-
-    const img = avatarInput.closest('div').querySelector('img');
-    img.src = URL.createObjectURL(file);
-
-    const fd = new FormData(); fd.append('avatar', file);
-    try {
-      const res = await fetch('{{ url_for("candidate.upload_avatar") }}', {method:'POST', body: fd});
-      const j = await res.json();
-      if(j.success) alert('Cập nhật ảnh thành công');
-      else alert(j.message || 'Không thể upload ảnh');
-    } catch(err) { console.error(err); alert('Lỗi mạng khi upload ảnh'); }
-  });
-});
-</script>
 {% endblock %}

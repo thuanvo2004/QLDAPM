@@ -1,16 +1,7 @@
-import os
-from datetime import datetime
-
-from flask import current_app, app
-
-import cloudinary
-import cloudinary.uploader
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
-from sqlalchemy import exc
-
-from app.models import User, Candidate, Employer, Message
-from app.extensions import db, mail
+from app.models import User, Candidate, Employer
+from app.extensions import db
 from app.forms import RegisterForm, LoginForm, EmployerRegisterForm
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -79,65 +70,27 @@ def register_candidate():
 @auth_bp.route("/register/employer", methods=["GET", "POST"])
 def register_employer():
     form = EmployerRegisterForm()
-
     if form.validate_on_submit():
-        current_app.logger.debug("Form validated successfully. Processing employer registration.")
-        if User.query.filter_by(email=form.email.data).first():
-            flash("Email đã được đăng ký!", "danger")
-            return render_template("auth/register_employer.html", form=form)
-
+        # 1. Tạo user với role employer
         user = User(email=form.email.data, role="employer")
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        current_app.logger.debug("User created with ID: %s", user.id)
 
-        logo_url = None
-        if form.logo.data:
-            current_app.logger.debug("Logo file detected: %s, filename: %s", type(form.logo.data), getattr(form.logo.data, 'filename', 'No filename'))
-            try:
-                upload_result = cloudinary.uploader.upload(
-                    form.logo.data,
-                    folder="jobnest",
-                    resource_type="image"
-                )
-                logo_url = upload_result.get("secure_url")
-                current_app.logger.debug("Cloudinary upload result: %s", upload_result)
-                if not logo_url:
-                    current_app.logger.error("Cloudinary upload succeeded but no secure_url in response.")
-                    flash("Tải logo thất bại: Không nhận được URL từ Cloudinary.", "danger")
-            except Exception as e:
-                current_app.logger.exception("Cloudinary upload failed: %s", str(e))
-                flash(f"Tải logo thất bại: {str(e)}", "danger")
-        else:
-            current_app.logger.debug("No logo file provided in form.")
-
+        # 2. Tạo employer profile liên kết với user
         employer = Employer(
             user_id=user.id,
             company_name=form.company_name.data,
-            phone=form.phone.data,
-            industry=form.industry.data,
-            company_size=form.company_size.data,
             address=form.address.data,
-            city=form.city.data,
-            website=form.website.data,
-            description=form.description.data,
-            founded_year=form.founded_year.data,
-            tax_code=form.tax_code.data,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
-            logo=logo_url
+            description=form.description.data
         )
         db.session.add(employer)
         db.session.commit()
-        current_app.logger.debug("Employer profile created with ID: %s, logo: %s", employer.id, logo_url)
 
         flash("Đăng ký nhà tuyển dụng thành công, vui lòng đăng nhập!", "success")
         return redirect(url_for("auth.login"))
 
-    current_app.logger.debug("Form not validated or GET request. Rendering form.")
     return render_template("auth/register_employer.html", form=form)
-
 
 @auth_bp.route('/register')
 def register():

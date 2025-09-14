@@ -1,58 +1,28 @@
-{% extends "base.html" %}
-{% block title %}Đăng nhập - JobNest{% endblock %}
-
-{% block content %}
-<div class="flex bg-white rounded-xl shadow-lg max-w-4xl w-full overflow-hidden mx-auto my-12">
-    <!-- Phần bên trái -->
-    <div class="w-1/2 bg-[var(--primary-blue)] text-white p-12 hidden md:flex flex-col justify-center items-center relative">
-        <div class="absolute top-6 left-6 flex items-center gap-2">
-            <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <span class="text-xl font-bold text-[var(--primary-blue)]">JN</span>
-            </div>
-            <span class="text-xl font-semibold">JobNest</span>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng nhập</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Đăng nhập</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-control") }}
         </div>
-        <h2 class="text-3xl font-bold leading-tight mt-12 text-center">
-            Nơi kết nối công việc <br> & người tài
-        </h2>
-        <p class="mt-4 text-center text-gray-200">
-            Tìm kiếm cơ hội nghề nghiệp trong mơ của bạn hoặc tìm kiếm những nhân tài sáng giá nhất cho đội ngũ của bạn.
-        </p>
-    </div>
-
-    <!-- Phần bên phải -->
-    <div class="w-full md:w-1/2 p-8 sm:p-12">
-        <div class="text-center md:text-left mb-6">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Đăng nhập</h1>
-            <p class="text-gray-500 mt-2 text-sm sm:text-base">Chào mừng bạn quay trở lại!<br> Hãy điền thông tin để tiếp tục.</p>
+        <div class="mb-3">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control") }}
         </div>
-
-        <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-6">
-            {{ form.hidden_tag() }}
-
-            <div>
-                {{ form.email.label(class="block text-sm font-medium text-gray-700 mb-1") }}
-                {{ form.email(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] transition-colors", placeholder="user@example.com") }}
-            </div>
-
-            <div>
-                {{ form.password.label(class="block text-sm font-medium text-gray-700 mb-1") }}
-                {{ form.password(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)] transition-colors") }}
-            </div>
-
-            <div>
-                <a href="#" class="text-sm text-[var(--primary-blue)] hover:underline float-right mb-2">Quên mật khẩu?</a>
-            </div>
-            <div>
-                {{ form.submit(class="w-full bg-[var(--primary-blue)] text-white font-semibold py-3 rounded-lg hover:bg-[var(--primary-blue-hover)] transition-colors shadow-md") }}
-            </div>
-        </form>
-
-        <div class="mt-6 text-center">
-            <p class="text-sm text-gray-600">
-                Chưa có tài khoản?
-                <a href="{{ url_for('auth.choose_role') }}" class="text-[var(--primary-blue)] font-medium hover:underline">Đăng ký ngay</a>
-            </p>
+        <div class="mb-3">
+            {{ form.submit(class="btn btn-primary") }}
         </div>
-    </div>
+    </form>
+    <p>Chưa có tài khoản? <a href="{{ url_for('auth.choose_role') }}">Đăng ký</a></p>
 </div>
-{% endblock %}
+</body>
+</html>

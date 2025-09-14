@@ -1,112 +1,56 @@
 {% extends "base.html" %}
-
-{% block title %}Công việc đã ứng tuyển - JobNest{% endblock %}
+{% block title %}Công việc đã ứng tuyển{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 py-8">
-
-  <!-- Header gradient -->
-  <div class="bg-gradient-to-r from-[#0046FF] to-[#001f78] text-white rounded-lg shadow-md mb-6 p-6 min-h-[200px] flex flex-col justify-center">
-    <h2 class="text-4xl font-bold mb-2 uppercase">Công việc đã ứng tuyển</h2>
-    <p class="text-sm opacity-90">
-      Theo dõi các công việc bạn đã gửi hồ sơ ứng tuyển. Trạng thái sẽ được cập nhật liên tục từ nhà tuyển dụng.
-    </p>
-  </div>
-
-  <!-- Đếm số việc -->
-  <p class="mb-6 font-medium">
-    Bạn đã ứng tuyển <span class="font-bold text-blue-700">{{ applications|length }}</span> công việc
-  </p>
+<div class="container py-5">
+  <h2 class="mb-4">Danh sách công việc đã ứng tuyển</h2>
 
   {% if applications %}
-    <!-- Grid jobs -->
-    <div class="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+    <div class="list-group">
       {% for app in applications %}
-        {% set job = app.job %}
-        <div class="relative bg-white rounded-xl shadow-sm border hover:shadow-lg transform transition duration-300 hover:-translate-y-2 flex flex-col overflow-hidden">
-          <!-- Timeline marker -->
-          <div class="absolute left-0 top-0 h-full w-1 bg-[var(--primary-blue)]"></div>
-
-          <div class="p-5 flex flex-col flex-grow">
-            <!-- Header with logo + title -->
-            <div class="flex items-center gap-3 mb-3">
-              {% if job.employer and job.employer.logo %}
-                <img src="{{ url_for('static', filename='uploads/company_logos/' ~ job.employer.logo) }}"
-                     alt="{{ job.employer.company_name }}"
-                     class="w-10 h-10 rounded-full border object-contain" />
-              {% else %}
-                <div class="w-10 h-10 rounded-full border flex items-center justify-center text-gray-400 text-sm bg-gray-100">
-                  <i class="fa-solid fa-building"></i>
-                </div>
-              {% endif %}
-              <div>
-                <h3 class="text-lg font-semibold text-black leading-tight">
-                  {{ job.title }}
-                </h3>
-                <p class="text-sm text-gray-500">
-                  {{ job.employer.company_name if job.employer else "Công ty ẩn danh" }}
-                </p>
-              </div>
-            </div>
-
-            <!-- Location + applied date -->
-            <p class="text-gray-500 text-sm flex items-center gap-2 mb-1">
-              <i class="fa-solid fa-location-dot"></i>
-              {{ job.city or "Địa điểm ẩn danh" }}
-            </p>
-            <p class="text-gray-500 text-sm flex items-center gap-2">
-              <i class="fa-regular fa-calendar-check"></i>
+        <div class="list-group-item list-group-item-action mb-3 shadow-sm">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">
+              <a href="{{ url_for('job_detail', id=app.job.id) }}">
+                {{ app.job.title }}
+              </a>
+            </h5>
+            <small class="text-muted">
               Nộp ngày {{ app.applied_at.strftime('%d/%m/%Y') }}
-            </p>
-
-            <!-- Status -->
-            <div class="mt-3 flex items-center gap-2">
-              {% if app.status == "pending" %}
-                <i class="fa-solid fa-clock text-yellow-500"></i>
-                <span class="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700 font-medium">Chờ duyệt</span>
-              {% elif app.status == "reviewed" %}
-                <i class="fa-solid fa-eye text-blue-500"></i>
-                <span class="px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-700 font-medium">Đang xem xét</span>
-              {% elif app.status == "accepted" %}
-                <i class="fa-solid fa-circle-check text-green-600"></i>
-                <span class="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700 font-medium">Được chấp nhận</span>
-              {% elif app.status == "rejected" %}
-                <i class="fa-solid fa-circle-xmark text-red-600"></i>
-                <span class="px-3 py-1 text-xs rounded-full bg-red-100 text-red-700 font-medium">Bị từ chối</span>
-              {% else %}
-                <i class="fa-solid fa-info-circle text-gray-400"></i>
-                <span class="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600 font-medium">{{ app.status }}</span>
-              {% endif %}
-            </div>
-
-            <!-- Actions -->
-            <div class="mt-auto pt-4 flex gap-2">
-              <a href="{{ url_for('job.job_detail', job_id=job.id) }}"
-                 class="flex-1 inline-block text-center px-3 py-2 text-sm text-white rounded-lg bg-[var(--primary-blue)] hover:bg-[var(--primary-blue-hover)] transition font-semibold">
-                Xem chi tiết
-              </a>
-              <a href="{{ url_for('messages.chat_with_user', user_id=job.employer.user.id) }}"
-                 class="flex-1 inline-block text-center px-3 py-2 text-sm text-[var(--primary-blue)] border border-[var(--primary-blue)] rounded-lg hover:bg-[var(--primary-blue)] hover:text-white transition font-semibold">
-                Chat
-              </a>
-            </div>
+            </small>
           </div>
+
+          <p class="mb-1 text-muted">
+            <i class="fa-solid fa-building"></i> {{ app.job.employer.company_name }}
+            · <i class="fa-solid fa-location-dot"></i> {{ app.job.city or '-' }}
+          </p>
+
+          <p class="mb-1">
+            <strong>Trạng thái:</strong>
+            {% if app.status == "pending" %}
+              <span class="badge bg-secondary">Chờ duyệt</span>
+            {% elif app.status == "reviewed" %}
+              <span class="badge bg-info text-dark">Đang xem xét</span>
+            {% elif app.status == "accepted" %}
+              <span class="badge bg-success">Được chấp nhận</span>
+            {% elif app.status == "rejected" %}
+              <span class="badge bg-danger">Bị từ chối</span>
+            {% else %}
+              <span class="badge bg-light text-dark">{{ app.status }}</span>
+            {% endif %}
+          </p>
+
+          {% if app.feedback %}
+            <p class="small text-muted">
+              <i class="fa-solid fa-comment-dots"></i> Phản hồi: {{ app.feedback }}
+            </p>
+          {% endif %}
         </div>
       {% endfor %}
     </div>
-
-   
   {% else %}
-    <!-- Empty state -->
-    <div class="col-span-full text-center py-12">
-      <div class="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-gray-100 text-gray-400 text-3xl mb-4">
-        <i class="fa-solid fa-briefcase"></i>
-      </div>
-      <h5 class="text-gray-600 font-medium">Bạn chưa ứng tuyển công việc nào.</h5>
-      <a href="{{ url_for('job.list_jobs') }}"
-         class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-[var(--primary-blue)] text-white rounded-lg hover:bg-[var(--primary-blue-hover)] transition">
-        <i class="fa-solid fa-magnifying-glass"></i> Khám phá việc làm
-      </a>
+    <div class="alert alert-info">
+      Bạn chưa ứng tuyển công việc nào.
     </div>
   {% endif %}
 </div>
