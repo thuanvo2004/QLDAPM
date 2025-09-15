@@ -10,25 +10,11 @@ from flask_login import login_required, current_user
 from app.extensions import db
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from app.models import Application
+from app.models import Application, CVHistory
 from werkzeug.utils import secure_filename
 
 cv_bp = Blueprint('cv', __name__, url_prefix='/cv')
 
-# ===== Model =====
-class CVHistory(db.Model):
-    __tablename__ = 'cv_history'
-    id = Column(Integer, primary_key=True)
-    candidate_id = Column(Integer, ForeignKey('candidates.id'), nullable=False)
-    cv_name = Column(String(100), nullable=False)
-    filename = Column(String(255), nullable=False)
-    public_url = Column(String(255))
-    template = Column(String(50))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    candidate = relationship('Candidate', backref=db.backref('cvs', order_by="desc(CVHistory.created_at)"))
-
-    def is_used(self):
-        return Application.query.filter_by(cv_id=self.id).filter(Application.status != 'rejected').count() > 0
 
 # ===== Helper =====
 async def html_to_pdf_bytes(html_str):

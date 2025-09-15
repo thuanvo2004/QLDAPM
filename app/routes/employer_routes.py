@@ -352,3 +352,23 @@ def employer_detail(employer_id):
         jobs=jobs,
         now=now
     )
+
+
+@employer_bp.route("/notifications")
+@login_required
+def view_notifications():
+    notifs = current_user.employer_profile.notifications
+    notifs = sorted(notifs, key=lambda n: n.created_at, reverse=True)
+    return render_template("employer/notifications.html", notifications=notifs)
+
+
+@employer_bp.route("/notifications/read/<int:notif_id>", methods=["POST"])
+@login_required
+def mark_notification_read(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+    if notif.employer_id != current_user.employer_profile.id:
+        flash("Không có quyền thao tác", "danger")
+        return redirect(url_for("employer.view_notifications"))
+    notif.is_read = True
+    db.session.commit()
+    return redirect(url_for("employer.view_notifications"))

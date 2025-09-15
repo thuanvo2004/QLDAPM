@@ -35,6 +35,7 @@
         </nav>
 
         <!-- Nút thông báo -->
+<<<<<<< HEAD
           <div class="dropdown me-3">
             <a class="relative text-[var(--primary-blue)] transition-transform duration-200 hover:scale-125" href="#"
                id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -50,31 +51,89 @@
             <ul class="dropdown-menu dropdown-menu-end w-80 bg-white rounded-lg shadow-lg border border-gray-200"
                 aria-labelledby="notifDropdown"
                 style="max-height: 300px; overflow-y: auto;">
+=======
+        <div class="dropdown me-3">
+          <a class="relative text-white transition-transform duration-200 hover:scale-125" href="#"
+             id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-regular fa-bell text-xl transition-transform duration-200 hover:scale-105"></i>
+            {% set unread_count = current_user.notifications|selectattr("is_read","equalto",False)|list|length %}
+            {% if unread_count > 0 %}
+            <!-- Badge số lượng thông báo chưa đọc -->
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+      {{ unread_count }}
+    </span>
+            {% endif %}
+          </a>
 
-              {% if current_user.notifications %}
-              {% for notif in current_user.notifications[:5] %}
-              <li>
-                <div class="px-3 py-2 hover:bg-gray-100 cursor-pointer">
-                  <div class="flex justify-between">
-                    <span class="text-sm text-gray-800">{{ notif.message }}</span>
-                    <small class="text-xs text-gray-500">
-                      {{ notif.created_at.strftime("%H:%M %d/%m") }}
-                    </small>
-                  </div>
+          <!-- Dropdown thông báo -->
+          <ul class="dropdown-menu dropdown-menu-end w-80 bg-white rounded-lg shadow-lg border border-gray-200"
+              aria-labelledby="notifDropdown"
+              style="max-height: 300px; overflow-y: auto;">
+>>>>>>> 4231998 (create send mail and notificatins)
+
+            {% if current_user.notifications %}
+            {% for notif in current_user.notifications[:5] %}
+            <li data-id="{{ notif.id }}">
+              <div class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center">
+                <div>
+                  <span class="text-sm text-gray-800 {% if not notif.is_read %}fw-bold{% endif %}">{{ notif.message }}</span><br>
+                  <small class="text-xs text-gray-500">{{ notif.created_at.strftime("%H:%M %d/%m") }}</small>
                 </div>
-              </li>
-              {% endfor %}
-              <li>
-                <a href="{{ url_for('notifications.index') }}"
-                   class="block text-center px-3 py-2 text-blue-600 hover:bg-gray-100 font-medium">
-                  Xem tất cả
-                </a>
-              </li>
-              {% else %}
-              <li class="text-center text-gray-500 py-3">Không có thông báo</li>
-              {% endif %}
-            </ul>
-          </div>
+                {% if not notif.is_read %}
+                <button class="btn-mark-read btn btn-sm btn-outline-primary ml-2">Đã đọc</button>
+                {% endif %}
+              </div>
+            </li>
+            {% endfor %}
+            <li>
+              <a href="{{ url_for('candidate.view_notifications') }}"
+                 class="block text-center px-3 py-2 text-blue-600 hover:bg-gray-100 font-medium">
+                Xem tất cả
+              </a>
+            </li>
+            {% else %}
+            <li class="text-center text-gray-500 py-3">Không có thông báo</li>
+            {% endif %}
+          </ul>
+        </div>
+
+        <!-- JS AJAX cho nút Đã đọc -->
+        <script>
+document.querySelectorAll('.btn-mark-read').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const li = e.target.closest('li');
+        const notifId = li.getAttribute('data-id');
+
+        fetch(`/candidate/notifications/mark_read/${notifId}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ form.csrf_token._value() if form else "" }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                li.querySelector('span').classList.remove('fw-bold'); // bỏ in đậm
+                e.target.remove(); // ẩn nút “Đã đọc”
+                // giảm badge số lượng
+                const badge = document.querySelector('#notifDropdown .badge');
+                if (badge) {
+                    let count = parseInt(badge.textContent);
+                    count = Math.max(count - 1, 0);
+                    badge.textContent = count;
+                    if(count === 0) badge.remove();
+                }
+            }
+        })
+        .catch(err => console.error(err));
+    });
+});
+
+
+        </script>
+
 
         <div class="header-actions">
           {% if current_user.is_authenticated %}

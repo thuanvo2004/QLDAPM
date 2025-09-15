@@ -6,10 +6,11 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from app.extensions import db
-from app.models import Job, Application, SavedJob, Candidate
+from app.models import Job, Application, SavedJob, Candidate, Notification,CVHistory
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm
 import os
+from utils.mail_utils import send_email  # đảm bảo import hàm gửi mail
 
 from app.routes.cv_routes import CVHistory
 
@@ -39,62 +40,48 @@ def profile():
 @candidate_bp.route("/apply/<int:job_id>", methods=["GET", "POST"])
 @login_required
 def apply_job(job_id):
-    job = Job.query.get_or_404(job_id)
-    now = date.today()
-    job.is_active = (job.deadline is None) or (job.deadline >= now)
-
     if current_user.role != "candidate":
         flash("Chỉ ứng viên mới nộp hồ sơ", "danger")
         return redirect(url_for("job.list_jobs"))
 
-    if not job.is_active:
-        flash("Công việc này đã hết hạn, không thể ứng tuyển.", "danger")
-        return redirect(url_for("job.list_jobs"))
+    job = Job.query.get_or_404(job_id)
+    employer = job.employer
 
-    existing = Application.query.filter_by(candidate_id=current_user.candidate_profile.id, job_id=job.id).first()
+    # Kiểm tra đã nộp chưa
+    existing = Application.query.filter_by(
+        candidate_id=current_user.candidate_profile.id,
+        job_id=job.id
+    ).first()
     if existing:
         flash("Bạn đã nộp hồ sơ trước đó", "warning")
         return redirect(url_for("job.job_detail", job_id=job.id))
 
-    if request.method == "GET":
-        cvs = CVHistory.query.filter_by(candidate_id=current_user.candidate_profile.id).all()
-        return render_template("candidate/apply_job.html", job=job, cvs=cvs)
-
+    # Xử lý CV (lấy từ form hoặc upload)
     cv_id = request.form.get("cv_id")
     uploaded_cv = request.files.get("cv_upload")
-
-    if not cv_id and not uploaded_cv:
-        flash("Vui lòng chọn hoặc tải lên CV", "danger")
-        return redirect(url_for("candidate.apply_job", job_id=job.id))
-
     cv = None
     if cv_id:
         cv = CVHistory.query.get_or_404(cv_id)
-        if cv.candidate_id != current_user.candidate_profile.id:
-            flash("Không có quyền sử dụng CV này", "danger")
-            return redirect(url_for("candidate.apply_job", job_id=job.id))
-    elif uploaded_cv and uploaded_cv.filename:
+    elif uploaded_cv:
+        # upload lên cloudinary (ví dụ)
+        from werkzeug.utils import secure_filename
+        import cloudinary.uploader, uuid
         filename = secure_filename(uploaded_cv.filename)
-        try:
-            result = cloudinary.uploader.upload(
-                uploaded_cv,
-                resource_type="raw",
-                public_id=f'cv_{current_user.id}_{uuid.uuid4().hex}',
-            )
-            cv = CVHistory(
-                candidate_id=current_user.candidate_profile.id,
-                cv_name=filename.rsplit('.', 1)[0],
-                filename=result['public_id'],
-                public_url=result['secure_url'],
-                template=None
-            )
-            db.session.add(cv)
-            db.session.commit()
-        except Exception as e:
-            current_app.logger.exception("CV upload failed: %s", str(e))
-            flash(f"Tải CV thất bại: {str(e)}", "danger")
-            return redirect(url_for("candidate.apply_job", job_id=job.id))
+        result = cloudinary.uploader.upload(
+            uploaded_cv,
+            resource_type="raw",
+            public_id=f'cv_{current_user.id}_{uuid.uuid4().hex}',
+        )
+        cv = CVHistory(
+            candidate_id=current_user.candidate_profile.id,
+            cv_name=filename.rsplit('.', 1)[0],
+            filename=result['public_id'],
+            public_url=result['secure_url'],
+        )
+        db.session.add(cv)
+        db.session.commit()
 
+    # Tạo application
     application = Application(
         candidate_id=current_user.candidate_profile.id,
         job_id=job.id,
@@ -102,7 +89,55 @@ def apply_job(job_id):
     )
     db.session.add(application)
     db.session.commit()
-    flash("Ứng tuyển thành công", "success")
+
+    # 1️⃣ Email cho ứng viên
+    body_candidate = render_template(
+        "emails/job_applied_candidate.html",
+        candidate_name=current_user.candidate_profile.full_name,
+        job_title=job.title,
+        company_name=employer.company_name
+    )
+    try:
+     send_email(
+        subject=f"Xác nhận nộp hồ sơ - {job.title}",
+        recipients=[current_user.email],
+        body=body_candidate
+    )
+    except Exception as e:
+        print("Email lỗi:", e)
+
+    # 2️⃣ Email cho nhà tuyển dụng
+    body_employer = render_template(
+        "emails/job_applied_employer.html",
+        employer_name=employer.company_name,
+        candidate_name=current_user.candidate_profile.full_name,
+        candidate_email=current_user.email,
+        candidate_phone=current_user.candidate_profile.phone,
+        job_title=job.title
+    )
+    try:
+     send_email(
+        subject=f"Thông báo hồ sơ mới - {job.title}",
+        recipients=[employer.email],
+        body=body_employer
+    )
+    except Exception as e:
+     print("Email lỗi:", e)
+
+    notif_candidate = Notification(
+        candidate_id=current_user.candidate_profile.id,
+        message=f"Bạn đã nộp hồ sơ thành công cho {job.title} tại {employer.company_name}.",
+        type="application"
+    )
+    notif_employer = Notification(
+        employer_id=employer.id,
+        message=f"Ứng viên {current_user.candidate_profile.full_name} đã nộp hồ sơ cho {job.title}.",
+        type="application"
+    )
+    db.session.add_all([notif_candidate, notif_employer])
+    db.session.commit()
+
+    flash("Ứng tuyển thành công. Email và thông báo đã được gửi.", "success")
     return redirect(url_for("candidate.applications"))
 
 @candidate_bp.route("/saved_jobs")
@@ -234,3 +269,31 @@ def upload_avatar():
     db.session.commit()
 
     return jsonify({"success": True, "message": "Upload thành công", "filename": filename})
+
+
+@candidate_bp.route("/notifications")
+@login_required
+def view_notifications():
+    if current_user.role == "candidate":
+        notifs = current_user.candidate_profile.notifications
+    elif current_user.role == "employer":
+        notifs = current_user.employer_profile.notifications
+    else:
+        notifs = []
+
+    notifs = sorted(notifs, key=lambda n: n.created_at, reverse=True)
+    return render_template("notifications/notifications.html", notifications=notifs)
+@candidate_bp.route("/notifications/mark_read/<int:notif_id>", methods=["POST"])
+@login_required
+def mark_notification_read(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+
+    # Kiểm tra quyền
+    if (current_user.role == "candidate" and notif.candidate_id != current_user.candidate_profile.id) or \
+       (current_user.role == "employer" and notif.employer_id != current_user.employer_profile.id):
+        return jsonify({"success": False, "message": "Không có quyền"}), 403
+
+    notif.is_read = True
+    db.session.commit()
+    return jsonify({"success": True})
+
