@@ -1,17 +1,153 @@
 {% extends "base.html" %}
-{% block title %}Danh sách việc làm{% endblock %}
+{% block title %}Trang Chủ - JobNest{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Danh sách việc làm</h2>
-    <ul class="list-group">
+<!-- HERO -->
+<section class="bg-[var(--primary-blue)] text-white text-center py-10">
+  <div class="container mx-auto px-4">
+    <h1 class="mb-3 text-3xl font-black">Tìm việc phù hợp - Nhanh chóng & Uy tín</h1>
+    <p class="text-md mb-4">Tìm kiếm theo vị trí, mức lương và địa điểm. Hàng ngàn cơ hội từ nhà tuyển dụng uy tín.</p>
+
+    <form id="main-search" action="{{ url_for('job.list_jobs') }}" method="get"
+          class="bg-white p-4 rounded-lg flex flex-col sm:flex-row sm:items-center sm:gap-3 gap-3">
+      <input               type="text" name="keyword" placeholder="Vị trí, kỹ năng hoặc công ty"
+             value="{{ search['keyword'] if search and 'keyword' in search else '' }}"
+             class="text-black flex-1 border-2 border-gray-300 rounded-full p-2 text-sm" />
+
+      <!-- Location select -->
+      <div class="relative flex-1">
+        <div id="location-input" class="border-2 border-gray-300 rounded-full p-2 text-gray-400 cursor-pointer text-sm"></div>
+        <input type="hidden" id="location-hidden" name="city" value="{{ search.city if search and 'city' in search else '' }}">
+        <input type="hidden" id="location-hidden-quick" name="location_quick" value="">
+        <div id="location-dropdown" class="absolute left-0 top-full mt-1 w-full bg-white border rounded shadow z-10 hidden">
+          <ul id="province-list" class="p-2"></ul>
+        </div>
+      </div>
+
+      <select class="border-2 border-gray-300 rounded-full p-2 text-gray-400 cursor-pointer text-sm" name="sort_by">
+        <option class="text-black" value="">Sắp xếp</option>
+        <option class="text-black" value="newest" {% if search.sort_by == 'newest' %}selected{% endif %}>Mới nhất</option>
+        <option class="text-black" value="salary_desc" {% if search.sort_by == 'salary_desc' %}selected{% endif %}>Lương cao nhất</option>
+        <option class="text-black" value="salary_asc" {% if search.sort_by == 'salary_asc' %}selected{% endif %}>Lương thấp nhất</option>
+      </select>
+
+      <input class="border-2 border-gray-300 rounded-full p-2 text-gray-400 cursor-pointer text-sm" type="text" name="salary_min" placeholder="Mức lương từ (VND)" value="{{ search.min_salary if search.min_salary else '' }}">
+
+      <input class="border-2 border-gray-300 rounded-full p-2 text-gray-400 cursor-pointer text-sm" type="text" name="salary_max" placeholder="Đến (VND)" value="{{ search.max_salary if search.max_salary else '' }}">
+
+      <button type="submit" class="bg-[var(--primary-blue)] hover:bg-[var(--primary-blue-hover)] text-white px-6 py-2 rounded-full text-sm transition">Tìm kiếm</button>
+    </form>
+  </div>
+</section>
+
+<!-- JOB LIST -->
+<section class="py-10">
+  <div class="container mx-auto px-4 flex gap-6">
+    <!-- Sidebar filter -->
+    <aside class="w-64 flex-shrink-0">
+      <h3 class="text-lg font-semibold mb-3">Bộ lọc</h3>
+
+      <div class="mb-4">
+        <h4 class="font-medium mb-2">Loại công việc</h4>
+        <ul class="space-y-1">
+          <li><label class="flex items-center gap-2"><input type="radio" name="job_type" value="" {% if not search.job_type or search.job_type == '' %}checked{% endif %}> All</label></li>
+          <li><label class="flex items-center gap-2"><input type="radio" name="job_type" value="Full-time" {% if search.job_type == 'Full-time' %}checked{% endif %}> Full-time</label></li>
+          <li><label class="flex items-center gap-2"><input type="radio" name="job_type" value="Part-time" {% if search.job_type == 'Part-time' %}checked{% endif %}> Part-time</label></li>
+          <li><label class="flex items-center gap-2"><input type="radio" name="job_type" value="Contract" {% if search.job_type == 'Contract' %}checked{% endif %}> Contract</label></li>
+          <li><label class="flex items-center gap-2"><input type="radio" name="job_type" value="Internship" {% if search.job_type == 'Internship' %}checked{% endif %}> Internship</label></li>
+        </ul>
+      </div>
+
+      <div class="mb-4">
+        <h4 class="font-medium mb-2">Hình thức làm việc</h4>
+        <ul class="space-y-1">
+          <li><label class="flex items-center gap-2"><input type="checkbox" name="work_type" value="Onsite" {% if 'Onsite' in search.work_types %}checked{% endif %}> Onsite</label></li>
+          <li><label class="flex items-center gap-2"><input type="checkbox" name="work_type" value="Remote" {% if 'Remote' in search.work_types %}checked{% endif %}> Remote</label></li>
+          <li><label class="flex items-center gap-2"><input type="checkbox" name="work_type" value="Hybrid" {% if 'Hybrid' in search.work_types %}checked{% endif %}> Hybrid</label></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main content: jobs -->
+    <main class="flex-1">
+      <div class="grid grid-cols-1 gap-6">
         {% for job in jobs %}
-            <li class="list-group-item">
-                <a href="{{ url_for('job.job_detail', job_id=job.id) }}">{{ job.title }}</a>
-                <div><small>{{ job.city }} - {{ job.deadline.strftime('%d/%m/%Y') if job.deadline else 'Không có hạn' }}</small></div>
-            </li>
+          <article class="bg-white rounded-lg border border-gray-200 p-6 shadow hover:shadow-md hovertransition flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              {% if job.employer and job.employer.logo %}
+                <img src="{{ job.employer.logo }}" alt="{{ job.employer.company_name }}" class="h-12 w-12 rounded-md object-cover border" />
+              {% else %}
+                <div class="h-12 w-12 rounded-md bg-gray-100 flex items-center justify-center text-gray-400">🏢</div>
+              {% endif %}
+
+              <div class="flex items-end space-x-2">
+                {% if job.is_active %}
+                  <span class="font-medium bg-green-200 text-green-600 text-xs p-1 rounded-full">Đang mở</span>
+                {% else %}
+                  <span class="font-medium bg-red-200 text-red-600 text-xs p-1 rounded-full">Đã hết hạn</span>
+                {% endif %}
+
+                <button type="button"
+                      class="save-btn text-[var(--primary-blue)] hover:text-[var(--primary-blue-hover)] transition
+                      {% if current_user.is_authenticated and job in current_user.candidate_profile.saved_jobs|map(attribute='job') %} saved {% endif %}
+                      {% if not current_user.is_authenticated or current_user.role != 'candidate' %} unauthenticated {% endif %}"
+                      data-job-id="{{ job.id }}"
+                      data-login-url="{{ url_for('auth.login') }}">
+                  <i class="{% if current_user.is_authenticated and job in current_user.candidate_profile.saved_jobs|map(attribute='job') %} fa-solid fa-bookmark {% else %} fa-regular fa-bookmark {% endif %}"></i>
+                </button>
+              </div>
+            </div>
+
+            <h3 class="mt-4 text-lg font-semibold text-gray-800 hover:text-blue-600">
+              <a href="{{ url_for('job.job_detail', job_id=job.id) }}">{{ job.title }}</a>
+            </h3>
+
+            <div class="mt-2 text-sm text-gray-600 space-y-1">
+              <p><i class="fa-solid fa-building mr-1 text-gray-400"></i>{{ job.employer.company_name or 'Công ty ẩn danh' }}</p>
+              <p><i class="fa-solid fa-location-dot mr-1 text-gray-400"></i>{{ job.city or 'Địa điểm ẩn danh' }}</p>
+            </div>
+
+            <p class="mt-3 text-sm text-gray-700 line-clamp-2">{{ job.description | truncate(100, true) }}</p>
+
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="px-3 py-1 text-xs bg-[var(--blue-bg)] text-[var(--primary-blue)] rounded-full">{{ job.job_type or '-' }}</span>
+              <span class="px-3 py-1 text-xs bg-[var(--blue-bg)] text-[var(--primary-blue)] rounded-full">{{ job.remote_option or 'On-Site' }}</span>
+              <span class="px-3 py-1 text-xs bg-[var(--blue-bg)] text-[var(--primary-blue)] rounded-full">{{ format_salary_range(job.salary_min, job.salary_max) }}</span>
+            <div class="job-status">
+          </div>
+
+            </div>
+
+            <div class="mt-4 flex gap-3">
+              <a href="{{ url_for('job.job_detail', job_id=job.id) }}" class="flex-1 text-center px-4 py-2 border !border-[var(--primary-blue)] rounded-lg text-sm font-medium text-[var(--primary-blue)] hover:bg-[var(--primary-blue)] hover:text-white transition">Chi tiết</a>
+              <a href="{{ url_for('candidate.apply_job', job_id=job.id) }}" class="flex-1 text-center px-4 py-2 bg-[var(--primary-blue)] text-white rounded-lg text-sm font-medium hover:bg-[var(--primary-blue-hover)] transition">Ứng tuyển ngay</a>
+            </div>
+          </article>
         {% else %}
-            <li class="list-group-item">Chưa có tin tuyển dụng nào</li>
+          <p class="text-center text-gray-500">Không có công việc nào.</p>
         {% endfor %}
-    </ul>
-</div>
+      </div>
+
+      <!-- Pagination -->
+      {% if total_pages > 1 %}
+      <nav class="mt-6 flex justify-center">
+        <ul class="flex space-x-2">
+          {% if page > 1 %}
+            <li><a href="{{ url_for('job.list_jobs', page=page-1, **search) }}" class="px-3 py-1 border rounded bg-gray-100 hover:bg-gray-200">Trước</a></li>
+          {% endif %}
+          {% for p in range(1, total_pages + 1) %}
+            <li>
+              <a href="{{ url_for('job.list_jobs', page=p, **search) }}"
+                 class="px-3 py-1 border rounded {% if p == page %} bg-blue-600 text-white {% else %} bg-gray-100 hover:bg-gray-200 {% endif %}">{{ p }}</a>
+            </li>
+          {% endfor %}
+          {% if page < total_pages %}
+            <li><a href="{{ url_for('job.list_jobs', page=page+1, **search) }}" class="px-3 py-1 border rounded bg-gray-100 hover:bg-gray-200">Sau</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+    </main>
+  </div>
+</section>
 {% endblock %}

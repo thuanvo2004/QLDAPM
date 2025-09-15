@@ -145,6 +145,13 @@
                   <div>
                     <div class="text-sm text-[#6B7280]"><i class="fa-solid fa-location-dot text-[#6B7280]"></i> Địa điểm</div>
                     <div class="font-semibold text-gray-800">{{ job.city or 'Chưa cập nhật' }}</div>
+                    <p class="text-sm text-[#6B7280] mt-2 mb-2"><i class="fa-regular fa-circle-dot"></i> Trạng thái:
+                      {% if job.is_active %}
+                        <span class="font-semibold bg-green-200 text-green-600 text-sm p-1 rounded-full">Đang mở</span>
+                      {% else %}
+                        <span class="font-semibold bg-red-200 text-red-600 text-sm p-1 rounded-full">Đã hết hạn</span>
+                      {% endif %}
+                    </p>
                   </div>
                   <div class="text-left">
                     <div class="text-sm text-[#6B7280]">Mức lương</div>
