@@ -5,7 +5,7 @@ from app.extensions import db
 import json
 import re
 from datetime import datetime
-
+#### This is thai work 
 payment_bp = Blueprint("payment", __name__, url_prefix="/payment")
 
 # Payment fee for premium activation (in VND)
