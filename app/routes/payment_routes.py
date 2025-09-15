@@ -11,7 +11,6 @@ payment_bp = Blueprint("payment", __name__, url_prefix="/payment")
 # Payment fee for premium activation (in VND)
 PREMIUM_FEE = 2000  # 2,000 VND
 
-
 @payment_bp.route("/")
 @login_required
 def payment_view():

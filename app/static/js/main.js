@@ -48,17 +48,33 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!res.ok) throw new Error('no provinces');
       const data = await res.json();
       const arr = Array.isArray(data) ? data : (data.provinces || []);
+      // 6 thành phố trực thuộc trung ương
+      const priority = ["Hà Nội", "Hồ Chí Minh", "Hải Phòng", "Đà Nẵng", "Cần Thơ", "Huế"];
+
+      // Tách thành 2 nhóm: tp trung ương + còn lại
+      const priorityArr = arr.filter(p => priority.includes(p.name));
+      const othersArr = arr.filter(p => !priority.includes(p.name));
+
+      // Sort các tỉnh còn lại theo alphabet
+      othersArr.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+
+      // Gộp lại: tp TW trước, sau đó tỉnh thành khác
+      const finalArr = [...priorityArr, ...othersArr];
+
+      // Clear list
       provinceList.innerHTML = '';
 
-      arr.forEach(p => {
+      // Render lại list
+      finalArr.forEach(p => {
         const li = document.createElement('li');
         li.innerHTML = `<label>
-          <input type="checkbox" data-name="${p}" value="${p}">
+          <input type="checkbox" data-name="${p.name}" value="${p.id}">
           <span class="box" aria-hidden="true"></span>
-          <span class="pname">${p}</span>
+          <span class="pname">${p.name}</span>
         </label>`;
         provinceList.appendChild(li);
       });
+
 
       initFromHidden();
     } catch (e) {
@@ -384,7 +400,56 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
   });
+    async function loadIndustries() {
+    const industrySelect = document.getElementById("industry-select");
+    if (!industrySelect) return;
+
+    try {
+      const res = await fetch("/industries"); // backend trả JSON
+      console.log("Fetch status:", res.status);
+      if (!res.ok) throw new Error("no industries");
+      const data = await res.json();
+      const arr = Array.isArray(data) ? data : (data.industries || []);
+
+      // Sắp xếp theo alphabet
+      arr.sort((a, b) => a.name.localeCompare(b.name, "vi"));
+
+      // Clear cũ (chỉ giữ option đầu tiên)
+      industrySelect.innerHTML = '<option value="">Ngành nghề</option>';
+
+      // Render danh sách
+      arr.forEach(ind => {
+        const opt = document.createElement("option");
+        opt.value = ind.id;
+        opt.textContent = ind.name;
+        industrySelect.appendChild(opt);
+      });
+
+    } catch (e) {
+      console.warn("Could not load industries", e);
+      Toastify({
+        text: "Không thể tải danh sách ngành nghề",
+        duration: 3000,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "#dc3545",
+        className: "toastify-custom-error",
+      }).showToast();
+    }
+  }
+
+const industrySelect = document.getElementById("industry-select");
+industrySelect.addEventListener("change", () => {
+  if (industrySelect.value === "") {
+    industrySelect.classList.add("text-gray-400");
+    industrySelect.classList.remove("text-black");
+  } else {
+    industrySelect.classList.add("text-black");
+    industrySelect.classList.remove("text-gray-400");
+  }
+});
 
   // init load
-  loadProvinces();
+    loadProvinces();
+    loadIndustries();
 });
