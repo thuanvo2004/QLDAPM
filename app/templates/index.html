@@ -3,169 +3,272 @@
 
 {% block content %}
 <!-- HERO -->
-<section class="hero">
-  <div class="container hero-inner">
-    <div class="upper-hero">
-      <h1 class="mb-3">Tìm việc phù hợp - Nhanh chóng & Uy tín</h1>
-      <p>Tìm kiếm theo vị trí, mức lương và địa điểm. Hàng ngàn cơ hội từ nhà tuyển dụng uy tín.</p>
-
-      <form id="main-search" class="search-bar" action="{{ url_for('main.index') }}" method="get" role="search">
-        <div class="search-top">
-          <input type="text" class="keyword-input" name="keyword" placeholder="Vị trí, kỹ năng hoặc công ty" value="{{ search['keyword'] if search and 'keyword' in search else '' }}">
-
-          <!-- Location select -->
-          <div class="location-select">
-            <div id="location-input" class="location-input" tabindex="0" role="button" aria-haspopup="false"></div>
-            <input type="hidden" id="location-hidden" name="city" placeholder="Nhập Tỉnh/Thành phố" readonly value="{{ search.city if search and 'city' in search else '' }}">
-            <input type="hidden" id="location-hidden-quick" name="location_quick" value="">
-
-            <div class="location-dropdown" id="location-dropdown">
-              <div class="location">
-                <ul id="province-list"></ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="search-bottom">
-          <input type="text" name="salary_min" placeholder="Mức lương từ (VND)" value="{{ search.min_salary if search.min_salary else '' }}">
-
-          <input type="text" name="salary_max" placeholder="Đến (VND)" value="{{ search.max_salary if search.max_salary else '' }}">
-
-          <select name="job_type" id="job_type_select">
-            <option value="">Loại công việc</option>
-            <option value="Full-time" {% if search.job_type == 'Full-time' %}selected{% endif %}>Full-time</option>
-            <option value="Part-time" {% if search.job_type == 'Part-time' %}selected{% endif %}>Part-time</option>
-            <option value="Contract" {% if search.job_type == 'Contract' %}selected{% endif %}>Contract</option>
-            <option value="Internship" {% if search.job_type == 'Intern' %}selected{% endif %}>Internship</option>
-          </select>
-
-          <select name="sort_by">
-            <option value="">Sắp xếp</option>
-            <option value="newest" {% if search.sort_by == 'newest' %}selected{% endif %}>Mới nhất</option>
-            <option value="salary_desc" {% if search.sort_by == 'salary_desc' %}selected{% endif %}>Lương cao nhất</option>
-            <option value="salary_asc" {% if search.sort_by == 'salary_asc' %}selected{% endif %}>Lương thấp nhất</option>
-          </select>
-
-          <button type="submit" class="search-btn">
-            <i class="fa-sharp fa-solid fa-magnifying-glass"></i>
-            Tìm kiếm
-          </button>
-        </div>
-
-        <!-- Hidden inputs for filters -->
-        <input type="hidden" id="job-type-hidden" name="job_type" value="{{ search.job_type if search.job_type else '' }}">
-        <input type="hidden" id="work-type-hidden" name="work_type" value="{{ search.work_types | join(',') if search and 'work_types' in search else '' }}">
-      </form>
+<section class="min-h-[450px] grid grid-cols-5 gap-6 items-center bg-gradient-to-tr from-[var(--primary-blue)] to-blue-800 text-white p-8">
+  <!-- Cột trái -->
+  <div class="col-span-3 space-y-6">
+    <div>
+      <h1 class="mb-3 text-4xl font-bold">Tìm việc phù hợp - Nhanh chóng & Uy tín</h1>
+      <p class="text-lg">Tìm kiếm theo vị trí, ngành nghề và địa điểm. Hàng ngàn cơ hội từ nhà tuyển dụng uy tín.</p>
     </div>
+
+    <!-- Form search -->
+    <form id="main-search" action="{{ url_for('main.index') }}" method="get" role="search"
+      class="flex items-center gap-3 flex-wrap bg-white rounded-xl p-3 shadow-md">
+      <!-- Keyword -->
+      <div class="flex-1 min-w-0">
+        <label for="keyword" class="sr-only">Từ khóa</label>
+        <input id="keyword" name="keyword" type="text"
+               placeholder="Vị trí, kỹ năng hoặc công ty"
+               value="{{ request.args.get('keyword', '') }}"
+               class="w-full block rounded-lg border border-gray-300 text-black px-4 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)]">
+      </div>
+
+      <!-- Industry -->
+      <div class="flex-1 min-w-0">
+        <label for="industry-select" class="sr-only">Ngành nghề</label>
+        <select id="industry-select" name="industry"
+                class="w-full block rounded-lg border border-gray-300 text-gray-400 px-4 py-3 text-sm appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)]">
+          <option value="">Ngành nghề</option>
+          {% for industry in industries %}
+            <option value="{{ industry.id }}" {% if request.args.get('industry') == industry.id %}selected{% endif %}>{{ industry.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Location -->
+      <div class="flex-1 min-w-0 location-select relative">
+        <label class="sr-only">Tỉnh/Thành phố</label>
+
+        <!-- visible container -->
+        <div id="location-input"
+             class="flex items-center justify-between w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-400 cursor-pointer hover:border-[var(--primary-blue)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-blue)]"
+             tabindex="0" role="button" aria-expanded="false">
+          <span class="location-placeholder truncate">Chọn Tỉnh/Thành phố</span>
+          <!-- caret -->
+          <svg class="w-4 h-4 ml-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+
+        <!-- dropdown -->
+        <div id="location-dropdown" class="location-dropdown mt-2 w-full max-h-80 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+          <ul id="province-list" class="p-2">
+            {% for province in provinces %}
+              <li class="px-2 py-1">
+                <label class="flex items-center gap-3 w-full cursor-pointer">
+                  <input type="checkbox" data-name="{{ province.name }}" value="{{ province.id }}"
+                         {% if province.id in request.args.get('city', '').split(',') %}checked{% endif %}
+                         class="hidden">
+                  <!-- visual box -->
+                  <span class="box w-4 h-4 inline-block shrink-0"></span>
+                  <span class="pname text-sm text-gray-800 truncate">{{ province.name }}</span>
+                </label>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <input type="hidden" id="location-hidden" name="city" value="{{ request.args.get('city', '') }}">
+        <input type="hidden" id="location-hidden-quick" name="city_quick" value="{{ request.args.get('city', '') }}">
+      </div>
+
+      <!-- Submit button (fixed smaller width) -->
+      <div class="w-auto">
+        <button type="submit"
+                class="inline-flex items-center justify-center px-6 py-3 bg-[var(--primary-blue)] text-white font-semibold rounded-lg hover:bg-[var(--primary-blue-hover)] transition">
+          Tìm kiếm
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Cột phải -->
+  <div class="col-span-2 flex justify-center">
+    <img src="/static/images/job-search-illustration.png" alt="Job Search" class="max-w-full h-auto">
   </div>
 </section>
 
-<!-- JOB LIST -->
-<section class="job-list-section">
-  <div class="container two-column-layout">
-    <!-- Left Column: Filters -->
-    <aside class="filter-column">
-      <h3 class="filter-title">Bộ lọc</h3>
-      <div class="filter-group">
-        <h4 class="filter-subtitle">Loại công việc</h4>
-        <ul class="filter-list" id="job-type-filter">
-          <li><label><input type="radio" name="job_type" value="" {% if not search.job_type or search.job_type == '' %}checked{% endif %}> All</label></li>
-          <li><label><input type="radio" name="job_type" value="Full-time" {% if search.job_type == 'Full-time' %}checked{% endif %}> Full-time</label></li>
-          <li><label><input type="radio" name="job_type" value="Part-time" {% if search.job_type == 'Part-time' %}checked{% endif %}> Part-time</label></li>
-          <li><label><input type="radio" name="job_type" value="Contract" {% if search.job_type == 'Contract' %}checked{% endif %}> Contract</label></li>
-          <li><label><input type="radio" name="job_type" value="Internship" {% if search.job_type == 'Internship' %}checked{% endif %}> Internship</label></li>
-        </ul>
+<!-- Companies Our Talents Work At -->
+    <section class="companies-section py-16">
+      <div class="container mx-auto">
+        <h2 class="text-3xl font-bold text-center mb-10 text-gray-800">Các Công Ty Hàng Đầu Tuyển Dụng Tại JobNest</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 items-center justify-items-center">
+            <a href="https://vingroup.net/" target="_blank" class="company-logo block w-26 hover:scale-105 transition">
+              <img src="{{ url_for('static', filename='images/companies/Vingroup_logo.png') }}" alt="Vingroup Logo" class="w-full h-auto">
+            </a>
+            <a href="https://fpt.com.vn/" target="_blank" class="company-logo block w-26 hover:scale-105 transition">
+              <img src="{{ url_for('static', filename='images/companies/FPT_logo.png') }}" alt="FPT Logo" class="w-full h-auto">
+            </a>
+            <a href="https://vinamilk.com.vn/" target="_blank" class="company-logo block w-26 hover:scale-105 transition">
+              <img src="{{ url_for('static', filename='images/companies/Vinamilk.png') }}" alt="Vinamilk Logo" class="w-full h-auto">
+            </a>
+            <a href="https://vng.com.vn/" target="_blank" class="company-logo block w-26 hover:scale-105 transition">
+              <img src="{{ url_for('static', filename='images/companies/VNG_Corp.png') }}" alt="VNG Logo" class="w-full h-auto">
+            </a>
+          </div>
       </div>
-      <div class="filter-group">
-        <h4 class="filter-subtitle">Hình thức làm việc</h4>
-        <ul class="filter-list" id="work-type-filter">
-          <li><label><input type="checkbox" name="work_type" value="Onsite" {% if 'Onsite' in search.work_types %}checked{% endif %}> Onsite</label></li>
-          <li><label><input type="checkbox" name="work_type" value="Remote" {% if 'Remote' in search.work_types %}checked{% endif %}> Remote</label></li>
-          <li><label><input type="checkbox" name="work_type" value="Hybrid" {% if 'Hybrid' in search.work_types %}checked{% endif %}> Hybrid</label></li>
-        </ul>
-      </div>
-    </aside>
+    </section>
 
-    <!-- Right Column: Jobs -->
-    <main class="job-column">
-      <div class="job-grid">
-        {% for job in jobs %}
-          <article class="job-card">
-            <div class="job-header">
-              <div class="company-logo-wrapper">
-                {% if job.employer and job.employer.logo %}
-                  <img src="{{ job.employer.logo }}"
-                       alt="{{ job.employer.company_name }}"
-                       class="company-logo-img h-12 w-12 rounded-md object-cover border" />
-                {% else %}
-                  <div class="company-logo h-12 w-12 rounded-md bg-gray-100 flex items-center justify-center text-gray-400">
-                    🏢
-                  </div>
-                {% endif %}
+
+    <!-- JOB LIST -->
+    <section class="job-preview-section py-16">
+      <div class="container mx-auto">
+        <h2 class="text-3xl font-bold mb-10 text-center text-gray-800">Cơ hội việc làm đang chờ bạn</h2>
+        <!-- Grid 4 cột -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {% for job in jobs[:4] %}
+            <article class="job-card bg-white rounded-2xl p-6 shadow-md transition-all duration-300">
+              <div class="job-header flex items-center justify-between mb-4">
+                <div class="company-logo-wrapper">
+                  {% if job.employer and job.employer.logo %}
+                    <img src="{{ job.employer.logo }}"
+                         alt="{{ job.employer.company_name }}"
+                         class="company-logo-img h-14 w-14 rounded-lg object-cover border-2 border-gray-200" />
+                  {% else %}
+                    <div class="company-logo h-14 w-14 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-2xl">
+                      🏢
+                    </div>
+                  {% endif %}
+                </div>
               </div>
 
-              {% if current_user.is_authenticated and current_user.role == "candidate" %}
-                <form action="{{ url_for('candidate.save_job', job_id=job.id) }}" method="POST" style="display:inline;">
-                  <button type="submit" class="save-btn {% if job in current_user.candidate_profile.saved_jobs|map(attribute='job') %}saved{% endif %}" data-job-id="{{ job.id }}">
-                    <i class="fa-regular fa-bookmark regular-icon"></i>
-                    <i class="fa-solid fa-bookmark solid-icon"></i>
-                  </button>
-                </form>
-              {% else %}
-                <button type="button" class="save-btn unauthenticated" data-job-id="{{ job.id }}" data-login-url="{{ url_for('auth.login') }}">
-                  <i class="fa-regular fa-bookmark regular-icon"></i>
-                  <i class="fa-solid fa-bookmark solid-icon"></i>
-                </button>
-              {% endif %}
-            </div>
-            <h3 class="job-title">
-              <a href="{{ url_for('job.job_detail', job_id=job.id) }}">{{ job.title }}</a>
-            </h3>
-            <div class="job-company-location">
-              <p class="company-name"><i class="fa-solid fa-building"></i> {{ job.employer.company_name or 'Công ty ẩn danh' }}</p>
-              <p class="job-location"><i class="fa-solid fa-location-dot"></i> {{ job.city or 'Địa điểm ẩn danh' }}</p>
-            </div>
-            <p class="job-description">{{ job.description | truncate(100, true) }}</p>
-            <div class="job-tags">
-              <span class="tag">{{ job.job_type or '-' }}</span>
-              <span class="tag">{{ job.remote_option or 'On-Site' }}</span>
-              <span class="tag">{{ format_salary_range(job.salary_min, job.salary_max) }}</span>
-            </div>
-
-            <div class="job-actions">
-              <a href="{{ url_for('job.job_detail', job_id=job.id) }}" class="btn details-btn">Chi tiết</a>
-              <a href="{{ url_for('candidate.apply_job', job_id=job.id) }}" class="btn apply-btn">Ứng tuyển ngay</a>
-            </div>
-          </article>
-        {% else %}
-          <p class="no-jobs">Không có công việc nào.</p>
-        {% endfor %}
-      </div>
-
-      <!-- Pagination -->
-      {% if total_pages > 1 %}
-      <nav class="pagination">
-        <ul>
-          {% if page > 1 %}
-          <li>
-            <a href="{{ url_for('main.index', page=page-1, **search) }}" class="btn secondary">Trước</a>
-          </li>
-          {% endif %}
-          {% for p in range(1, total_pages + 1) %}
-          <li>
-            <a href="{{ url_for('main.index', page=p, **search) }}" class="btn {% if p == page %}primary{% else %}secondary{% endif %}">{{ p }}</a>
-          </li>
+              <h3 class="job-title font-bold text-xl mb-1">
+                <a href="{{ url_for('job.job_detail', job_id=job.id) }}" class="text-gray-900 hover:text-blue-600 transition-colors">{{ job.title }}</a>
+              </h3>
+              <p class="company-name text-sm text-gray-600 mb-1">
+                <i class="fa-solid fa-building mr-2 text-gray-400"></i> {{ job.employer.company_name or 'Công ty ẩn danh' }}
+              </p>
+              <p class="job-location text-sm text-gray-600 mb-3">
+                <i class="fa-solid fa-location-dot mr-2 text-gray-400"></i> {{ job.city or 'Địa điểm ẩn danh' }}
+              </p>
+              <p class="job-description text-sm text-gray-500 mb-3 line-clamp-2">
+                {{ job.description | truncate(80, true) }}
+              </p>
+              <div class="job-tags flex flex-wrap gap-2 text-xs">
+                <span class="tag bg-[var(bg-blue)] px-3 py-1 rounded-full text-[var(--[primary-blue)] font-medium">{{ job.job_type or '-' }}</span>
+                <span class="tag bg-[var(bg-blue)] px-3 py-1 rounded-full text-[var(--[primary-blue)] font-medium">{{ job.remote_option or 'On-Site' }}</span>
+                <span class="tag bg-[var(bg-blue)] px-3 py-1 rounded-full text-[var(--[primary-blue)] font-medium">{{ format_salary_range(job.salary_min, job.salary_max) }}</span>
+              </div>
+            </article>
           {% endfor %}
-          {% if page < total_pages %}
-          <li>
-            <a href="{{ url_for('main.index', page=page+1, **search) }}" class="btn secondary">Sau</a>
-          </li>
-          {% endif %}
-        </ul>
-      </nav>
-      {% endif %}
-    </main>
+        </div>
+
+        <!-- Link đến trang tất cả việc làm -->
+        <div class="text-center mt-12">
+          <a href="{{ url_for('job.list_jobs') }}"
+             class="inline-flex items-center space-x-2 text-blue-600 hover:underline transition-colors font-medium text-lg">
+            <span>Xem thêm tất cả việc làm</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHY CHOOSE US -->
+    <section class="why-choose-us-section bg-white py-16">
+      <div class="container mx-auto">
+        <h2 class="text-3xl font-bold text-center mb-10 text-gray-800">Tại sao nên chọn JobNest?</h2>
+        <main class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="feature-card bg-gray-50 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300
+              flex flex-col items-center text-center">
+            <div class="icon-wrapper mb-4 text-white p-4 rounded-full bg-[var(--primary-blue)] shadow-md">
+                <i class="fa-solid fa-magnifying-glass text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-2 text-gray-900">Tìm kiếm dễ dàng</h3>
+            <p class="text-gray-600">Công cụ tìm kiếm mạnh mẽ giúp bạn nhanh chóng tìm được việc làm phù hợp.</p>
+          </div>
+          <div class="feature-card bg-gray-50 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300
+              flex flex-col items-center text-center">
+            <div class="icon-wrapper mb-4 text-white p-4 rounded-full bg-[var(--primary-blue)] shadow-md">
+                <i class="fa-solid fa-briefcase text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-2 text-gray-900">Cơ hội đa dạng</h3>
+            <p class="text-gray-600">Hàng ngàn việc làm từ các ngành nghề khác nhau, từ khắp nơi trên cả nước.</p>
+          </div>
+          <div class="feature-card bg-gray-50 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300
+              flex flex-col items-center text-center">
+            <div class="icon-wrapper mb-4 text-white p-4 rounded-full bg-[var(--primary-blue)] shadow-md">
+                <i class="fa-solid fa-shield text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-2 text-gray-900">Uy tín & An toàn</h3>
+            <p class="text-gray-600">Chúng tôi kiểm duyệt kỹ lưỡng các nhà tuyển dụng để đảm bảo môi trường an toàn cho bạn.</p>
+          </div>
+        </main>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16">
+      <div class="container mx-auto">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-900 p-8 md:p-12 rounded-3xl text-white shadow-xl">
+          <div class="grid grid-cols-1 md:grid-cols-2 items-center gap-8">
+            <div>
+              <h2 class="text-3xl md:text-4xl font-bold leading-tight mb-2">
+                Bạn đã sẵn sàng để ứng tuyển hoặc tuyển dụng chưa?
+              </h2>
+              <p class="text-blue-200 text-lg">
+                Tìm kiếm công việc mơ ước hoặc thu hút nhân tài hàng đầu ngay hôm nay!
+              </p>
+            </div>
+            <div class="flex justify-start md:justify-end">
+              <a href="{{ url_for('auth.register') }}"
+                 class="inline-block bg-white text-blue-600 font-bold px-8 py-4 rounded-full shadow-lg hover:bg-gray-100 transition-colors">
+                Bắt đầu ngay
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="max-w-5xl mx-auto my-12 px-4">
+      <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">
+        Câu hỏi thường gặp (FAQ)
+      </h2>
+      <div class="space-y-4">
+        <!-- Item 1 -->
+        <details class="faq-details group rounded-xl transition-all duration-300">
+          <summary class="flex justify-between items-center cursor-pointer font-semibold text-gray-800 p-4">
+            Làm sao để ứng tuyển một công việc?
+            <span class="transition-transform group-open:rotate-180 text-blue-500">
+              <i class="fa-solid fa-chevron-down"></i>
+            </span>
+          </summary>
+          <p class="mt-2 text-gray-600 px-4 pb-4">
+            Bạn chỉ cần tạo tài khoản, tìm công việc phù hợp và nhấn nút <b>Ứng tuyển ngay</b>.
+            Hệ thống sẽ gửi CV của bạn đến nhà tuyển dụng.
+          </p>
+        </details>
+
+        <!-- Item 2 -->
+        <details class="faq-details group rounded-xl transition-all duration-300">
+          <summary class="flex justify-between items-center cursor-pointer font-semibold text-gray-800 p-4">
+            Tôi có cần trả phí khi ứng tuyển không?
+            <span class="transition-transform group-open:rotate-180 text-blue-500">
+              <i class="fa-solid fa-chevron-down"></i>
+            </span>
+          </summary>
+          <p class="mt-2 text-gray-600 px-4 pb-4">
+            Không. Ứng viên hoàn toàn <b>miễn phí</b> khi tìm và ứng tuyển công việc trên JobNest.
+          </p>
+        </details>
+
+        <!-- Item 3 -->
+        <details class="faq-details group rounded-xl transition-all duration-300">
+          <summary class="flex justify-between items-center cursor-pointer font-semibold text-gray-800 p-4">
+            Nhà tuyển dụng cần làm gì để đăng tin tuyển dụng?
+            <span class="transition-transform group-open:rotate-180 text-blue-500">
+              <i class="fa-solid fa-chevron-down"></i>
+            </span>
+          </summary>
+          <p class="mt-2 text-gray-600 px-4 pb-4">
+            Doanh nghiệp chỉ cần đăng ký tài khoản, sau đó có thể tạo và quản lý tin tuyển dụng ngay trong trang quản trị.
+          </p>
+        </details>
+      </div>
+    </section>
+</main>
   </div>
 </section>
 {% endblock %}

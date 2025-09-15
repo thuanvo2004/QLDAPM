@@ -1,0 +1,14 @@
+{
+  "industries": [
+    { "id": 1, "name": "Công nghệ thông tin" },
+    { "id": 2, "name": "Kế toán - Kiểm toán" },
+    { "id": 3, "name": "Ngân hàng - Tài chính" },
+    { "id": 4, "name": "Marketing - Truyền thông" },
+    { "id": 5, "name": "Xây dựng - Kiến trúc" },
+    { "id": 6, "name": "Sản xuất - Kỹ thuật" },
+    { "id": 7, "name": "Y tế - Dược phẩm" },
+    { "id": 8, "name": "Giáo dục - Đào tạo" },
+    { "id": 9, "name": "Du lịch - Khách sạn - Nhà hàng" },
+    { "id": 10, "name": "Bán hàng - Chăm sóc khách hàng" }
+  ]
+}

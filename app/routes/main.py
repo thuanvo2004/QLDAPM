@@ -1,5 +1,7 @@
+import json
+import os
 import re
-from flask import Blueprint, render_template, request, send_from_directory
+from flask import Blueprint, render_template, request, send_from_directory, current_app
 from flask_login import current_user
 from app.models import Job, Employer, db
 from sqlalchemy import or_, and_, func, desc, asc, case
@@ -8,6 +10,44 @@ from sqlalchemy import or_, and_, func, desc, asc, case
 # Blueprint
 # ============================
 main_bp = Blueprint("main", __name__)
+
+from flask import jsonify
+
+_json_cache = {}
+
+def load_json_file(filename):
+    # key by absolute path
+    app_root = current_app.root_path
+    path = os.path.join(app_root, 'static', 'data', filename)
+    # cache by path
+    if path in _json_cache:
+        return _json_cache[path]
+    if not os.path.exists(path):
+        return None
+    with open(path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    _json_cache[path] = data
+    return data
+
+@main_bp.route('/provinces')
+def provinces_json():
+    data = load_json_file('provinces.json')
+    if data is None:
+        return jsonify({'provinces': []}), 200
+    # ensure response shape { provinces: [...] }
+    if isinstance(data, list):
+        return jsonify({'provinces': data})
+    return jsonify(data)
+
+@main_bp.route('/industries')
+def industries_json():
+    data = load_json_file('industries.json')
+    if data is None:
+        return jsonify({'industries': []}), 200
+    if isinstance(data, list):
+        return jsonify({'industries': data})
+    return jsonify(data)
+
 
 # ============================
 # Hàm trích xuất số nguyên từ chuỗi
@@ -125,10 +165,6 @@ def index():
         user=current_user,
         logo=logo
     )
-
-@main_bp.route("/provinces")
-def provinces():
-    return send_from_directory("static/data", "provinces.json")
 
 @main_bp.app_template_global()
 def format_salary_range(min_salary, max_salary):
