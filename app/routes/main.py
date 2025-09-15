@@ -62,14 +62,13 @@ def parse_int_from_str(s):
 
 @main_bp.route("/")
 def index():
-    # pagination params
+    # --- Pagination params ---
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 9, type=int)
 
     keyword = (request.args.get("keyword", "") or "").strip()
-
     location_raw = request.args.get("city", "")
-    job_type_raw = (request.args.get("job_type", "") or "").strip()  # Single value
+    job_type_raw = (request.args.get("job_type", "") or "").strip()
     work_type_raw = (request.args.get("work_type", "") or "").strip()
     sort_by = request.args.get("sort_by", "")
 
@@ -79,9 +78,9 @@ def index():
     min_salary = parse_int_from_str(min_salary_raw)
     max_salary = parse_int_from_str(max_salary_raw)
 
+    # --- Query jobs ---
     q = Job.query.outerjoin(Employer)
 
-    # --- KEYWORD---
     if keyword:
         kw_like = f"%{keyword}%"
         q = q.filter(or_(
@@ -90,50 +89,32 @@ def index():
             Employer.company_name.ilike(kw_like)
         ))
 
-    # --- LOCATION ---
     if location_raw:
         locs = [s.strip() for s in location_raw.split(",") if s.strip()]
         if locs:
-            locs_lower = [l.lower() for l in locs]
-            q = q.filter(func.lower(Job.city).in_(locs_lower))
+            q = q.filter(func.lower(Job.city).in_([l.lower() for l in locs]))
 
-    # --- JOB TYPE ---
     if job_type_raw and job_type_raw.lower() != "all":
         q = q.filter(func.lower(Job.job_type) == job_type_raw.lower())
 
-    # --- WORK TYPE ---
     if work_type_raw:
         work_types = [s.strip().lower() for s in work_type_raw.split(",") if s.strip()]
         if work_types and "all" not in work_types:
             q = q.filter(func.lower(Job.remote_option).in_(work_types))
 
-    # --- SALARY FILTER ---
     if min_salary is not None and max_salary is not None:
-        q = q.filter(
-            and_(
-                Job.salary_max >= min_salary,
-                Job.salary_min <= max_salary
-            )
-        )
+        q = q.filter(and_(Job.salary_max >= min_salary, Job.salary_min <= max_salary))
     else:
         if min_salary is not None:
             q = q.filter(Job.salary_min >= min_salary)
         if max_salary is not None:
             q = q.filter(Job.salary_max <= max_salary)
 
-    # --- SORT ---
+    # --- Sorting ---
     if sort_by == "salary_desc":
-        q = q.order_by(
-            case((Job.salary_max == None, 1), else_=0),
-            Job.salary_max.desc()
-        )
+        q = q.order_by(case((Job.salary_max == None, 1), else_=0), Job.salary_max.desc())
     elif sort_by == "salary_asc":
-        q = q.order_by(
-            case((Job.salary_min == None, 1), else_=0),
-            Job.salary_min.asc()
-        )
-    elif sort_by == "newest":
-        q = q.order_by(Job.created_at.desc())
+        q = q.order_by(case((Job.salary_min == None, 1), else_=0), Job.salary_min.asc())
     else:
         q = q.order_by(Job.created_at.desc())
 
@@ -145,15 +126,16 @@ def index():
         "city": location_raw,
         "job_type": job_type_raw,
         "work_types": work_type_raw.split(",") if work_type_raw else [],
-        "job_types": [job_type_raw] if job_type_raw else [],  # Đảm bảo là list
+        "job_types": [job_type_raw] if job_type_raw else [],
         "sort_by": sort_by,
         "min_salary": min_salary_raw or "",
         "max_salary": max_salary_raw or "",
         "per_page": per_page
     }
 
+    # --- Check logo an toàn ---
     logo = None
-    if current_user.is_authenticated and current_user.role == "employer":
+    if current_user.is_authenticated and current_user.role == "employer" and current_user.employer_profile:
         logo = current_user.employer_profile.logo
 
     return render_template(
@@ -166,6 +148,14 @@ def index():
         logo=logo
     )
 
+<<<<<<< HEAD
+=======
+
+@main_bp.route("/provinces")
+def provinces():
+    return send_from_directory("static/data", "provinces.json")
+
+>>>>>>> 4231998 (create send mail and notificatins)
 @main_bp.app_template_global()
 def format_salary_range(min_salary, max_salary):
     def to_mil(v):

@@ -12,6 +12,6 @@ bcrypt = Bcrypt()
 mail = Mail()
 
 # Cấu hình login manager
-login_manager.login_view = "auth.login"   # nếu chưa login thì redirect về /auth/login
+login_manager.login_view = "auth.login"
 login_manager.login_message = "Vui lòng đăng nhập để tiếp tục."
 login_manager.login_message_category = "info"

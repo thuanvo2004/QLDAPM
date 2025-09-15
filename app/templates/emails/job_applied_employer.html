@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Thông báo hồ sơ mới</title>
+</head>
+<body style="font-family:Arial,sans-serif;line-height:1.6;color:#333;">
+  <h2>Xin chào {{ employer_name }},</h2>
+  <p>Bạn vừa nhận được hồ sơ mới cho vị trí <strong>{{ job_title }}</strong>.</p>
+  <p><strong>Thông tin ứng viên:</strong></p>
+  <ul>
+    <li>Tên: {{ candidate_name }}</li>
+    <li>Email: {{ candidate_email }}</li>
+    <li>Điện thoại: {{ candidate_phone }}</li>
+  </ul>
+  <p>Vui lòng đăng nhập vào hệ thống để xem chi tiết hồ sơ.</p>
+  <hr>
+  <p style="font-size:12px;color:#888;">Đây là email tự động từ hệ thống JobNest. Vui lòng không trả lời email này.</p>
+</body>
+</html>

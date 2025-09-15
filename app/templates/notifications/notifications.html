@@ -1,0 +1,62 @@
+<!-- templates/notifications/notifications.html -->
+{% extends "base.html" %}
+{% block title %}Thông báo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Thông báo của bạn</h2>
+    <ul class="list-group mt-3" id="notification-list">
+        {% for notif in notifications %}
+        <li class="list-group-item d-flex justify-content-between align-items-center {% if not notif.is_read %}fw-bold{% endif %}">
+            <div>
+                {{ notif.message }}
+                <br>
+                <small class="text-muted">{{ notif.created_at.strftime("%d/%m/%Y %H:%M") }}</small>
+            </div>
+            {% if not notif.is_read %}
+            <button class="btn btn-sm btn-primary mark-read-btn" data-id="{{ notif.id }}">Đã đọc</button>
+            {% else %}
+            <span class="badge bg-success">Đã đọc</span>
+            {% endif %}
+        </li>
+        {% else %}
+        <li class="list-group-item">Chưa có thông báo nào</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const buttons = document.querySelectorAll(".mark-read-btn");
+    buttons.forEach(button => {
+        button.addEventListener("click", async function() {
+            const notifId = this.dataset.id;
+            try {
+                const response = await fetch(`/candidate/notifications/mark_read/${notifId}`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ form.csrf_token._value() }}", // nếu dùng Flask-WTF CSRF
+                        "Content-Type": "application/json"
+                    },
+                });
+                const data = await response.json();
+                if (data.success) {
+                    // Thay đổi giao diện
+                    this.remove();
+                    const badge = document.createElement("span");
+                    badge.className = "badge bg-success";
+                    badge.innerText = "Đã đọc";
+                    this.parentNode.appendChild(badge);
+                    this.parentNode.classList.remove("fw-bold");
+                } else {
+                    alert(data.message || "Lỗi khi đánh dấu đã đọc");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi khi kết nối server");
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
