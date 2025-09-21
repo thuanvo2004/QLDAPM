@@ -1,39 +1,69 @@
 {% extends "base.html" %}
-
 {% block title %}Thanh toán thành công{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-body text-center">
-                    <div class="mb-4">
-                        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
-                    </div>
-                                        <!-- Thai work-->
+<div class="container mx-auto px-4 py-12">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-xl border border-gray-300 overflow-hidden shadow-xl">
+            <div class="p-6 md:p-8 text-center">
+                <!-- Success Icon -->
+                <div class="mb-6">
+                    <i class="fas fa-check-circle text-green-500" style="font-size: 5rem;"></i>
+                </div>
 
-                    <h2 class="text-success mb-3">Thanh toán thành công!</h2>
-                    
-                    <div class="alert alert-success">
-                        <h5><i class="fas fa-crown"></i> Tài khoản Premium đã được kích hoạt</h5>
-                        <p class="mb-0">Bạn có thể đăng không giới hạn tin tuyển dụng.</p>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <a href="{{ url_for('job.post_job') }}" class="btn btn-primary btn-lg me-3">
-                            <i class="fas fa-plus"></i>
-                            Đăng tin tuyển dụng
-                        </a>
-                        
-                        <a href="{{ url_for('job.manage_jobs') }}" class="btn btn-outline-primary btn-lg">
-                            <i class="fas fa-list"></i>
-                            Quản lý tin đã đăng
-                        </a>
-                    </div>
+                <!-- Success Message -->
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Thanh toán thành công!</h2>
+
+                <!-- Premium Activation Info -->
+                <div class="bg-green-50 text-gray-800 p-4 rounded-lg border-l-4 border-green-500 mb-6">
+                    <h3 class="text-lg font-semibold flex items-center justify-center space-x-2 mb-2">
+                        <i class="fas fa-crown text-green-500"></i>
+                        <span>Tài khoản Premium đã được kích hoạt</span>
+                    </h3>
+                    <p class="text-sm text-gray-600">Bạn có thể đăng không giới hạn tin tuyển dụng và tận hưởng các quyền lợi độc quyền.</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+                    <a href="{{ url_for('job.post_job') }}"
+                       class="bg-[var(--primary-blue)] text-white px-6 py-3 rounded-lg font-medium hover:bg-[var(--primary-blue-hover)] transition-colors flex items-center justify-center space-x-2">
+                        <i class="fas fa-plus"></i>
+                        <span>Đăng tin tuyển dụng</span>
+                    </a>
+                    <a href="{{ url_for('job.manage_jobs') }}"
+                       class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors flex items-center justify-center space-x-2">
+                        <i class="fas fa-list"></i>
+                        <span>Quản lý tin đã đăng</span>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Include Inter font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        font-family: 'Roboto', sans-serif;
+    }
+    .transition-colors {
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    Toastify({
+        text: "Tài khoản Premium đã được kích hoạt thành công!",
+        duration: 3000,
+        gravity: "bottom",
+        position: "right",
+        backgroundColor: "#28a745",
+    }).showToast();
+});
+</script>
 {% endblock %}

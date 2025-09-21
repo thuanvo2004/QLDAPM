@@ -3,48 +3,47 @@
 {% block title %}Nâng cấp Premium{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">
-                        <i class="fas fa-crown"></i>
+<div class="container mx-auto px-4 py-12">
+    <div class="max-w-5xl mx-auto">
+        <div class="bg-white rounded-xl border border-gray-300 overflow-hidden">
+            <!--Card Header-->
+                <div class="bg-gradient-to-r from-[#001f78] to-[#0046FF] text-white p-6 rounded-t-xl">
+                    <h4 class="text-xl font-bold flex items-center space-x-2">
                         Nâng cấp tài khoản Premium
                     </h4>
                 </div>
-                <div class="card-body">
+                <!-- Card Body -->
+                <div class="p-6 md:p-8">
                     <!-- Premium Benefits -->
-                    <div class="alert alert-info">
-                        <h5><i class="fas fa-star"></i> Quyền lợi tài khoản Premium:</h5>
-                        <ul class="mb-0">
+                    <div class="text-gray-800 p-4 rounded-lg border-l-4 border-[var(--primary-blue)]">
+                        <h5 class="text-xl font-semibold"> Quyền lợi tài khoản Premium: </h5>
+                        <ul class="mb-0 list-disc">
                             <li>Đăng không giới hạn tin tuyển dụng</li>
                             <li>Hiển thị ưu tiên trong kết quả tìm kiếm</li>
                             <li>Tiếp cận nhiều ứng viên chất lượng hơn</li>
                             <li>Hỗ trợ khách hàng ưu tiên</li>
                         </ul>
                     </div>
-                    <!-- Thai work-->
-                    <div class="row">
+                    <!-- Payment Options -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                         <!-- QR Code Payment -->
-                        <div class="col-md-6">
-                            <div class="card border-success">
-                                <div class="card-header bg-success text-white">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-qrcode"></i>
+                        <div>
+                            <div class="bg-white rounded-xl border border-gray-300">
+                                <div class="bg-[var(--primary-blue)] text-white p-4 rounded-t-xl">
+                                    <h5 class="text-lg font-bold flex items-center space-x-2">
                                         Thanh toán bằng QR Code
                                     </h5>
                                 </div>
-                                <div class="card-body text-center">
-                                    <div class="mb-3">
-                                        <img src="https://qr.sepay.vn/img?bank={{ payment_data.bank_name }}&acc={{ payment_data.bank_account }}&template=compact&amount={{ payment_data.amount }}&des={{ payment_data.order_id }}" 
-                                             class="img-fluid" 
+                                <div class="p-6 text-center">
+                                    <div class="mb-4">
+                                        <img src="https://qr.sepay.vn/img?bank={{ payment_data.bank_name }}&acc={{ payment_data.bank_account }}&template=compact&amount={{ payment_data.amount }}&des={{ payment_data.order_id }}"
+                                             class="mx-auto rounded-lg w-64 h-64 object"
                                              alt="QR Code thanh toán"
                                              style="max-width: 250px;">
                                     </div>
-                                    <div class="alert alert-warning">
+                                    <div class="bg-gray-50 text-gray-600 p-3 rounded-lg text-sm border-l-4 border-yellow-500">
                                         <small>
-                                            <i class="fas fa-info-circle"></i>
+                                            <i class="fas fa-info-circle text-yellow-500"></i>
                                             Quét mã QR bằng ứng dụng ngân hàng để thanh toán tự động
                                         </small>
                                     </div>
@@ -53,61 +52,57 @@
                         </div>
 
                         <!-- Manual Banking Information -->
-                        <div class="col-md-6">
-                            <div class="card border-info">
-                                <div class="card-header bg-info text-white">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-university"></i>
+                        <div class="bg-white rounded-xl border border-gray-300">
+                            <div class="bg-[var(--primary-blue)] text-white p-4 rounded-t-xl">
+                                    <h5 class="text-lg font-bold flex items-center space-x-">
                                         Thông tin chuyển khoản
                                     </h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="payment-info">
-                                        <div class="info-row mb-3">
-                                            <label class="fw-bold">Ngân hàng:</label>
-                                            <span class="text-primary">{{ payment_data.bank_name }}</span>
+                            </div>
+                                <div class="p-6">
+                                    <div class="space-y-4 text-sm text-lg">
+                                        <div class="flex items-center space-x-1">
+                                            <label class="font-bold">Ngân hàng:</label>
+                                            <span class="text-[var(--primary-blue)] font-medium">{{ payment_data.bank_name }}</span>
                                         </div>
-                                        
-                                        <div class="info-row mb-3">
-                                            <label class="fw-bold">Số tài khoản:</label>
-                                            <div class="d-flex align-items-center">
+
+                                        <div class="flex items-center space-x-1">
+                                            <label class="font-bold">Số tài khoản:</label>
+                                            <div class="text-[var(--primary-blue)] flex items-center space-x-2">
                                                 <span class="text-primary me-2" id="account-number">{{ payment_data.bank_account }}</span>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('account-number')">
+                                                <button type="button" class="bg-gray-200 text-gray-400 hover:text-[var(--primary-blue)] hover:bg-[var(--blue-bg)] px-2 py-1 rounded-lg" onclick="copyToClipboard('account-number')">
                                                     <i class="fas fa-copy"></i>
                                                 </button>
                                             </div>
                                         </div>
-                                        
-                                        <div class="info-row mb-3">
-                                            <label class="fw-bold">Chủ tài khoản:</label>
-                                            <span class="text-primary">{{ payment_data.account_holder }}</span>
+
+                                        <div class="flex items-center space-x-1">
+                                            <label class="font-bold">Chủ tài khoản:</label>
+                                            <span class="text-[var(--primary-blue)]">{{ payment_data.account_holder }}</span>
                                         </div>
-                                        
-                                        <div class="info-row mb-3">
-                                            <label class="fw-bold">Số tiền:</label>
-                                            <div class="d-flex align-items-center">
-                                                <span class="text-danger fw-bold me-2" id="amount">{{ "{:,.0f}".format(payment_data.amount) }} VNĐ</span>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('amount')">
+
+                                        <div class="flex items-center space-x-1">
+                                            <label class="font-bold">Số tiền:</label>
+                                                <span class="text-red-600 font-bold" id="amount">{{ "{:,.0f}".format(payment_data.amount) }} VNĐ</span>
+                                                <button type="button" class="bg-gray-200 text-gray-400 hover:text-[var(--primary-blue)] hover:bg-[var(--blue-bg)] px-2 py-1 rounded-lg" onclick="copyToClipboard('amount')">
                                                     <i class="fas fa-copy"></i>
                                                 </button>
-                                            </div>
                                         </div>
-                                        
-                                        <div class="info-row mb-3">
-                                            <label class="fw-bold">Nội dung:</label>
-                                            <div class="d-flex align-items-center">
-                                                <span class="text-info me-2" id="description">{{ payment_data.order_id }}</span>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('description')">
+
+                                        <div class="flex items-center space-x-1">
+                                            <label class="font-bold">Nội dung:</label>
+                                            <div class="text-[var(--primary-blue)] flex items-center space-x-2">
+                                                <span id="description">{{ payment_data.order_id }}</span>
+                                                <button type="button" class="bg-gray-200 text-gray-400 hover:text-[var(--primary-blue)] hover:bg-[var(--blue-bg)] px-2 py-1 rounded-lg" onclick="copyToClipboard('description')">
                                                     <i class="fas fa-copy"></i>
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    <div class="alert alert-danger">
-                                        <small>
-                                            <i class="fas fa-exclamation-triangle"></i>
-                                            <strong>Quan trọng:</strong> Vui lòng ghi đúng nội dung chuyển khoản để hệ thống tự động xử lý thanh toán.
+
+                                    <div class="bg-gray-50 text-gray-600 p-3 rounded-lg text-sm mt-4 border-l-4 border-red-500">
+                                        <small class="flex items-start space-x-1">
+                                            <i class="fas fa-exclamation-triangle text-red-500 mt-1"></i>
+                                            <span><strong>Quan trọng:</strong> Vui lòng ghi đúng nội dung chuyển khoản để hệ thống tự động xử lý thanh toán.</span>
                                         </small>
                                     </div>
                                 </div>
@@ -116,26 +111,35 @@
                     </div>
 
                     <!-- Payment Status Check -->
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="card border-warning">
-                                <div class="card-body text-center">
-                                    <h6 class="text-muted">Sau khi chuyển khoản thành công</h6>
-                                    <p class="text-muted">Hệ thống sẽ tự động kích hoạt tài khoản Premium trong vòng 1-2 phút</p>
-                                    <a href="{{ url_for('payment.payment_success') }}" class="btn btn-warning">
+                    <div class="mt-6">
+                        <div class="bg-white rounded-xl border border-gray-300">
+                            <div class="p-6 text-center">
+                                <h6 class="text-sm text-gray-500 mb-1">Sau khi chuyển khoản thành công</h6>
+                                <p class="text-sm text-gray-500 mb-4">Hệ thống sẽ tự động kích hoạt tài khoản Premium trong vòng 1-2 phút</p>
+                                <div class="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
+                                    <a href="{{ url_for('payment.payment_success') }}"
+                                       class="bg-[var(--primary-blue)]
+                                            text-white px-6 py-3 rounded-lg font-medium
+                                            hover:bg-[var(--primary-blue-hover)]
+                                            transition-colors flex items-center
+                                            justify-center space-x-2 ">
                                         <i class="fas fa-sync-alt"></i>
-                                        Kiểm tra trạng thái thanh toán
+                                        <span>Kiểm tra trạng thái thanh toán</span>
                                     </a>
-                                    <a href="{{ url_for('job.list_jobs') }}" class="btn btn-secondary">
+                                    <a href="{{ url_for('job.list_jobs') }}"
+                                       class="border border-1 !border-[var(--primary-blue)] text-[var(--primary-blue)] px-6 py-3 rounded-lg font-medium
+                                        hover:bg-[var(--primary-blue)] hover:text-white transition-colors flex
+                                        items-center justify-center space-x-2">
                                         <i class="fas fa-arrow-left"></i>
-                                        Quay lại
+                                        <span>
+                                            Quay lại
+                                        </span>
                                     </a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
 </div>
@@ -144,12 +148,12 @@
 function copyToClipboard(elementId) {
     const element = document.getElementById(elementId);
     const text = element.textContent.trim();
-    
+
     navigator.clipboard.writeText(text).then(function() {
         // Show success message
         const originalHTML = element.innerHTML;
         element.innerHTML = '<i class="fas fa-check text-success"></i> Đã sao chép';
-        
+
         setTimeout(function() {
             element.innerHTML = originalHTML;
         }, 1000);
