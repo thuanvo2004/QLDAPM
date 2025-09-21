@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>{% block title %}JobNest - Cổng Việc Làm{% endblock %}</title>
 
-  <!--  Boostrap 5-->
-   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
 
-  <!--  Toastify.js -->
+  <!-- Toastify.js -->
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
@@ -34,233 +34,309 @@
           <a href="{{ url_for('employer.list_employers') }}">Doanh nghiệp</a>
         </nav>
 
-        <!-- Nút thông báo -->
-<<<<<<< HEAD
+        <div class="header-right flex items-center gap-3">
+          <!-- Nút thông báo (chỉ hiển thị khi đã đăng nhập) -->
+          {% if current_user.is_authenticated %}
           <div class="dropdown me-3">
             <a class="relative text-[var(--primary-blue)] transition-transform duration-200 hover:scale-125" href="#"
                id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="fa-regular fa-bell text-xl transition-transform duration-200 hover:scale-105"></i>
-              {% if current_user.notifications|length > 0 %}
-              <!-- Badge số lượng thông báo -->
+              {% set unread_count = current_user.notifications|selectattr("is_read","equalto",False)|list|length %}
+              {% if unread_count > 0 %}
+              <!-- Badge số lượng thông báo chưa đọc -->
               <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                {{ current_user.notifications|length }}
+                {{ unread_count }}
+                <span class="visually-hidden">unread notifications</span>
               </span>
               {% endif %}
             </a>
             <!-- Dropdown thông báo -->
-            <ul class="dropdown-menu dropdown-menu-end w-80 bg-white rounded-lg shadow-lg border border-gray-200"
+            <ul class="dropdown-menu dropdown-menu-end w-[360px] bg-white rounded-lg shadow-lg border border-gray-200"
                 aria-labelledby="notifDropdown"
                 style="max-height: 300px; overflow-y: auto;">
-=======
-        <div class="dropdown me-3">
-          <a class="relative text-white transition-transform duration-200 hover:scale-125" href="#"
-             id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fa-regular fa-bell text-xl transition-transform duration-200 hover:scale-105"></i>
-            {% set unread_count = current_user.notifications|selectattr("is_read","equalto",False)|list|length %}
-            {% if unread_count > 0 %}
-            <!-- Badge số lượng thông báo chưa đọc -->
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-      {{ unread_count }}
-    </span>
-            {% endif %}
-          </a>
-
-          <!-- Dropdown thông báo -->
-          <ul class="dropdown-menu dropdown-menu-end w-80 bg-white rounded-lg shadow-lg border border-gray-200"
-              aria-labelledby="notifDropdown"
-              style="max-height: 300px; overflow-y: auto;">
->>>>>>> 4231998 (create send mail and notificatins)
-
-            {% if current_user.notifications %}
-            {% for notif in current_user.notifications[:5] %}
-            <li data-id="{{ notif.id }}">
-              <div class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center">
-                <div>
-                  <span class="text-sm text-gray-800 {% if not notif.is_read %}fw-bold{% endif %}">{{ notif.message }}</span><br>
-                  <small class="text-xs text-gray-500">{{ notif.created_at.strftime("%H:%M %d/%m") }}</small>
+              {% if current_user.notifications %}
+              {% for notif in current_user.notifications[:5] %}
+              <li data-id="{{ notif.id }}" class="notification-item {% if not notif.is_read %}unread{% endif %}">
+                <div class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between gap-2">
+                  <div class="flex-1 min-w-0">
+                    <span class="text-sm text-gray-800 {% if not notif.is_read %}fw-bold{% endif %}">{{ notif.message }}</span>
+                    <p class="text-xs text-gray-500 mt-1">
+                      <span class="time-ago" data-time="{{ notif.created_at_local.isoformat() }}"></span>
+                    </p>
+                  </div>
+                  {% if not notif.is_read %}
+                  <button class="btn-mark-read btn btn-sm bg-[var(--primary-blue)] text-white hover:bg-[var(--primary-blue-hover)] hover:text-white text-xs px-2 py-1 rounded-lg"
+                          data-id="{{ notif.id }}"
+                          data-endpoint="{{ url_for('candidate.mark_notification_read' if current_user.role == 'candidate' else 'employer.mark_notification_read', notif_id=notif.id) }}">
+                    Đã đọc
+                  </button>
+                  {% endif %}
                 </div>
-                {% if not notif.is_read %}
-                <button class="btn-mark-read btn btn-sm btn-outline-primary ml-2">Đã đọc</button>
-                {% endif %}
-              </div>
-            </li>
-            {% endfor %}
-            <li>
-              <a href="{{ url_for('candidate.view_notifications') }}"
-                 class="block text-center px-3 py-2 text-blue-600 hover:bg-gray-100 font-medium">
-                Xem tất cả
-              </a>
-            </li>
-            {% else %}
-            <li class="text-center text-gray-500 py-3">Không có thông báo</li>
-            {% endif %}
-          </ul>
-        </div>
-
-        <!-- JS AJAX cho nút Đã đọc -->
-        <script>
-document.querySelectorAll('.btn-mark-read').forEach(button => {
-    button.addEventListener('click', function(e) {
-        e.preventDefault();
-        const li = e.target.closest('li');
-        const notifId = li.getAttribute('data-id');
-
-        fetch(`/candidate/notifications/mark_read/${notifId}`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ form.csrf_token._value() if form else "" }}',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                li.querySelector('span').classList.remove('fw-bold'); // bỏ in đậm
-                e.target.remove(); // ẩn nút “Đã đọc”
-                // giảm badge số lượng
-                const badge = document.querySelector('#notifDropdown .badge');
-                if (badge) {
-                    let count = parseInt(badge.textContent);
-                    count = Math.max(count - 1, 0);
-                    badge.textContent = count;
-                    if(count === 0) badge.remove();
-                }
-            }
-        })
-        .catch(err => console.error(err));
-    });
-});
-
-
-        </script>
-
-
-        <div class="header-actions">
-          {% if current_user.is_authenticated %}
-
-            {% if current_user.role == "candidate" %}
-
-
-              <!-- Ứng viên -->
-              <div class="dropdown">
-                <a class="border border-1 border-white p-2 rounded-lg text-sm dropdown-toggle transition hover:bg-[var(--primary-blue-hover)]" href="#" role="button" data-bs-toggle="dropdown">
-                  <i class="fa-regular fa-user"></i> {{ current_user.candidate_profile.full_name or current_user.email }}
+              </li>
+              {% endfor %}
+              <li>
+                <a href="{{ url_for('candidate.view_notifications') }}"
+                   class="block text-center px-3 py-2 text-blue-600 hover:bg-gray-100 font-medium">
+                  Xem tất cả
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end w-64 bg-white rounded-lg shadow-lg p-2">
-                  <li>
-                    <a href="{{ url_for('candidate.profile') }}"
-                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
-                      <i class="fa-regular fa-id-card w-5 text-gray-500"></i> Hồ sơ
-                    </a>
-                  </li>
-                  <li>
-                    <a href="{{ url_for('candidate.saved_jobs') }}"
-                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
-                      <i class="fa-regular fa-bookmark w-5 text-gray-500"></i> Đã lưu
-                    </a>
-                  </li>
-                  <li>
-                    <a href="{{ url_for('candidate.applications') }}"
-                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
-                      <i class="fa-regular fa-folder w-5 text-gray-500"></i> Công việc đã ứng tuyển
-                    </a>
-                  </li>
-                  <li>
-                    <a href="{{ url_for('messages.index') }}"
-                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
-                      <i class="fa-regular fa-comments w-5 text-gray-500"></i> Tin nhắn
-                    </a>
-                  </li>
-
-                  <li><hr class="dropdown-divider border-t border-gray-200 my-2"></li>
-                  <li>
-                    <a href="{{ url_for('auth.logout') }}"
-                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 transition">
-                      <i class="fa-solid fa-right-from-bracket w-5 text-red-500"></i> Đăng xuất
-                    </a>
-                  </li>
-                </ul>
-
-              </div>
-
-            {% elif current_user.role == "employer" %}
-              <!-- Nhà tuyển dụng -->
-              <div class="dropdown">
-                <a class="border border-1 border-white p-2 rounded-lg text-sm dropdown-toggle transition hover:bg-[var(--primary-blue-hover)]"
-                   href="#" role="button" data-bs-toggle="dropdown">
-                  <i class="fa-regular fa-building"></i>
-                  {{ current_user.employer_profile.company_name or current_user.email }}
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end w-64 bg-white rounded-lg shadow-lg p-2">
-                  <li>
-                    <a href="{{ url_for('employer.dashboard') }}"
-                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
-                      <i class="fa-regular fa-clipboard w-5 text-gray-500"></i> Quản lý tin tuyển dụng
-                    </a>
-                  </li>
-                  <li>
-                    <a href="{{ url_for('job.post_job') }}"
-                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
-                      <i class="fa-regular fa-square-plus w-5 text-gray-500"></i> Đăng tin mới
-                    </a>
-                  </li>
-                  <li>
-                    <a href="{{ url_for('messages.index') }}"
-                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
-                      <i class="fa-regular fa-comments w-5 text-gray-500"></i> Tin nhắn
-                    </a>
-                  </li>
-
-                  <li>
-                    <a href="{{ url_for('employer.profile') }}"
-                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
-                      <i class="fa-regular fa-id-badge w-5 text-gray-500"></i> Hồ sơ công ty
-                    </a>
-                  </li>
-                  <li><hr class="dropdown-divider border-t border-gray-200 my-2"></li>
-                  <li>
-                    <a href="{{ url_for('auth.logout') }}"
-                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 transition">
-                      <i class="fa-solid fa-right-from-bracket w-5 text-red-500"></i> Đăng xuất
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-            {% elif current_user.role == "admin" %}
-              <!-- Admin -->
-              <div class="dropdown">
-                <a class="border border-1 border-white p-2 rounded-lg text-sm dropdown-toggle transition hover:bg-[var(--primary-blue-hover)]"
-                   href="#" role="button" data-bs-toggle="dropdown">
-                  <i class="fa-regular fa-shield"></i> Admin
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end w-64 bg-white rounded-lg shadow-lg p-2">
-                  <li>
-                    <a href="{{ url_for('admin.dashboard') }}"
-                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
-                      <i class="fa-regular fa-gauge-high w-5 text-gray-500"></i> Bảng điều khiển
-                    </a>
-                  </li>
-                  <li><hr class="dropdown-divider border-t border-gray-200 my-2"></li>
-
-                    <a href="{{ url_for('auth.logout') }}"
-                       class="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 transition">
-                      <i class="fa-solid fa-right-from-bracket w-5 text-red-500"></i> Đăng xuất
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            {% endif %}
-
-          {% else %}
-            <!-- Chưa đăng nhập -->
-            <a class="btn-login" href="{{ url_for('auth.login') }}"> Đăng nhập</a>
-            <a class="btn-register" href="{{ url_for('auth.register') }}"> Đăng ký</a>
-            <a class="btn-post-job" href="{{ url_for('job.post_job') }}"><i class="fa-solid fa-briefcase"></i> Đăng tin tuyển dụng</a>
+              </li>
+              {% else %}
+              <li class="text-center text-gray-500 py-3">Không có thông báo</li>
+              {% endif %}
+            </ul>
+          </div>
           {% endif %}
+
+          <!-- Header actions (login, register, user panel) -->
+          <div class="header-actions">
+            {% if current_user.is_authenticated %}
+              {% if current_user.role == "candidate" %}
+                <!-- Ứng viên -->
+                <div class="dropdown">
+                  <a class="border border-1 !border-[var(--primary-blue)] text-[var(--primary-blue)] p-2 rounded-lg text-sm dropdown-toggle transition hover:bg-[var(--primary-blue-hover)] hover:text-white" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="fa-regular fa-user"></i> {{ current_user.candidate_profile.full_name or current_user.email }}
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end w-64 bg-white rounded-lg shadow-lg p-2">
+                    <li>
+                      <a href="{{ url_for('candidate.profile') }}"
+                         class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+                        <i class="fa-regular fa-id-card w-5 text-gray-500"></i> Hồ sơ
+                      </a>
+                    </li>
+                    <li>
+                      <a href="{{ url_for('candidate.saved_jobs') }}"
+                         class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+                        <i class="fa-regular fa-bookmark w-5 text-gray-500"></i> Đã lưu
+                      </a>
+                    </li>
+                    <li>
+                      <a href="{{ url_for('candidate.applications') }}"
+                         class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+                        <i class="fa-regular fa-folder w-5 text-gray-500"></i> Công việc đã ứng tuyển
+                      </a>
+                    </li>
+                    <li>
+                      <a href="{{ url_for('messages.index') }}"
+                         class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+                        <i class="fa-regular fa-comments w-5 text-gray-500"></i> Tin nhắn
+                      </a>
+                    </li>
+                    <li><hr class="dropdown-divider border-t border-gray-200 my-2"></li>
+                    <li>
+                      <a href="{{ url_for('auth.logout') }}"
+                         class="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 transition">
+                        <i class="fa-solid fa-right-from-bracket w-5 text-red-500"></i> Đăng xuất
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              {% elif current_user.role == "employer" %}
+                <!-- Nhà tuyển dụng -->
+                <div class="dropdown">
+                  <a class="border border-1 text-[var(--primary-blue)] !border-[var(--primary-blue)] p-2 rounded-lg text-sm dropdown-toggle transition hover:bg-[var(--primary-blue-hover)] hover:text-white"
+                     href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="fa-regular fa-building"></i>
+                    {{ current_user.employer_profile.company_name or current_user.email }}
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end w-64 bg-white rounded-lg shadow-lg p-2">
+                    <li>
+                      <a href="{{ url_for('employer.dashboard') }}"
+                         class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+                        <i class="fa-regular fa-clipboard w-5 text-gray-500"></i> Quản lý tin tuyển dụng
+                      </a>
+                    </li>
+                    <li>
+                      <a href="{{ url_for('job.post_job') }}"
+                         class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+                        <i class="fa-regular fa-square-plus w-5 text-gray-500"></i> Đăng tin mới
+                      </a>
+                    </li>
+                    <li>
+                      <a href="{{ url_for('messages.index') }}"
+                         class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+                        <i class="fa-regular fa-comments w-5 text-gray-500"></i> Tin nhắn
+                      </a>
+                    </li>
+                    <li>
+                      <a href="{{ url_for('employer.profile') }}"
+                         class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+                        <i class="fa-regular fa-id-badge w-5 text-gray-500"></i> Hồ sơ công ty
+                      </a>
+                    </li>
+                    <li><hr class="dropdown-divider border-t border-gray-200 my-2"></li>
+                    <li>
+                      <a href="{{ url_for('auth.logout') }}"
+                         class="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 transition">
+                        <i class="fa-solid fa-right-from-bracket w-5 text-red-500"></i> Đăng xuất
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              {% elif current_user.role == "admin" %}
+                <!-- Admin -->
+                <div class="dropdown">
+                  <a class="border border-1 border-white p-2 rounded-lg text-sm dropdown-toggle transition hover:bg-[var(--primary-blue-hover)]"
+                     href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="fa-regular fa-shield"></i> Admin
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end w-64 bg-white rounded-lg shadow-lg p-2">
+                    <li>
+                      <a href="{{ url_for('admin.dashboard') }}"
+                         class="dropdown-item flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+                        <i class="fa-regular fa-gauge-high w-5 text-gray-500"></i> Bảng điều khiển
+                      </a>
+                    </li>
+                    <li><hr class="dropdown-divider border-t border-gray-200 my-2"></li>
+                    <li>
+                      <a href="{{ url_for('auth.logout') }}"
+                         class="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 transition">
+                        <i class="fa-solid fa-right-from-bracket w-5 text-red-500"></i> Đăng xuất
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              {% endif %}
+            {% else %}
+              <!-- Chưa đăng nhập -->
+              <a class="btn-login" href="{{ url_for('auth.login') }}"> Đăng nhập</a>
+              <a class="btn-register" href="{{ url_for('auth.register') }}"> Đăng ký</a>
+              <a class="btn-post-job" href="{{ url_for('job.post_job') }}"><i class="fa-solid fa-briefcase"></i> Đăng tin tuyển dụng</a>
+            {% endif %}
+          </div>
         </div>
       </div>
     </header>
+
+    <!-- JS AJAX cho nút Đã đọc -->
+    <script>
+      function updateHeaderBadge() {
+    const badge = document.querySelector('#notifDropdown .badge');
+    if (badge) {
+        const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+        badge.textContent = unreadCount;
+        if (unreadCount === 0) {
+            badge.remove();
+        }
+    }
+}
+
+      // Time ago function
+      function timeAgo(dateString) {
+        const now = new Date();
+        const d = new Date(dateString);
+        if (isNaN(d)) return "Vừa xong"; // Fallback for invalid dates
+        const seconds = Math.floor((now - d) / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        if (days > 0) return `${days} ngày trước`;
+        if (hours > 0) return `${hours} giờ trước`;
+        if (minutes > 0) return `${minutes} phút trước`;
+        return `Vừa xong`;
+      }
+
+      // Update all .time-ago elements
+      function updateTimeAgoElements() {
+        document.querySelectorAll('.time-ago').forEach(el => {
+          const t = el.dataset.time;
+          if (t) {
+            const txt = timeAgo(t);
+            if (txt) el.textContent = txt;
+          }
+        });
+      }
+
+      // Run initially and every minute
+      document.addEventListener('DOMContentLoaded', () => {
+        updateTimeAgoElements();
+        setInterval(updateTimeAgoElements, 60 * 1000);
+      });
+
+      // Handle "Đã đọc" button clicks
+      document.querySelectorAll('.btn-mark-read').forEach(button => {
+        button.addEventListener('click', async function(e) {
+          e.preventDefault();
+          const li = this.closest('li.notification-item');
+          const notifId = li.dataset.id;
+          const endpoint = this.dataset.endpoint;
+
+          if (!notifId || !endpoint) {
+            console.error("Missing notifId or endpoint", { notifId, endpoint });
+            Toastify({
+              text: "Lỗi: Không tìm thấy ID thông báo hoặc endpoint",
+              duration: 3000,
+              gravity: "bottom",
+              position: "right",
+              backgroundColor: "#dc3545",
+            }).showToast();
+            return;
+          }
+
+          this.textContent = "Đang xử lý...";
+          this.disabled = true;
+
+          try {
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': '{{ form.csrf_token._value() if form else "" }}',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ csrf_token: '{{ form.csrf_token._value() if form else "" }}' })
+            });
+            const data = await response.json();
+            if (data.success) {
+              // Update UI
+              li.classList.remove('unread');
+              const messageSpan = li.querySelector('span.text-sm');
+              if (messageSpan)
+                messageSpan.classList.remove('fw-bold');
+              this.remove();
+
+              // Update badge count
+              const badge = document.querySelector('#notifDropdown .badge');
+              if (badge) {
+                let count = parseInt(badge.textContent);
+                count = Math.max(count - 1, 0);
+                badge.textContent = count;
+                if (count === 0) badge.remove();
+              }
+
+              // Show success toast
+              Toastify({
+                text: "Đã đánh dấu thông báo là đã đọc",
+                duration: 2000,
+                gravity: "bottom",
+                position: "right",
+                backgroundColor: "#28a745",
+              }).showToast();
+            } else {
+              Toastify({
+                text: data.message || "Lỗi khi đánh dấu đã đọc",
+                duration: 3000,
+                gravity: "bottom",
+                position: "right",
+                backgroundColor: "#dc3545",
+              }).showToast();
+              this.textContent = "Đã đọc";
+              this.disabled = false;
+            }
+          } catch (err) {
+            console.error("Fetch error:", err);
+            Toastify({
+              text: "Lỗi khi kết nối server",
+              duration: 3000,
+              gravity: "bottom",
+              position: "right",
+              backgroundColor: "#dc3545",
+            }).showToast();
+            this.textContent = "Đã đọc";
+            this.disabled = false;
+          }
+        });
+      });
+    </script>
 
     <!-- Flash messages -->
     {% with messages = get_flashed_messages() %}
@@ -274,7 +350,6 @@ document.querySelectorAll('.btn-mark-read').forEach(button => {
         </div>
       {% endif %}
     {% endwith %}
-
 
     <!-- Main -->
     <main class="site-main">
@@ -310,8 +385,27 @@ document.querySelectorAll('.btn-mark-read').forEach(button => {
     </footer>
   </div>
 
+  <style>
+    /* Ensure notification dropdown items align properly */
+    .notification-item .flex {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .notification-item .text-sm {
+      flex-grow: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .notification-item .btn-mark-read {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+  </style>
+
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   {% block scripts %}{% endblock %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -1,7 +1,6 @@
 import cloudinary
 from dotenv import load_dotenv
 from flask import Flask
-from flask_login import LoginManager
 from .extensions import db, login_manager, mail
 from .routes.auth_routes import auth_bp
 from .routes.job_routes import job_bp
@@ -14,8 +13,6 @@ from .routes.main import main_bp
 from .routes.message import messages_bp
 from flask_migrate import Migrate
 import os
-import logging
-from config import Config
 from flask_mail import Mail
 load_dotenv()
 
