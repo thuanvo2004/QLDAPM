@@ -1,8 +1,14 @@
 from datetime import datetime
+
+import pytz
 from flask_login import UserMixin
 from app.extensions import db, login_manager
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
+# Define timezone constants
+UTC = pytz.UTC
+VIETNAM_TZ = pytz.timezone('Asia/Ho_Chi_Minh')
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
@@ -181,7 +187,7 @@ class Application(db.Model):
 
     candidate = db.relationship("Candidate", back_populates="applications")
     job = db.relationship("Job", back_populates="applications")
-    cv = db.relationship("CVHistory", backref="applications")
+    cv = db.relationship('CVHistory', backref=db.backref('applications', lazy='dynamic'))
 
     def __repr__(self):
         return f"<Application Candidate={self.candidate_id} Job={self.job_id}>"
@@ -221,7 +227,7 @@ class Notification(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     is_read = db.Column(db.Boolean, default=False)
     type = db.Column(db.String(50), default="system")
 
@@ -230,6 +236,14 @@ class Notification(db.Model):
 
     candidate = db.relationship("Candidate", back_populates="notifications")
     employer = db.relationship("Employer", back_populates="notifications")
+
+    @property
+    def created_at_local(self):
+        if self.created_at:
+            utc_time = UTC.localize(self.created_at)
+            local_time = utc_time.astimezone(VIETNAM_TZ)
+            return local_time
+        return None
 
 
 class Conversation(db.Model):
@@ -317,7 +331,6 @@ candidate_language = db.Table(
 class CVHistory(db.Model):
     __tablename__ = "cv_history"
 
-
     id = db.Column(db.Integer, primary_key=True)
     candidate_id = db.Column(db.Integer, db.ForeignKey("candidates.id"), nullable=False)
     cv_name = db.Column(db.String(255), nullable=False)
@@ -325,5 +338,9 @@ class CVHistory(db.Model):
     public_url = db.Column(db.String(255), nullable=False)
     template = db.Column(db.Text, nullable=True)
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     candidate = db.relationship("Candidate", back_populates="cvs")
+
+    def is_used(self):
+        return self.applications.filter(Application.status != 'rejected').count() > 0

@@ -148,14 +148,6 @@ def index():
         logo=logo
     )
 
-<<<<<<< HEAD
-=======
-
-@main_bp.route("/provinces")
-def provinces():
-    return send_from_directory("static/data", "provinces.json")
-
->>>>>>> 4231998 (create send mail and notificatins)
 @main_bp.app_template_global()
 def format_salary_range(min_salary, max_salary):
     def to_mil(v):

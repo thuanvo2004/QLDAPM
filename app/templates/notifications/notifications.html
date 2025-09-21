@@ -1,62 +1,270 @@
-<!-- templates/notifications/notifications.html -->
 {% extends "base.html" %}
 {% block title %}Thông báo{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Thông báo của bạn</h2>
-    <ul class="list-group mt-3" id="notification-list">
-        {% for notif in notifications %}
-        <li class="list-group-item d-flex justify-content-between align-items-center {% if not notif.is_read %}fw-bold{% endif %}">
-            <div>
-                {{ notif.message }}
-                <br>
-                <small class="text-muted">{{ notif.created_at.strftime("%d/%m/%Y %H:%M") }}</small>
+<div class="relative w-full max-w-5xl mx-auto my-12 bg-white rounded-lg shadow-xl overflow-hidden">
+    <!-- Header -->
+    <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h2 class="text-xl font-semibold text-gray-800">Tất cả thông báo của bạn</h2>
+        {% if notifications and current_user.role in ['candidate', 'employer'] %}
+            <button class="text-sm font-medium text-[var(--primary-blue)] hover:text-[var(--primary-blue-hover)] transition-colors"
+                    id="mark-all-read-btn"
+                    data-endpoint="{{ url_for('candidate.mark_all_notifications_read' if current_user.role == 'candidate' else 'employer.mark_all_notifications_read') }}">
+                Đánh dấu tất cả đã đọc</button>
+        {% endif %}
+    </div>
+
+    <!-- Notification Container -->
+    <div class="h-[400px] overflow-y-auto notification-scroll-container">
+        <!-- Filter Buttons -->
+        <div class="p-4 flex space-x-2 border-b border-gray-200">
+            <button class="px-3 py-1 text-sm rounded-full bg-[var(--primary-blue)] text-white font-medium filter-btn active hover:bg-[var(--primary-blue-hover)] hover:text-white" data-filter="all">Tất cả</button>
+            <button class="px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-700 font-medium hover:bg-[var(--primary-blue-hover)] hover:text-white transition-colors filter-btn" data-filter="unread">Chưa đọc</button>
+        </div>
+
+        <!-- Notification List -->
+        <div id="notification-list">
+            {% for notif in notifications %}
+            <div class="p-4 border-b border-gray-200 hover:bg-gray-50 flex items-center space-x-3 transition-colors notification-item {% if not notif.is_read %}unread{% endif %}" data-id="{{ notif.id }}" data-type="{{ notif.type }}">
+                <!-- Unread Indicator -->
+                <div class="w-2 h-2 rounded-full {% if not notif.is_read %}bg-blue-500{% else %}bg-transparent{% endif %} flex-shrink-0"></div>
+
+                <!-- Notification Content -->
+                <div class="flex-1 min-w-0 flex items-center justify-between {% if not notif.is_read %}font-semibold text-black{% else %}text-gray-500 font-normal{% endif %}">
+                    <p class="text-md truncate">
+                        {{ notif.message }}
+                    </p>
+
+                    {% if not notif.is_read %}
+                        <button class="px-2 py-1 text-xs text-blue-600 bg-[var(--blue-bg)] rounded-lg hover:bg-blue-200 transition-colors mark-read-btn"
+                                data-id="{{ notif.id }}"
+                                data-endpoint="{{ url_for('candidate.mark_notification_read' if current_user.role == 'candidate' else 'employer.mark_notification_read', notif_id=notif.id) }}">
+                            Đánh dấu đã đọc</button>
+                    {% endif %}
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                    <span class="time-ago" data-time="{{ notif.created_at_local.isoformat() }}"></span>
+                </p>
             </div>
-            {% if not notif.is_read %}
-            <button class="btn btn-sm btn-primary mark-read-btn" data-id="{{ notif.id }}">Đã đọc</button>
             {% else %}
-            <span class="badge bg-success">Đã đọc</span>
-            {% endif %}
-        </li>
-        {% else %}
-        <li class="list-group-item">Chưa có thông báo nào</li>
-        {% endfor %}
-    </ul>
+            <div class="p-12 text-center text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <p class="mt-4">Bạn đã xem hết thông báo!</p>
+                <p class="text-xs mt-1">Không có thông báo mới.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
+
+<style>
+    /* Custom scrollbar styling */
+    .notification-scroll-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    .notification-scroll-container::-webkit-scrollbar-track {
+        background: #f1f5f9; /* slate-100 */
+    }
+    .notification-scroll-container::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1; /* slate-300 */
+        border-radius: 4px;
+    }
+    .notification-item .flex-1 {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .notification-item .text-md {
+        flex-grow: 1;
+        margin-right: 1rem;
+    }
+    .notification-item .mark-read-btn {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+</style>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    const buttons = document.querySelectorAll(".mark-read-btn");
-    buttons.forEach(button => {
+    const csrfToken = "{{ form.csrf_token._value() }}";
+    const markReadButtons = document.querySelectorAll(".mark-read-btn");
+    const markAllReadBtn = document.querySelector("#mark-all-read-btn");
+    const filterButtons = Array.from(document.querySelectorAll(".filter-btn"));
+    const notificationListContainer = document.getElementById("notification-list");
+
+    // Helper to get current notification items
+    function getNotificationItems() {
+        return notificationListContainer.querySelectorAll(".notification-item");
+    }
+
+    // Time ago function
+    function timeAgo(dateString) {
+        const now = new Date();
+        const d = new Date(dateString);
+        if (isNaN(d)) return "Vừa xong";
+        const seconds = Math.floor((now - d) / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        if (days > 0) return `${days} ngày trước`;
+        if (hours > 0) return `${hours} giờ trước`;
+        if (minutes > 0) return `${minutes} phút trước`;
+        return `Vừa xong`;
+    }
+
+    // Update all .time-ago elements
+    function updateTimeAgoElements() {
+        document.querySelectorAll('.time-ago').forEach(el => {
+            const t = el.dataset.time;
+            if (t) {
+                const txt = timeAgo(t);
+                if (txt) el.textContent = txt;
+            }
+        });
+    }
+
+    // Handle individual notification marking
+    markReadButtons.forEach(button => {
         button.addEventListener("click", async function() {
             const notifId = this.dataset.id;
+            const endpoint = this.dataset.endpoint;
+            if (!notifId || !endpoint) {
+                console.error("Missing notifId or endpoint", { notifId, endpoint });
+                alert("Lỗi: Không tìm thấy ID thông báo hoặc endpoint");
+                return;
+            }
+
+            this.textContent = "Đang xử lý...";
+            this.disabled = true;
+
             try {
-                const response = await fetch(`/candidate/notifications/mark_read/${notifId}`, {
+                const response = await fetch(endpoint, {
                     method: "POST",
                     headers: {
-                        "X-CSRFToken": "{{ form.csrf_token._value() }}", // nếu dùng Flask-WTF CSRF
+                        "X-CSRFToken": csrfToken,
                         "Content-Type": "application/json"
                     },
+                    body: JSON.stringify({ csrf_token: csrfToken })
                 });
                 const data = await response.json();
                 if (data.success) {
-                    // Thay đổi giao diện
-                    this.remove();
-                    const badge = document.createElement("span");
-                    badge.className = "badge bg-success";
-                    badge.innerText = "Đã đọc";
-                    this.parentNode.appendChild(badge);
-                    this.parentNode.classList.remove("fw-bold");
+                    const item = this.closest(".notification-item");
+                    if (item) {
+                        this.remove();
+
+                        item.classList.remove("unread");
+
+                        const title = item.querySelector(".text-md");
+                        if (title)
+                            title.classList.remove("font-semibold", "text-black");
+                            title.classList.add("font-normal", "text-gray-500");
+
+                        const dot = item.querySelector(".w-2");
+                        if (dot) dot.classList.add("bg-transparent");
+                        // Reapply filter to update visibility
+                        filterNotifications();
+                    }
                 } else {
                     alert(data.message || "Lỗi khi đánh dấu đã đọc");
+                    this.textContent = "Đánh dấu đã đọc";
+                    this.disabled = false;
                 }
             } catch (err) {
-                console.error(err);
+                console.error("Fetch error:", err);
                 alert("Lỗi khi kết nối server");
+                this.textContent = "Đánh dấu đã đọc";
+                this.disabled = false;
             }
         });
     });
+
+    // Handle mark all as read
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener("click", async function() {
+            const endpoint = this.dataset.endpoint;
+            if (!endpoint) {
+                console.error("Missing endpoint for mark all read");
+                alert("Lỗi: Không tìm thấy endpoint");
+                return;
+            }
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrfToken,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ csrf_token: csrfToken })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    getNotificationItems().forEach(item => {
+                        const button = item.querySelector(".mark-read-btn");
+                        if (button) button.remove();
+
+                        item.classList.remove("unread");
+
+                        const title = item.querySelector(".text-md");
+                        if (title)
+                            title.classList.remove("font-semibold", "text-black");
+                            title.classList.add("font-normal", "text-gray-500");
+
+                        const dot = item.querySelector(".w-2");
+                        if (dot) dot.classList.add("bg-transparent");
+                    });
+                    filterNotifications(); // Reapply filter
+                } else {
+                    alert(data.message || "Lỗi khi đánh dấu tất cả đã đọc");
+                    this.disabled = false;
+                    this.textContent = "Đánh dấu tất cả đã đọc";
+                }
+            } catch (err) {
+                console.error("Fetch error:", err);
+                alert("Lỗi khi kết nối server");
+                this.disabled = false;
+                this.textContent = "Đánh dấu tất cả đã đọc";
+            }
+        });
+    }
+
+    // Filter notifications
+    function filterNotifications() {
+        const activeFilter = document.querySelector(".filter-btn.active")?.dataset.filter || "all";
+        console.log("Active filter:", activeFilter); // Debug log
+        getNotificationItems().forEach(item => {
+            const isUnread = item.classList.contains("unread");
+            if (activeFilter == "all") {
+                item.style.display = "";
+            } else if (activeFilter == "unread" && isUnread) {
+                item.style.display = "";
+            } else {
+                item.style.display = "none";
+            }
+        });
+    }
+
+    // Filter button clicks
+    filterButtons.forEach(button => {
+        button.addEventListener("click", function() {
+            filterButtons.forEach(btn => {
+                btn.classList.remove("active", "bg-[var(--primary-blue)]", "text-white");
+                btn.classList.add("bg-gray-200", "text-gray-700");
+            });
+            this.classList.add("active", "bg-[var(--primary-blue)]", "text-white");
+            this.classList.remove("bg-gray-200", "text-gray-700");
+            filterNotifications();
+        });
+    });
+
+    // Initial setup
+    updateTimeAgoElements();
+    filterNotifications();
+    setInterval(updateTimeAgoElements, 60 * 1000);
 });
 </script>
 {% endblock %}

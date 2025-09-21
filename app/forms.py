@@ -3,7 +3,8 @@ import os
 import re
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, SelectField, TextAreaField, IntegerField, DateField, TimeField, DateTimeField
+from wtforms import StringField, PasswordField, SubmitField, SelectField, TextAreaField, IntegerField, DateField, \
+    TimeField, DateTimeField, HiddenField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional,URL,NumberRange
 from flask_wtf.file import FileField, FileAllowed
 from flask_wtf import FlaskForm
@@ -184,3 +185,7 @@ class EmployerProfileForm(FlaskForm):
             validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Chỉ chấp nhận ảnh!')]
         )
         submit = SubmitField("Lưu hồ sơ")
+
+class NotificationForm(FlaskForm):
+    notification_id = HiddenField('Notification ID', validators=[DataRequired()])
+    mark_read = SubmitField('Mark as Read')

@@ -4,8 +4,10 @@ from datetime import date
 import cloudinary
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
+from flask_wtf.csrf import validate_csrf
 from sqlalchemy.orm import joinedload
 from app.extensions import db
+from app.forms import NotificationForm
 from app.models import Job, Application, SavedJob, Candidate, Notification,CVHistory
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm
@@ -270,10 +272,10 @@ def upload_avatar():
 
     return jsonify({"success": True, "message": "Upload thành công", "filename": filename})
 
-
-@candidate_bp.route("/notifications")
+@candidate_bp.route("/notifications", methods=['GET', 'POST'])
 @login_required
 def view_notifications():
+    form = NotificationForm()
     if current_user.role == "candidate":
         notifs = current_user.candidate_profile.notifications
     elif current_user.role == "employer":
@@ -282,7 +284,8 @@ def view_notifications():
         notifs = []
 
     notifs = sorted(notifs, key=lambda n: n.created_at, reverse=True)
-    return render_template("notifications/notifications.html", notifications=notifs)
+    return render_template("notifications/notifications.html", notifications=notifs, form=form)
+
 @candidate_bp.route("/notifications/mark_read/<int:notif_id>", methods=["POST"])
 @login_required
 def mark_notification_read(notif_id):
@@ -297,3 +300,22 @@ def mark_notification_read(notif_id):
     db.session.commit()
     return jsonify({"success": True})
 
+@candidate_bp.route("/notifications/mark_all_read", methods=["POST"])
+@login_required
+def mark_all_notifications_read():
+    try:
+        validate_csrf(request.form.get('csrf_token') or request.json.get('csrf_token'))
+    except:
+        return jsonify({"success": False, "message": "CSRF token không hợp lệ"}), 403
+
+    if current_user.role != "candidate" or not (hasattr(current_user, 'candidate_profile') and current_user.candidate_profile):
+        return jsonify({"success": False, "message": "Chỉ ứng viên mới dùng chức năng này"}), 403
+
+    notifications = Notification.query.filter_by(
+        candidate_id=current_user.candidate_profile.id,
+        is_read=False
+    ).all()
+    for notif in notifications:
+        notif.is_read = True
+    db.session.commit()
+    return jsonify({"success": True, "message": "Tất cả thông báo đã được đánh dấu là đã đọc"})
