@@ -264,11 +264,11 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     receiver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    conversation_id = db.Column(db.Integer, db.ForeignKey("conversations.id"), nullable=False)  # <-- thêm
-    content = db.Column(db.Text, nullable=False)
     conversation_id = db.Column(db.Integer, db.ForeignKey("conversations.id"), nullable=False)
+    content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     attachment_url = db.Column(db.String(255))
+    is_read = db.Column(db.Boolean, default=False)
 
     sender = db.relationship("User", foreign_keys=[sender_id], backref="sent_messages")
     receiver = db.relationship("User", foreign_keys=[receiver_id], backref="received_messages")

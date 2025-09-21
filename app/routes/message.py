@@ -55,7 +55,8 @@ def send_message_user(user_id):
         sender_id=current_user.id,
         receiver_id=other_user.id,
         conversation_id=conversation.id,
-        content=content.strip()
+        content=content.strip(),
+        is_read=False
     )
     db.session.add(new_msg)
     db.session.commit()
@@ -111,6 +112,11 @@ def conversation_detail(conversation_id):
 
     # 🔹 Lấy tin nhắn của hội thoại
     messages = Message.query.filter_by(conversation_id=convo.id).order_by(Message.created_at.asc()).all()
+    # Đánh dấu tất cả tin nhắn gửi cho current_user trong cuộc trò chuyện này là đã đọc
+    unread_msgs = Message.query.filter_by(conversation_id=convo.id, receiver_id=current_user.id, is_read=False).all()
+    for msg in unread_msgs:
+        msg.is_read = True
+    db.session.commit()
 
     return render_template(
         "messages/chat.html",
@@ -124,25 +130,51 @@ def conversation_detail(conversation_id):
 def send_message_conversation(conversation_id):
     convo = Conversation.query.get_or_404(conversation_id)
 
+    # Kiểm tra quyền tham gia hội thoại
     if current_user.id not in [convo.user1_id, convo.user2_id]:
         return "Bạn không có quyền", 403
 
-    content = request.form.get("content")
+    content = request.form.get("content", "").strip()
     if content:
+        # Xác định người nhận
+        if convo.user1_id == current_user.id:
+            receiver_id = convo.user2_id
+        else:
+            receiver_id = convo.user1_id
+
+        # Tạo tin nhắn mới
         msg = Message(
             conversation_id=convo.id,
             sender_id=current_user.id,
+            receiver_id=receiver_id,
             content=content,
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
+            is_read=False
         )
+
         db.session.add(msg)
         db.session.commit()
 
     return redirect(url_for("messages.conversation_detail", conversation_id=convo.id))
 
+# dem so tin nhan chua doc
+@messages_bp.route("/unread_count")
+@login_required
+def unread_count():
+    count = Message.query.filter_by(receiver_id=current_user.id, is_read=False).count()
+    return {"count": count}
 
-
-
+# Inject vào template context
+@messages_bp.app_context_processor
+def inject_unread_count():
+    if current_user.is_authenticated:
+        unread_count = Message.query.filter_by(
+            receiver_id=current_user.id,
+            is_read=False
+        ).count()
+    else:
+        unread_count = 0
+    return dict(unread_count=unread_count)
 @messages_bp.route("/messages/")
 @login_required
 def message_list():

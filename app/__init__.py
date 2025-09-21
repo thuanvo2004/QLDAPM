@@ -8,12 +8,14 @@ from .routes.candidate_routes import candidate_bp
 from .routes.employer_routes import employer_bp
 from .routes.cv_routes import cv_bp
 from .routes.payment_routes import payment_bp
-from .models import User
+from .models import User, Message
 from .routes.main import main_bp
 from .routes.message import messages_bp
 from flask_migrate import Migrate
 import os
 from flask_mail import Mail
+from flask_login import login_required, current_user
+
 load_dotenv()
 
 cloudinary.config(
@@ -25,6 +27,7 @@ cloudinary.config(
 
 migrate = Migrate()
 mail = Mail()
+
 def create_app():
     """Tạo và cấu hình Flask app"""
     app = Flask(__name__)
@@ -41,6 +44,7 @@ def create_app():
     migrate.init_app(app, db)
     mail.init_app(app)
 
+
     # Cấu hình Flask-Login
     login_manager.login_view = "auth.login"
     login_manager.login_message_category = "warning"
@@ -53,6 +57,18 @@ def create_app():
         if not value:
             return "Thỏa thuận"
         return f"{value:,.0f} VNĐ"
+
+    @app.context_processor
+    def inject_unread_count():
+        """Inject biến unread_count vào tất cả template Jinja2"""
+        if current_user.is_authenticated:
+            unread_count = Message.query.filter_by(
+                receiver_id=current_user.id,
+                is_read=False
+            ).count()
+        else:
+            unread_count = 0
+        return dict(unread_count=unread_count)
 
     # Đăng ký filter
     app.jinja_env.filters['fmt_salary'] = format_salary

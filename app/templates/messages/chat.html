@@ -20,6 +20,18 @@
             <p class="text-muted">Chưa có tin nhắn nào.</p>
         {% endfor %}
     </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.querySelector("form");
+        const input = form.querySelector("input[name='content']");
+
+        form.addEventListener("submit", function () {
+            setTimeout(() => {
+                input.value = ""; // reset sau khi gửi
+            }, 50);
+        });
+    });
+</script>
 
     <!-- Form gửi tin nhắn -->
     <form method="POST" action="{{ url_for('messages.send_message_user', user_id=other_user.id) }}">

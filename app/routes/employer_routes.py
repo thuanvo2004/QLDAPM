@@ -408,3 +408,14 @@ def mark_all_notifications_read():
         notif.is_read = True
     db.session.commit()
     return jsonify({"success": True, "message": "Tất cả thông báo đã được đánh dấu là đã đọc"})
+
+
+@employer_bp.route("/unread_notifications_count")
+@login_required
+def unread_notifications_count():
+    # chỉ đếm notifications gắn employer_id cho tài khoản employer hiện tại
+    if current_user.role != "employer" or not getattr(current_user, "employer_profile", None):
+        return jsonify({"count": 0})
+    employer_id = current_user.employer_profile.id
+    count = Notification.query.filter_by(employer_id=employer_id, is_read=False).count()
+    return jsonify({"count": count})
