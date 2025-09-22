@@ -3,42 +3,146 @@
 {% block title %}Chat với {{ other_user.username }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h3>💬 Chat với {{ other_user.username }}</h3>
-    <div class="chat-box border rounded p-3 mb-3" style="height: 400px; overflow-y: auto;">
-        {% for msg in chat_messages %}
-            <div class="mb-2 {% if msg.sender_id == current_user.id %}text-end{% endif %}">
-                <small class="text-muted">
-                    {{ "Bạn" if msg.sender_id == current_user.id else msg.sender.username }}
-                    ({{ msg.created_at.strftime("%H:%M:%S %d-%m-%Y") }})
-                </small><br>
-                <span class="p-2 rounded {% if msg.sender_id == current_user.id %}bg-primary text-white{% else %}bg-light{% endif %}">
-                    {{ msg.content }}
-                </span>
-            </div>
-        {% else %}
-            <p class="text-muted">Chưa có tin nhắn nào.</p>
-        {% endfor %}
-    </div>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const form = document.querySelector("form");
-        const input = form.querySelector("input[name='content']");
+<div class="container mx-auto mt-6 px-4">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+        Chat với {{ other_user.username }}
+        <span class="ml-2 text-sm text-gray-500">({{ unread_count }} tin nhắn chưa đọc)</span>
+    </h2>
 
-        form.addEventListener("submit", function () {
-            setTimeout(() => {
-                input.value = ""; // reset sau khi gửi
-            }, 50);
-        });
-    });
-</script>
+    <!-- Chat Box -->
+    <div id="chatBox" class="chat-box border borer-1 !border-[var(--primary-blue)] rounded-lg p-4 mb-6 bg-white" style="height: 500px; overflow-y: auto;">
+        {% if chat_messages %}
+            {% for msg in chat_messages %}
+                <div class="mb-3 {% if msg.sender_id == current_user.id %}text-right{% else %}text-left{% endif %}">
+                    <div class="inline-block p-2 rounded-lg {% if msg.sender_id == current_user.id %}bg-[var(--primary-blue)] text-white{% else %}bg-gray-300 text-gray-800{% endif %} max-w-[70%]">
+                        <p class="text-md font-medium">{{ msg.content }}</p>
+                        <small class="text-xs block mt-1 {% if msg.sender_id == current_user.id %}text-white{% else %}text-muted{% endif %}">
+                            {{ msg.created_at_local.strftime("%H:%M %d/%m/%Y") if msg.created_at_local else msg.created_at.strftime("%H:%M %d/%m/%Y") }}
+                            {% if msg.sender_id == current_user.id %} (Bạn){% else %} - {{ display_names[msg.sender_id] if display_names is defined and msg.sender_id in display_names else (msg.sender.username if msg.sender is defined else 'User#'~msg.sender_id) }}{% endif %}
+                        </small>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-center text-gray-500">Chưa có tin nhắn nào.</p>
+        {% endif %}
+    </div>
 
     <!-- Form gửi tin nhắn -->
-    <form method="POST" action="{{ url_for('messages.send_message_user', user_id=other_user.id) }}">
-        <div class="input-group">
-            <input type="text" name="content" class="form-control" placeholder="Nhập tin nhắn..." required>
-            <button type="submit" class="btn btn-primary">Gửi</button>
+    <form id="msgForm" method="POST" action="{{ url_for('messages.send_message_user', user_id=other_user.id) }}" class="flex flex-col items-stretch space-y-2 mb-4">
+        <!-- dùng textarea để hỗ trợ xuống dòng; Enter gửi (Shift+Enter xuống dòng) -->
+        <textarea id="contentInput" name="content" rows="2"
+               class="form-control p-3 border rounded-lg focus:!outline-none focus:!ring-2 focus:!ring-[var(--primary-blue)]"
+               placeholder="Nhập tin nhắn..." required></textarea>
+
+        <div class="flex items-center space-x-2">
+            <button id="sendBtn" type="submit"
+                class="w-full btn bg-[var(--primary-blue)] text-white px-6 py-2 rounded-lg hover:bg-[var(--primary-blue-hover)] transition-colors text-lg font-semibold flex items-center justify-center">
+                Gửi
+            </button>
         </div>
     </form>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("msgForm");
+            const input = document.getElementById("contentInput");
+            const chatBox = document.getElementById("chatBox");
+            const currentUserId = {{ current_user.id }};
+            const sendUrl = form.action;
+
+            // helper scroll to bottom
+            function scrollToBottom() {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+            // initial scroll
+            scrollToBottom();
+
+            // Enter gửi (Shift+Enter xuống dòng)
+            input.addEventListener("keydown", function (e) {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    submitMessage();
+                }
+            });
+
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+                submitMessage();
+            });
+
+            function submitMessage() {
+                const text = input.value.trim();
+                if (!text) return;
+
+                const fd = new FormData();
+                fd.append("content", text);
+
+                // Disable UI while gửi
+                const sendBtn = document.getElementById("sendBtn");
+                sendBtn.disabled = true;
+
+                fetch(sendUrl, {
+                    method: "POST",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "Accept": "application/json"
+                    },
+                    body: fd
+                })
+                .then(async response => {
+                    sendBtn.disabled = false;
+                    if (!response.ok) {
+                        const err = await response.json().catch(()=>({error:"unknown"}));
+                        console.error("Send failed", err);
+                        return;
+                    }
+                    const data = await response.json();
+                    // append message to chatBox
+                    appendMessageToChat(data);
+                    input.value = ""; // clear
+                    input.focus();
+                    scrollToBottom();
+                })
+                .catch(error => {
+                    console.error("Error sending message:", error);
+                    sendBtn.disabled = false;
+                });
+            }
+
+            function appendMessageToChat(msgData) {
+                // msgData: { id, sender_id, receiver_id, content, created_at_display }
+                const isMine = msgData.sender_id === currentUserId;
+                const outer = document.createElement("div");
+                outer.className = "mb-3 " + (isMine ? "text-right" : "text-left");
+
+                const inner = document.createElement("div");
+                inner.className = "inline-block p-2 rounded-lg max-w-[70%]";
+                if (isMine) {
+                    inner.classList.add("bg-[var(--primary-blue)]", "text-white");
+                } else {
+                    inner.classList.add("bg-gray-300", "text-gray-800");
+                }
+
+                const p = document.createElement("p");
+                p.className = "text-md font-medium";
+                p.textContent = msgData.content;
+                inner.appendChild(p);
+
+                const small = document.createElement("small");
+                small.className = "text-xs block mt-1";
+                if (isMine) small.classList.add("text-white");
+                else small.classList.add("text-muted");
+
+                // tên hiển thị: nếu bạn có display_names trên template, bạn có thể dùng JS variable; fallback hiển thị 'Bạn' hoặc 'Người khác'
+                let senderLabel = isMine ? " (Bạn)" : (" - " + (msgData.sender_name || ("User#" + msgData.sender_id)));
+                small.textContent = (msgData.created_at_display || new Date(msgData.created_at).toLocaleString()) + senderLabel;
+
+                inner.appendChild(small);
+                outer.appendChild(inner);
+                chatBox.appendChild(outer);
+            }
+        });
+    </script>
 </div>
 {% endblock %}
