@@ -1,0 +1,106 @@
+{% extends "admin/layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+    <!-- Ảnh đại diện + Thông tin cơ bản -->
+    <div class="col-md-4">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body text-center">
+          {% if candidate.avatar %}
+            <img src="{{ url_for('static', filename='uploads/avatars/' ~ candidate.avatar) }}" 
+                 class="rounded-circle mb-3" width="150" height="150" alt="Avatar">
+          {% else %}
+            <img src="{{ url_for('static', filename='images/default-avatar.png') }}" 
+                 class="rounded-circle mb-3" width="150" height="150" alt="Avatar">
+          {% endif %}
+          <h4 class="card-title">{{ candidate.full_name }}</h4>
+          <p class="text-muted">{{ candidate.current_position or "Chưa cập nhật" }}</p>
+          <p><strong>📞</strong> {{ candidate.phone or "-" }}</p>
+          <p><strong>📧</strong> {{ candidate.user.email }}</p>
+          <p><strong>📍</strong> {{ candidate.address }}, {{ candidate.city }}</p>
+        </div>
+      </div>
+
+      <!-- CV file -->
+      {% if candidate.cv_file %}
+      <div class="card shadow-sm mb-4">
+        <div class="card-body text-center">
+          <a href="{{ url_for('static', filename='uploads/cv/' ~ candidate.cv_file) }}" 
+             class="btn btn-outline-primary" target="_blank">📄 Xem CV đính kèm</a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Thông tin chi tiết -->
+    <div class="col-md-8">
+      <!-- Thông tin cá nhân -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">Thông tin cá nhân</div>
+        <div class="card-body">
+          <p><strong>👤 Giới tính:</strong> {{ candidate.gender or "-" }}</p>
+          <p><strong>🎂 Ngày sinh:</strong> {{ candidate.date_of_birth.strftime('%d/%m/%Y') if candidate.date_of_birth else "-" }}</p>
+          <p><strong>🎓 Học vấn:</strong> {{ candidate.education or "-" }} - {{ candidate.major or "" }}</p>
+        </div>
+      </div>
+
+      <!-- Kinh nghiệm -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">Kinh nghiệm</div>
+        <div class="card-body">
+          <p><strong>Kinh nghiệm:</strong> {{ candidate.experience_str }}</p>
+          <p><strong>Vị trí mong muốn:</strong> {{ candidate.expected_position or "-" }}</p>
+          <p><strong>Mức lương kỳ vọng:</strong> 
+            {% if candidate.expected_salary %}
+              {{ "{:,.0f}".format(candidate.expected_salary) }} VND
+            {% else %}
+              -
+            {% endif %}
+          </p>
+        </div>
+      </div>
+
+      <!-- Kỹ năng -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">Kỹ năng</div>
+        <div class="card-body">
+          {% if candidate.skills %}
+            <ul>
+              {% for skill in candidate.skills.split(",") %}
+                <li>{{ skill.strip() }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>-</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Ngoại ngữ -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-warning">Ngoại ngữ</div>
+        <div class="card-body">
+          {% if candidate.languages %}
+            <ul>
+              {% for lang in candidate.languages.split(",") %}
+                <li>{{ lang.strip() }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>-</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Mục tiêu nghề nghiệp -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">Mục tiêu nghề nghiệp</div>
+        <div class="card-body">
+          <p>{{ candidate.career_objective or "-" }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

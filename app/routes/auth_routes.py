@@ -15,6 +15,7 @@ from app.forms import RegisterForm, LoginForm, EmployerRegisterForm
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
+
 # =======================
 # Login
 # =======================
@@ -30,8 +31,13 @@ def login():
         if user and user.check_password(form.password.data):
             login_user(user)
             flash("Đăng nhập thành công", "success")
-            next_page = request.args.get("next")
-            return redirect(next_page or url_for("main.index"))
+
+            # Check role thay vì is_admin
+            if user.role == "admin":
+                return redirect(url_for("admin.dashboard"))
+            else:
+                return redirect(url_for("main.index"))
+
         flash("Email hoặc mật khẩu sai", "danger")
     return render_template("auth/login.html", form=form)
 

@@ -1,0 +1,18 @@
+{% extends "admin/layout.html" %}
+{% set active_page = "users" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Chi tiết người dùng</h2>
+  <div class="card mt-3">
+    <div class="card-body">
+      <h5 class="card-title">{{ user.full_name or "Chưa có tên" }}</h5>
+      <p><strong>Email:</strong> {{ user.email }}</p>
+      <p><strong>Vai trò:</strong> {{ user.role }}</p>
+      <p><strong>Trạng thái:</strong> {{ "Hoạt động" if user.is_active else "Bị khóa" }}</p>
+      <p><strong>Ngày tạo:</strong> {{ user.created_at.strftime("%d/%m/%Y %H:%M") }}</p>
+      <a href="{{ url_for('admin.list_users') }}" class="btn btn-secondary">⬅ Quay lại</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -15,7 +15,7 @@ from flask_migrate import Migrate
 import os
 from flask_mail import Mail
 from flask_login import login_required, current_user
-
+from .routes.admin import admin_bp
 load_dotenv()
 
 cloudinary.config(
@@ -82,6 +82,7 @@ def create_app():
     app.register_blueprint(main_bp, url_prefix='/')
     app.register_blueprint(messages_bp, url_prefix='/messages')
     app.register_blueprint(payment_bp, url_prefix='/payment')
+    app.register_blueprint(admin_bp,url_prefix='/admin' )
 
     # Tạo bảng nếu chưa có (chỉ dùng dev, không dùng production)
     with app.app_context():
