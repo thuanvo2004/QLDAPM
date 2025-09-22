@@ -1,6 +1,7 @@
 import re
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, send_from_directory
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, send_from_directory, \
+    jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import case, or_, func, and_
 
@@ -8,6 +9,8 @@ from app.forms import JobForm
 from app.models import Job, Employer
 from app.extensions import db
 from datetime import datetime, date
+
+from app.routes.main import load_json_file
 
 job_bp = Blueprint("job", __name__, url_prefix="/jobs")
 
@@ -224,3 +227,12 @@ def format_salary_range(min_salary, max_salary):
     if b:
         return f"Đến {b} triệu"
     return "Thương lượng"
+
+@job_bp.route('/industries')
+def industries_json():
+    data = load_json_file('industries.json')
+    if data is None:
+        return jsonify({'industries': []}), 200
+    if isinstance(data, list):
+        return jsonify({'industries': data})
+    return jsonify(data)
