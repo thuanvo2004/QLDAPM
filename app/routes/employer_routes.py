@@ -348,7 +348,7 @@ def employer_detail(employer_id):
     ).all()
 
     return render_template(
-        'employer/detail.html',  # Template to display employer details
+        'employer/employer_detail.html',
         employer=employer,
         jobs=jobs,
         now=now

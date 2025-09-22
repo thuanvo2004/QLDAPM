@@ -416,10 +416,12 @@ document.addEventListener("DOMContentLoaded", function () {
     <!-- Footer -->
     <footer class="site-footer">
       <div class="container footer-inner">
-        <div class="brand-info">
-          <div class="brand-logo small">JN</div>
+        <a href="{{ url_for('main.index') }}" class="flex items-center mb-4">
+          <div class="brand-info">
+          <div class="font-extrabold text-4xl py-2 px-1 bg-[var(--primary-blue)] rounded-lg mr-2">JN</div>
           <p class="f-desc whitespace-normal">JobNest - nơi kết nối công việc & <br> người tài.</p>
         </div>
+        </a>
         <div class="f-col">
           <h4>Liên kết nhanh</h4>
           <ul>
