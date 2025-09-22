@@ -1,66 +1,81 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <h3>Ứng viên đã ứng tuyển cho: <strong>{{ job.title }}</strong></h3>
-    <p>Công ty: <strong>{{ job.employer.company_name }}</strong></p>
+<div class="container mx-auto mt-6 px-4">
+    <!-- Header Section -->
+    <div class="bg-gray-100 rounded-lg shadow-md p-6 mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-800">Ứng viên đã ứng tuyển cho: <span class="underline">{{ job.title }}</span></h2>
+            <p class="text-gray-600 mt-1">Công ty: <span class="font-medium">{{ job.employer.company_name }}</span></p>
+        </div>
+        <a href="{{ url_for('employer.dashboard') }}" class="mt-4 md:mt-0 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm">Quay lại Dashboard</a>
+    </div>
 
     {% if applications %}
-    <table class="table table-hover mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>Họ và tên</th>
-                <th>Email</th>
-                <th>Số điện thoại</th>
-                <th>Kinh nghiệm (năm)</th>
-                <th>Vị trí mong muốn</th>
-                <th>CV</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for app in applications %}
-            <tr>
-                <td>{{ app.candidate.full_name }}</td>
-                <td>{{ app.candidate.user.email }}</td>
-                <td>{{ app.candidate.phone or "Chưa cập nhật" }}</td>
-                <td>{{ app.candidate.experience_years }}</td>
-                <td>{{ app.candidate.expected_position or "Chưa cập nhật" }}</td>
-                <td>
+    <!-- Applications Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for app in applications %}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 hover:border-gray-200 transition-all duration-200">
+            <div class="p-5">
+                <!-- Candidate Info -->
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-user text-gray-500 text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-base font-medium text-gray-800">{{ app.candidate.full_name }}</h3>
+                        <p class="text-sm text-gray-500">{{ app.candidate.user.email }}</p>
+                    </div>
+                </div>
+
+                <!-- Details -->
+                <div class="space-y-2 text-sm text-gray-600 mb-4">
+                    <p><span class="font-medium">SĐT:</span> {{ app.candidate.phone or "Chưa cập nhật" }}</p>
+                    <p><span class="font-medium">Kinh nghiệm:</span> {{ app.candidate.experience_years or "Chưa cập nhật" }} năm</p>
+                    <p><span class="font-medium">Vị trí mong muốn:</span> {{ app.candidate.expected_position or "Chưa cập nhật" }}</p>
+                </div>
+
+                <!-- CV -->
+                <div class="mb-4">
                     {% if app.cv_file %}
-                    <a href="{{ app.cv_file }}" target="_blank" class="btn btn-sm btn-primary">Xem CV</a>
+                    <a href="{{ app.cv_file }}" target="_blank" class="text-blue-600 hover:underline text-sm">Xem CV</a>
                     {% else %}
-                    Chưa có
+                    <span class="text-gray-500 text-sm">Chưa có CV</span>
                     {% endif %}
-                </td>
-                <td>
+                </div>
+
+                <!-- Status -->
+                <div class="mb-4">
                     {% if app.status == "pending" %}
-                        <span class="badge bg-warning text-dark">Đang chờ</span>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700">Đang chờ</span>
                     {% elif app.status == "accepted" %}
-                        <span class="badge bg-success">Đã duyệt</span>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700">Đã duyệt</span>
                     {% elif app.status == "rejected" %}
-                        <span class="badge bg-danger">Đã từ chối</span>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700">Đã từ chối</span>
                     {% endif %}
-                </td>
-                <td>
-                    <!-- Duyệt/Từ chối -->
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-2">
                     {% if app.status == "pending" %}
-                    <a href="{{ url_for('employer.change_application_status', app_id=app.id, action='accept') }}" class="btn btn-sm btn-success">Duyệt</a>
-                    <a href="{{ url_for('employer.change_application_status', app_id=app.id, action='reject') }}" class="btn btn-sm btn-danger">Từ chối</a>
+                    <a href="{{ url_for('employer.change_application_status', app_id=app.id, action='accept') }}" class="flex-1 text-center px-3 py-1 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-sm">Duyệt</a>
+                    <a href="{{ url_for('employer.change_application_status', app_id=app.id, action='reject') }}" class="flex-1 text-center px-3 py-1 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-sm">Từ chối</a>
                     {% endif %}
-
-                    <!-- Liên lạc (mở trang chat) -->
-                    <a href="{{ url_for('messages.chat_with_user', user_id=app.candidate.user.id) }}" class="btn btn-sm btn-info text-white">Nhắn</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    <a href="{{ url_for('messages.chat_with_user', user_id=app.candidate.user.id) }}" class="flex-1 text-center px-3 py-1 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm">Nhắn</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
     {% else %}
-    <p>Chưa có ứng viên nào ứng tuyển.</p>
+    <!-- Empty State -->
+    <div class="text-center py-12 bg-white rounded-lg shadow-md">
+        <div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-users text-gray-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-medium text-gray-700 mb-2">Chưa có ứng viên nào ứng tuyển</h3>
+        <p class="text-gray-500 mb-4">Hãy quảng bá công việc để thu hút ứng viên.</p>
+    </div>
     {% endif %}
-
-    <a href="{{ url_for('employer.dashboard') }}" class="btn btn-secondary mt-3">Quay lại Dashboard</a>
 </div>
 {% endblock %}
