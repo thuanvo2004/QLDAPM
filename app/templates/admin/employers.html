@@ -1,0 +1,32 @@
+{% extends "admin/layout.html" %}
+{% set active_page = "employers" %}
+{% block content %}
+<h2 class="mb-4">Quản lý nhà tuyển dụng</h2>
+<table class="table table-hover bg-white shadow-sm">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Công ty</th>
+      <th>Email</th>
+      <th>Số lượng job</th>
+      <th>Ngày tham gia</th>
+      <th>Hành động</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for employer in employers %}
+    <tr>
+      <td>{{ employer.id }}</td>
+      <td>{{ employer.company_name }}</td>
+      <td>{{ employer.user.email }}</td>
+      <td>{{ employer.jobs|length }}</td>
+      <td>{{ employer.created_at.strftime('%Y-%m-%d') }}</td>
+      <td>
+        <a href="{{ url_for('admin.view_employer', employer_id=employer.id) }}" class="btn btn-sm btn-info">Xem</a>
+        <a href="{{ url_for('admin.delete_employer', employer_id=employer.id) }}" class="btn btn-sm btn-danger">Xoá</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

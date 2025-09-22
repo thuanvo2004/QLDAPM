@@ -1,0 +1,33 @@
+{% extends "admin/layout.html" %}
+{% set active_page = "candidates" %}
+{% block content %}
+<h2 class="mb-4">Quản lý ứng viên</h2>
+<table class="table table-hover bg-white shadow-sm">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Họ tên</th>
+      <th>Email</th>
+      <th>Kinh nghiệm</th>
+      <th>Kỹ năng</th>
+      <th>Hành động</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for candidate in candidates %}
+    <tr>
+      <td>{{ candidate.id }}</td>
+      <td>{{ candidate.full_name }}</td>
+      <td>{{ candidate.user.email }}</td>
+      <td>{{ candidate.experience_years }} năm</td>
+      <td>{{ candidate.skills }}</td>
+      <td>
+        <a href="{{ url_for('admin.candidate_detail', candidate_id=candidate.id) }}" class="btn btn-sm btn-info">Xem</a>
+
+        <a href="{{ url_for('admin.delete_candidate', candidate_id=candidate.id) }}" class="btn btn-sm btn-danger">Xoá</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

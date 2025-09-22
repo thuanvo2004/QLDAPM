@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Chi tiết Nhà tuyển dụng{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="card shadow-lg border-0 rounded-4">
+    <div class="card-body p-5">
+ <!-- Nút quay lại -->
+      <div class="mt-4">
+        <a href="{{ url_for('admin.list_employers') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách
+        </a>
+      </div>
+      <!-- Header -->
+      <div class="d-flex align-items-center mb-4">
+        <img src="{{ employer.logo or url_for('static', filename='images/company_default.png') }}"
+             alt="Logo công ty"
+             class="rounded-circle border shadow-sm"
+             width="100" height="100"
+             style="object-fit: cover;">
+        <div class="ms-4">
+          <h2 class="fw-bold text-primary">{{ employer.company_name }}</h2>
+          <p class="text-muted mb-0">{{ employer.industry or "Chưa cập nhật" }}</p>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Thông tin chi tiết -->
+      <div class="row g-4">
+        <div class="col-md-6">
+          <h5 class="fw-bold text-secondary">Thông tin liên hệ</h5>
+          <ul class="list-unstyled">
+            <li><i class="bi bi-person-circle me-2"></i>Người đại diện: {{ employer.contact_person or "-" }}</li>
+            <li><i class="bi bi-envelope me-2"></i>Email: {{ employer.contact_email or "-" }}</li>
+            <li><i class="bi bi-telephone me-2"></i>Số điện thoại: {{ employer.contact_phone or "-" }}</li>
+            <li><i class="bi bi-globe me-2"></i>Website: 
+              {% if employer.website %}
+                <a href="{{ employer.website }}" target="_blank">{{ employer.website }}</a>
+              {% else %}
+                -
+              {% endif %}
+            </li>
+          </ul>
+        </div>
+
+        <div class="col-md-6">
+          <h5 class="fw-bold text-secondary">Địa chỉ</h5>
+          <p>
+            {{ employer.address or "" }}<br>
+            {{ employer.city or "" }}
+          </p>
+
+          <h5 class="fw-bold text-secondary mt-4">Thông tin thêm</h5>
+          <ul class="list-unstyled">
+            <li><i class="bi bi-people me-2"></i>Quy mô: {{ employer.company_size or "Chưa rõ" }}</li>
+            <li><i class="bi bi-calendar me-2"></i>Ngày tạo: {{ employer.created_at.strftime('%d/%m/%Y') }}</li>
+            <li><i class="bi bi-clock-history me-2"></i>Cập nhật: {{ employer.updated_at.strftime('%d/%m/%Y') }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <!-- Giới thiệu -->
+      <h5 class="fw-bold text-secondary">Giới thiệu</h5>
+      <p>{{ employer.description or "Chưa có mô tả công ty." }}</p>
+
+      <!-- Các job đang tuyển -->
+      <h5 class="fw-bold text-secondary mt-4">Tin tuyển dụng</h5>
+      {% if employer.jobs %}
+        <ul class="list-group">
+          {% for job in employer.jobs %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>
+                <i class="bi bi-briefcase me-2"></i>
+                <a href="{{ url_for('job.job_detail', job_id=job.id) }}">{{ job.title }}</a>
+
+              </span>
+              <span class="badge bg-primary rounded-pill">
+                {{ job.salary_min or 0 }} - {{ job.salary_max or 0 }} {{ job.currency or "VND" }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted fst-italic">Chưa có tin tuyển dụng nào.</p>
+      {% endif %}
+
+
+
+    </div>
+  </div>
+</div>
+{% endblock %}

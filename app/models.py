@@ -19,11 +19,16 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False)  # "candidate" | "employer" | "admin"
     isPremiumActive = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    active = db.Column(db.Boolean, default=True)
+
 
     # Liên kết One-to-One với Candidate/Employer
     candidate_profile = db.relationship("Candidate", back_populates="user", uselist=False)
     employer_profile = db.relationship("Employer", back_populates="user", uselist=False)
 
+    @property
+    def is_active(self):
+        return self.active
     def __repr__(self):
         return f"<User {self.email} - {self.role}>"
 

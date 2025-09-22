@@ -1,0 +1,171 @@
+{% extends "admin/layout.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- ==================== Header ==================== -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Dashboard Admin</h2>
+  </div>
+
+  <!-- ==================== Stats Cards ==================== -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-4 text-center p-3 bg-light">
+        <div class="card-body">
+          <i class="bi bi-people-fill fs-2 text-primary mb-2"></i>
+          <h6 class="text-muted">Users</h6>
+          <h2 class="fw-bold">{{ stats.users }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-4 text-center p-3 bg-light">
+        <div class="card-body">
+          <i class="bi bi-briefcase-fill fs-2 text-success mb-2"></i>
+          <h6 class="text-muted">Jobs</h6>
+          <h2 class="fw-bold">{{ stats.jobs }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-4 text-center p-3 bg-light">
+        <div class="card-body">
+          <i class="bi bi-person-badge-fill fs-2 text-warning mb-2"></i>
+          <h6 class="text-muted">Candidates</h6>
+          <h2 class="fw-bold">{{ stats.candidates }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-4 text-center p-3 bg-light">
+        <div class="card-body">
+          <i class="bi bi-building fs-2 text-danger mb-2"></i>
+          <h6 class="text-muted">Employers</h6>
+          <h2 class="fw-bold">{{ stats.employers }}</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Chart ==================== -->
+  <div class="row mb-4">
+    <div class="col-lg-12">
+      <div class="card shadow-sm border-0 rounded-4 p-4">
+        <h5 class="fw-bold mb-3">Số lượng Users & Jobs theo tháng</h5>
+        <canvas id="dashboardChart" height="100"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Recent items ==================== -->
+  <div class="row mb-4">
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 rounded-4 p-4">
+        <h5 class="fw-bold mb-3">Recent Jobs</h5>
+        <ul class="list-group list-group-flush">
+          {% for job in recent_jobs %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <i class="bi bi-briefcase me-2 text-success"></i>
+              <a href="{{ url_for('job.job_detail', job_id=job.id) }}">{{ job.title }}</a>
+              <small class="text-muted ms-2">({{ job.employer.company_name }})</small>
+            </div>
+            <span class="badge bg-success rounded-pill">
+              {{ job.salary_min or 0 }}-{{ job.salary_max or 0 }} {{ job.currency or 'VND' }}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 rounded-4 p-4">
+        <h5 class="fw-bold mb-3">Recent Candidates</h5>
+        <ul class="list-group list-group-flush">
+          {% for candidate in recent_candidates %}
+          <li class="list-group-item d-flex align-items-center">
+            <img src="{{ candidate.avatar or url_for('static', filename='images/avatar_default.png') }}"
+                 alt="avatar" class="rounded-circle me-3" width="40" height="40">
+            <div>
+              {{ candidate.full_name }}
+              <small class="text-muted d-block">{{ candidate.current_position or '-' }}</small>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 rounded-4 p-4">
+        <h5 class="fw-bold mb-3">Recent Employers</h5>
+        <ul class="list-group list-group-flush">
+          {% for employer in recent_employers %}
+          <li class="list-group-item d-flex align-items-center">
+            <img src="{{ employer.logo or url_for('static', filename='images/company_default.png') }}"
+                 alt="logo" class="rounded-circle me-3" width="50" height="50">
+            <div>
+              <a href="{{ url_for('admin.view_employer', employer_id=employer.id) }}">{{ employer.company_name }}</a>
+              <small class="text-muted d-block">{{ employer.industry or '-' }}</small>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== Chart.js ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('dashboardChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: {{ labels|tojson }},
+        datasets: [
+            {
+                label: 'Jobs',
+                data: {{ job_values|tojson }},
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                borderRadius: 6
+            },
+            {
+                label: 'Candidates',
+                data: {{ candidate_values|tojson }},
+                backgroundColor: 'rgba(255, 206, 86, 0.7)',
+                borderColor: 'rgba(255, 206, 86, 1)',
+                borderWidth: 1,
+                borderRadius: 6
+            },
+            {
+                label: 'Employers',
+                data: {{ employer_values|tojson }},
+                backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                borderRadius: 6
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: true },
+            tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+            y: { beginAtZero: true },
+            x: { grid: { display: false } }
+        }
+    }
+});
+</script>
+{% endblock %}

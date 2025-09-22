@@ -1,0 +1,38 @@
+{% extends "admin/layout.html" %}
+{% set active_page = "jobs" %}
+{% block content %}
+<h2 class="mb-4">Quản lý công việc</h2>
+<table class="table table-hover bg-white shadow-sm">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Tiêu đề</th>
+      <th>Công ty</th>
+      <th>Ngày đăng</th>
+      <th>Trạng thái</th>
+      <th>Hành động</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for job in jobs %}
+    <tr>
+      <td>{{ job.id }}</td>
+      <td>{{ job.title }}</td>
+      <td>{{ job.company_name }}</td>
+      <td>{{ job.created_at.strftime('%Y-%m-%d') }}</td>
+      <td>
+        {% if job.is_active %}
+          <span class="badge bg-success">Active</span>
+        {% else %}
+          <span class="badge bg-secondary">Inactive</span>
+        {% endif %}
+      </td>
+      <td>
+        <a href="{{ url_for('admin.edit_job', job_id=job.id) }}" class="btn btn-sm btn-primary">Sửa</a>
+        <a href="{{ url_for('admin.delete_job', job_id=job.id) }}" class="btn btn-sm btn-danger">Xoá</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
