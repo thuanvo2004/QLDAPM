@@ -32,8 +32,8 @@ try:
     with open(json_path, 'r', encoding='utf-8') as f:
         provinces_data = json.load(f)
         if not isinstance(provinces_data, dict) or 'provinces' not in provinces_data:
-            raise ValueError("provinces.json must contain a 'provinces' key with a list of province names")
-        PROVINCE_CHOICES = [(province, province) for province in provinces_data['provinces']]
+            raise ValueError("provinces.json must contain a 'provinces' key with a list of province objects")
+        PROVINCE_CHOICES = [(province['id'], province['name']) for province in provinces_data['provinces']]
 except FileNotFoundError:
     PROVINCE_CHOICES = [("Unknown", "Unknown")]  # Fallback
 except json.JSONDecodeError as e:

@@ -79,9 +79,9 @@ def parse_int_from_str(s):
 # Danh sách job (cho ứng viên)
 @job_bp.route("/")
 def list_jobs():
-    # pagination
+    # Pagination
     page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 6, type=int)
+    per_page = request.args.get("per_page", 12, type=int)
 
     keyword = (request.args.get("keyword", "") or "").strip()
     location_raw = request.args.get("city", "")
@@ -95,9 +95,14 @@ def list_jobs():
     min_salary = parse_int_from_str(min_salary_raw)
     max_salary = parse_int_from_str(max_salary_raw)
 
+    # Validate min_salary <= max_salary
+    if min_salary is not None and max_salary is not None and min_salary > max_salary:
+        flash("Mức lương tối thiểu không được lớn hơn mức lương tối đa", "warning")
+        min_salary, max_salary = None, None
+
     q = Job.query.outerjoin(Employer)
 
-    # --- keyword ---
+    # --- Keyword ---
     if keyword:
         kw_like = f"%{keyword}%"
         q = q.filter(or_(
@@ -106,36 +111,34 @@ def list_jobs():
             Employer.company_name.ilike(kw_like)
         ))
 
-    # --- location ---
+    # --- Location ---
     if location_raw:
         locs = [s.strip() for s in location_raw.split(",") if s.strip()]
         if locs:
             locs_lower = [l.lower() for l in locs]
             q = q.filter(func.lower(Job.city).in_(locs_lower))
 
-    # --- job type ---
+    # --- Job type ---
     if job_type_raw and job_type_raw.lower() != "all":
         q = q.filter(func.lower(Job.job_type) == job_type_raw.lower())
 
-    # --- work type ---
+    # --- Work type ---
     if work_type_raw:
         work_types = [s.strip().lower() for s in work_type_raw.split(",") if s.strip()]
         if work_types and "all" not in work_types:
             q = q.filter(func.lower(Job.remote_option).in_(work_types))
 
-    # --- salary filter ---
-    if min_salary is not None and max_salary is not None:
-        q = q.filter(and_(
-            Job.salary_max >= min_salary,
-            Job.salary_min <= max_salary
-        ))
-    else:
-        if min_salary is not None:
-            q = q.filter(Job.salary_min >= min_salary)
-        if max_salary is not None:
-            q = q.filter(Job.salary_max <= max_salary)
+    # --- Salary filter ---
+    if min_salary is not None:
+        q = q.filter(Job.salary_min >= min_salary)
+    if max_salary is not None:
+        q = q.filter(Job.salary_max <= max_salary)
 
-    # --- sort ---
+    # --- Filter active jobs ---
+    now = date.today()
+    q = q.filter(or_(Job.deadline == None, Job.deadline >= now))
+
+    # --- Sort ---
     if sort_by == "salary_desc":
         q = q.order_by(
             case((Job.salary_max == None, 1), else_=0),
@@ -154,8 +157,8 @@ def list_jobs():
     pagination = q.paginate(page=page, per_page=per_page, error_out=False)
     jobs_page = pagination.items
 
-    now = date.today()
-    for job in pagination.items:
+    # Gán is_active cho mỗi job (dù đã lọc active, nhưng để chắc chắn cho template)
+    for job in jobs_page:
         job.is_active = (job.deadline is None) or (job.deadline >= now)
 
     search_params = {
