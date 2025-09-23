@@ -416,10 +416,12 @@ document.addEventListener("DOMContentLoaded", function () {
     <!-- Footer -->
     <footer class="site-footer">
       <div class="container footer-inner">
-        <div class="brand-info">
-          <div class="brand-logo small">JN</div>
+        <a href="{{ url_for('main.index') }}" class="flex items-center mb-4">
+          <div class="brand-info">
+          <div class="font-extrabold text-4xl py-2 px-1 bg-[var(--primary-blue)] rounded-lg mr-2">JN</div>
           <p class="f-desc whitespace-normal">JobNest - nơi kết nối công việc & <br> người tài.</p>
         </div>
+        </a>
         <div class="f-col">
           <h4>Liên kết nhanh</h4>
           <ul>
@@ -501,10 +503,74 @@ document.addEventListener("DOMContentLoaded", function () {
     updateNotifBadge();
     setInterval(updateNotifBadge, 5000); // 5s reload
 });
+        // Embedded province data
+        const provinces = {
+          "provinces": [
+            { "id": "ha-noi", "name": "Hà Nội" },
+            { "id": "ho-chi-minh", "name": "Hồ Chí Minh" },
+            { "id": "hai-phong", "name": "Hải Phòng" },
+            { "id": "da-nang", "name": "Đà Nẵng" },
+            { "id": "can-tho", "name": "Cần Thơ" },
+            { "id": "hue", "name": "Huế" },
+            { "id": "an-giang", "name": "An Giang" },
+            { "id": "bac-ninh", "name": "Bắc Ninh" },
+            { "id": "cao-bang", "name": "Cao Bằng" },
+            { "id": "ca-mau", "name": "Cà Mau" },
+            { "id": "dak-lak", "name": "Đắk Lắk" },
+            { "id": "dien-bien", "name": "Điện Biên" },
+            { "id": "dong-nai", "name": "Đồng Nai" },
+            { "id": "dong-thap", "name": "Đồng Tháp" },
+            { "id": "gia-lai", "name": "Gia Lai" },
+            { "id": "ha-tinh", "name": "Hà Tĩnh" },
+            { "id": "hung-yen", "name": "Hưng Yên" },
+            { "id": "khanh-hoa", "name": "Khánh Hòa" },
+            { "id": "lai-chau", "name": "Lai Châu" },
+            { "id": "lang-son", "name": "Lạng Sơn" },
+            { "id": "lao-cai", "name": "Lào Cai" },
+            { "id": "lam-dong", "name": "Lâm Đồng" },
+            { "id": "nghe-an", "name": "Nghệ An" },
+            { "id": "ninh-binh", "name": "Ninh Bình" },
+            { "id": "phu-tho", "name": "Phú Thọ" },
+            { "id": "quang-ngai", "name": "Quảng Ngãi" },
+            { "id": "quang-ninh", "name": "Quảng Ninh" },
+            { "id": "quang-tri", "name": "Quảng Trị" },
+            { "id": "son-la", "name": "Sơn La" },
+            { "id": "tay-ninh", "name": "Tây Ninh" },
+            { "id": "thanh-hoa", "name": "Thanh Hóa" },
+            { "id": "thai-nguyen", "name": "Thái Nguyên" },
+            { "id": "tuyen-quang", "name": "Tuyên Quang" },
+            { "id": "vinh-long", "name": "Vĩnh Long" }
+          ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropdown = document.getElementById('location-dropdown');
+            const input = document.getElementById('location-input');
+            const hidden = document.getElementById('location-hidden');
+            const provinceList = document.getElementById('province-list');
+
+            input.addEventListener('click', () => {
+                dropdown.classList.toggle('hidden');
+                provinceList.innerHTML = '';
+                provinces.provinces.forEach(province => {
+                    const li = document.createElement('li');
+                    li.textContent = province.name;
+                    li.addEventListener('click', () => {
+                        input.textContent = province.name;
+                        hidden.value = province.name;
+                        dropdown.classList.add('hidden');
+                    });
+                    provinceList.appendChild(li);
+                });
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        });
 </script>
-
-
-
-
 </body>
 </html>

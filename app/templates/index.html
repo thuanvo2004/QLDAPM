@@ -12,7 +12,7 @@
     </div>
 
     <!-- Form search -->
-    <form id="main-search" action="{{ url_for('main.index') }}" method="get" role="search"
+    <form id="main-search" action="{{ url_for('job.list_jobs') }}" method="get" role="search"
       class="flex items-center gap-3 flex-wrap bg-white rounded-xl p-3 shadow-md">
       <!-- Keyword -->
       <div class="flex-1 min-w-0">
@@ -51,7 +51,8 @@
         </div>
 
         <!-- dropdown -->
-        <div id="location-dropdown" class="location-dropdown mt-2 w-full max-h-80 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div id="location-dropdown"
+             class="location-dropdown mt-2 w-full max-h-80 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50 text-black">
           <ul id="province-list" class="p-2">
             {% for province in provinces %}
               <li class="px-2 py-1">

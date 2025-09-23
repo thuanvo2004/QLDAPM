@@ -1,35 +1,59 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
-    <h2>Danh sách hội thoại</h2>
-    <ul class="list-group">
+
+<div class="container mx-auto mt-6 px-4">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Danh sách hội thoại</h2>
+
+    <div class="space-y-4">
         {% for convo in conversations %}
-        <a href="{{ url_for('messages.chat_with_user',
-                            user_id=(convo.user2.id if convo.user1_id == current_user.id else convo.user1.id)) }}"
-           class="list-group-item list-group-item-action">
-            <div class="d-flex justify-content-between">
-                <strong>
-                    {% if convo.user1_id == current_user.id %}
-                        {{ convo.user2.username }}
+            {% set latest_message = convo.messages|sort(attribute='created_at', reverse=True)|first %}
+            {% set other_id = convo.user2_id if convo.user1_id == current_user.id else convo.user1_id %}
+            <a href="{{ url_for('messages.chat_with_user', user_id=other_id) }}"
+               class="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-4 border border-gray-100 hover:border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div>
+
+
+                        {% if latest_message and latest_message.attachment_url %}
+                            <span class="ml-2 inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                                <i class="fas fa-paperclip mr-1"></i> Đính kèm
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <small class="text-sm text-gray-500">
+                            {%- if latest_message and latest_message.created_at -%}
+                                {{ latest_message.created_at.strftime("%H:%M %d/%m/%Y") }}
+                            {%- elif convo.created_at is defined -%}
+                                {{ convo.created_at.strftime("%H:%M %d/%m/%Y") }}
+                            {%- else -%}
+                                --
+                            {%- endif -%}
+                        </small>
+
+                    </div>
+                </div>
+
+                <div class="mt-2 text-sm text-gray-600 line-clamp-2">
+                    {% if latest_message and latest_message.content %}
+                        {{ latest_message.content[:50] ~ ("..." if latest_message.content|length > 50 else "") }}
                     {% else %}
-                        {{ convo.user1.username }}
+                        <em class="text-gray-400">Không có nội dung</em>
                     {% endif %}
-                </strong>
-                <small>
-                    {% if convo.last_message %}
-                        {{ convo.last_message.created_at.strftime("%H:%M %d/%m") }}
-                    {% endif %}
-                </small>
-            </div>
-            <div>
-                {% if convo.last_message %}
-                    {{ convo.last_message.content[:30] ~ ("..." if convo.last_message.content|length > 30 else "") }}
-                {% else %}
-                    <em>Chưa có tin nhắn</em>
+                </div>
+
+                {% if convo.id %}
+                    <div class="mt-1 text-xs text-gray-400">
+                        ID Hội thoại: {{ convo.id }}
+                    </div>
                 {% endif %}
-            </div>
-        </a>
+            </a>
         {% endfor %}
-    </ul>
+    </div>
+
+    {% if not conversations %}
+        <p class="text-center text-gray-500 mt-6">Không có hội thoại nào.</p>
+    {% endif %}
 </div>
 {% endblock %}

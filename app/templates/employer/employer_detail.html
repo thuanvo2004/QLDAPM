@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}{{ employer.company_name }} - JobNest{% endblock %}
+
+{% block content %}
+    <section class="text-center mb-16">
+        <div class="w-full">
+            <div class="bg-gradient-to-t from-[#001f78] to-[#0046FF] min-h-[300px] flex items-center justify-center relative">
+
+            <div class="absolute top-4 left-4">
+                <button onclick="history.back()"
+                        class="flex items-center gap-2 px-4 py-2 text-white hover:font-semibold">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Quay lại</span>
+                </button>
+            </div>
+
+            <div class="w-48 h-48 mx-auto rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-4xl font-bold">
+                {% if employer.logo %}
+                    <img src="{{ employer.logo }}" alt="{{ employer.company_name }} Logo" class="w-full h-full rounded-full object-cover">
+                {% else %}
+                    {{ employer.company_name[:1]|upper }}
+                {% endif %}
+            </div>
+        </div>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-5 mt-5">{{ employer.company_name }}</h1>
+        <a href="#jobs"
+           class="bg-[var(--primary-blue)] text-white px-8 py-3 rounded-full text-md font-semibold hover:bg-[var(--primary-blue-hover)] transition-colors">
+            Các công việc đang tuyển dụng
+        </a>
+        </div>
+    </section>
+
+    <section id="info" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 mx-4">
+        <div class="p-6 rounded-xl text-center">
+            <i class="fa-regular fa-building text-3xl text-[var(--primary-blue)] mb-2"></i>
+            <h3 class="font-semibold text-lg text-black">Ngành nghề</h3>
+            <p class="text-[var(--muted)]">{{ employer.industry or 'Không có thông tin' }}</p>
+        </div>
+        <div class="p-6 rounded-xl text-center">
+            <i class="fa-solid fa-users text-3xl text-[var(--primary-blue)] mb-2"></i>
+            <h3 class="font-semibold text-lg text-black">Quy mô</h3>
+            <p class="text-[var(--muted)]">{{ employer.company_size or 'Không có thông tin' }}</p>
+        </div>
+        <div class="p-6 rounded-xl text-center">
+            <i class="fa-solid fa-location-dot text-3xl text-[var(--primary-blue)] mb-2"></i>
+            <h3 class="font-semibold text-lg text-black">Địa điểm</h3>
+            <p class="text-[var(--muted)]">{{ employer.city or 'Không có thông tin' }}</p>
+        </div>
+        <div class="p-6 rounded-xl text-center">
+            <i class="fa-solid fa-globe text-3xl text-[var(--primary-blue)] mb-2"></i>
+            <h3 class="font-semibold text-lg text-gray-700">Website</h3>
+            <a href="{{ employer.website }}" target="_blank" class="text-blue-600 hover:underline">
+                {{ employer.website or 'Không có thông tin' }}
+            </a>
+        </div>
+    </section>
+
+    <section id="about" class="p-8 md:p-12 rounded-xl mb-16 items-center justify-center">
+        <h2 class="text-3xl font-bold mb-6 text-center">Giới thiệu</h2>
+        <div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div><strong>Tên:</strong> {{ employer.company_name if employer else 'Chưa cập nhật' }}</div>
+                <div><strong>Thành lập:</strong> {{ employer.founded_year if employer and employer.founded_year else 'Chưa cập nhật' }}</div>
+                <div><strong>Địa chỉ:</strong> {{ employer.address if employer }}, {{ city if city else '' }}</div>
+                <div><strong>MST:</strong> {{ employer.tax_code if employer and employer.tax_code else 'Chưa cập nhật' }}</div>
+                <div><strong>Giới thiệu:</strong> {{ employer.description or 'Không có lời giới thiệu nào.' }}</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="jobs" class="mb-16 mx-4">
+        <h2 class="text-3xl font-bold text-gray-900 text-center mb-12">Các vị trí đang tuyển dụng</h2>
+        {% if jobs %}
+        <div class="job-grid grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for job in jobs %}
+          <article class="job-card border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition flex flex-col">
+            <div class="job-header flex items-start justify-between mb-3">
+              <div class="company-logo-wrapper">
+                {% if job.employer and job.employer.logo %}
+                  <img src="{{ job.employer.logo }}"
+                       alt="{{ job.employer.company_name }}"
+                       class="company-logo-img h-12 w-12 rounded-md object-cover border" />
+                {% else %}
+                  <div class="company-logo h-12 w-12 rounded-md bg-gray-100 flex items-center justify-center text-gray-400">
+                    🏢
+                  </div>
+                {% endif %}
+              </div>
+
+              <div class="flex items-end space-x-2">
+                {% if job.is_active %}
+                  <span class="text-xs font-medium bg-green-100 text-green-800 px-2 py-1 rounded-full">Đang mở</span>
+                {% else %}
+                  <span class="text-xs font-medium bg-red-100 text-red-800 px-2 py-1 rounded-full">Quá hạn</span>
+                {% endif %}
+
+                {% if current_user.is_authenticated and current_user.role == "candidate" %}
+                  <form action="{{ url_for('candidate.save_job', job_id=job.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="save-btn text-[var(--primary-blue)] hover:text-[var(--primary-blue-hover)] transition {% if job in current_user.candidate_profile.saved_jobs|map(attribute='job') %}saved{% endif %}" data-job-id="{{ job.id }}">
+                      <i class="fa-regular fa-bookmark"></i>
+                      <i class="fa-solid fa-bookmark hidden"></i>
+                    </button>
+                  </form>
+                {% else %}
+                  <button type="button" class="save-btn text-[var(--primary-blue)] hover:text-[var(--primary-blue-hover)] transition unauthenticated" data-job-id="{{ job.id }}" data-login-url="{{ url_for('auth.login') }}">
+                    <i class="fa-regular fa-bookmark"></i>
+                    <i class="fa-solid fa-bookmark hidden"></i>
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+            <h3 class="job-title text-lg font-semibold text-gray-800 mb-2 hover:text-[var(--primary-blue)]">
+              <a href="{{ url_for('job.job_detail', job_id=job.id) }}">{{ job.title }}</a>
+            </h3>
+            <div class="job-company-location text-sm text-gray-600 space-y-1 mb-2">
+              <p><i class="fa-solid fa-building mr-1"></i>{{ job.employer.company_name or 'Công ty ẩn danh' }}</p>
+              <p><i class="fa-solid fa-location-dot mr-1"></i>{{ job.city or 'Địa điểm ẩn danh' }}</p>
+            </div>
+            <p class="job-description text-sm text-gray-700 mb-3 line-clamp-2">{{ job.description | truncate(100, true) }}</p>
+            <div class="job-tags flex flex-wrap gap-2 mb-4">
+              <span class="tag px-3 py-1 text-xs bg-[var(--blue-bg)] text-[var(--primary-blue)] rounded-full">{{ job.job_type or '-' }}</span>
+              <span class="tag px-3 py-1 text-xs bg-[var(--blue-bg)] text-[var(--primary-blue)] rounded-full">{{ job.remote_option or 'On-Site' }}</span>
+              <span class="tag px-3 py-1 text-xs bg-[var(--blue-bg)] text-[var(--primary-blue)] rounded-full">{{ format_salary_range(job.salary_min, job.salary_max) }}</span>
+            </div>
+            <div class="job-actions flex gap-3">
+              <a href="{{ url_for('job.job_detail', job_id=job.id) }}"
+                 class="flex-1 text-center px-4 py-2 border !border-[var(--primary-blue)] rounded-lg text-sm font-medium text-[var(--primary-blue)] hover:bg-[var(--primary-blue)] hover:text-white transition-colors whitespace-nowrap">Chi tiết</a>
+              <a href="{{ url_for('candidate.apply_job', job_id=job.id) }}"
+                 class="flex-1 text-center px-4 py-2 bg-[var(--primary-blue)] text-white rounded-lg text-sm font-medium hover:bg-[var(--primary-blue-hover)] transition-colors whitespace-nowrap">Ứng tuyển ngay</a>
+            </div>
+          </article>
+        {% else %}
+          <p class="no-jobs text-center text-gray-500 col-span-full">Không có công việc nào.</p>
+            {% endfor %}
+        {% endif %}
+        </div>
+    </section>
+{% endblock %}
