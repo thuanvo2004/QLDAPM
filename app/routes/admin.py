@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app.models import User, Candidate, Employer, Job, db
 from sqlalchemy import extract, func
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -285,12 +285,108 @@ def delete_job(job_id):
     return redirect(url_for("admin.list_jobs"))
 
 
-# ==============================
-# PREMIUM MANAGEMENT
-# ==============================
-@admin_bp.route("/premium")
+# --- Route danh sách Premium ---
+@admin_bp.route('/premium', methods=['GET'])
 @login_required
-@admin_required
 def list_premium():
-    premium_users = User.query.filter_by(isPremiumActive=True).all()
+    search_email = request.args.get('search_email', '').strip()
+    search_name = request.args.get('search_name', '').strip()
+    status = request.args.get('status', '').strip()
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+
+    query = User.query.filter(User.isPremiumActive == True)
+    if search_email:
+        query = query.filter(User.email.ilike(f"%{search_email}%"))
+    if search_name:
+        query = query.filter(User.fullname.ilike(f"%{search_name}%"))
+    if status == "active":
+        query = query.filter(User.active == True)
+    elif status == "inactive":
+        query = query.filter(User.active == False)
+
+    premium_users = query.order_by(User.created_at.desc()).paginate(page=page, per_page=per_page)
     return render_template("admin/premium.html", premium_users=premium_users)
+
+# --- Route thêm Premium ---
+@admin_bp.route('/premium/add', methods=['GET', 'POST'])
+def add_premium():
+    # Lấy tất cả employer chưa phải premium
+    employers = User.query.filter_by(role='employer', isPremiumActive=False).all()
+
+    if request.method == 'POST':
+        user_id = request.form.get('user_id')
+        user = User.query.get(user_id)
+        if not user:
+            flash("Người dùng không tồn tại.", "danger")
+            return redirect(url_for('admin.add_premium'))
+
+        # Nâng cấp premium 1 năm
+        user.isPremiumActive = True
+        user.expiry_date = datetime.utcnow() + timedelta(days=365)
+        db.session.commit()
+        flash(f"{user.email} đã được nâng cấp Premium.", "success")
+        return redirect(url_for('admin.list_premium'))
+
+    return render_template('admin/add_premium.html', employers=employers)
+
+# --- Route sửa Premium ---
+@admin_bp.route('/premium/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_premium(id):
+    user = User.query.get_or_404(id)
+    if request.method == 'POST':
+        user.fullname = request.form.get('fullname')
+        user.expiry_date = datetime.strptime(request.form.get('expiry_date'), '%Y-%m-%d')
+        user.active = request.form.get('active') == 'on'
+        db.session.commit()
+        flash("Cập nhật thành công.", "success")
+        return redirect(url_for('admin.list_premium'))
+
+    return render_template("admin/edit_premium.html", user=user)
+
+# --- Route xóa Premium ---
+@admin_bp.route('/premium/delete/<int:id>', methods=['POST', 'GET'])
+@login_required
+def delete_premium(id):
+    user = User.query.get_or_404(id)
+    db.session.delete(user)
+    db.session.commit()
+    flash("Xóa người dùng thành công.", "success")
+    return redirect(url_for('admin.list_premium'))
+
+@admin_bp.route('/premium/renew/<int:user_id>', methods=['POST'])
+def renew_premium(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        flash("Người dùng không tồn tại.", "danger")
+        return redirect(url_for('admin.list_premium'))
+
+    if not user.isPremiumActive:
+        flash("Người dùng này chưa phải Premium.", "warning")
+        return redirect(url_for('admin.list_premium'))
+
+    # Nếu expiry_date None hoặc đã hết hạn, bắt đầu từ hôm nay
+    if not user.expiry_date or user.expiry_date < datetime.utcnow():
+        user.expiry_date = datetime.utcnow() + timedelta(days=365)
+    else:
+        user.expiry_date = user.expiry_date + timedelta(days=365)
+
+    db.session.commit()
+    flash(f"{user.email} đã được gia hạn Premium 1 năm.", "success")
+    return redirect(url_for('admin.list_premium'))
+
+
+@admin_bp.route("/premium/update/<int:user_id>", methods=["POST"])
+@login_required
+def update_premium(user_id):
+    user = User.query.get_or_404(user_id)
+
+    # Lấy dữ liệu từ form
+    expiry_date_str = request.form.get("expiry_date")
+    if expiry_date_str:
+        user.expiry_date = datetime.strptime(expiry_date_str, "%Y-%m-%d")
+
+    db.session.commit()
+    flash("Cập nhật Premium thành công!", "success")
+    return redirect(url_for("admin.list_premium"))

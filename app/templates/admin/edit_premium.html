@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% set active_page = "premium" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Chỉnh sửa Premium</h2>
+
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Thông tin người dùng</h5>
+      <p><strong>ID:</strong> {{ user.id }}</p>
+      <p><strong>Email:</strong> {{ user.email }}</p>
+      <p><strong>Họ tên:</strong> {{ user.full_name or "Chưa cập nhật" }}</p>
+      <p><strong>Role:</strong>
+        {% if user.role == "employer" %}
+          <span class="badge bg-success">Nhà tuyển dụng</span>
+        {% elif user.role == "candidate" %}
+          <span class="badge bg-primary">Ứng viên</span>
+        {% endif %}
+      </p>
+      <p><strong>Trạng thái:</strong>
+        {% if user.is_active %}
+          <span class="badge bg-success">Hoạt động</span>
+        {% else %}
+          <span class="badge bg-danger">Bị khóa</span>
+        {% endif %}
+      </p>
+      <p><strong>Ngày tạo:</strong> {{ user.created_at.strftime("%d/%m/%Y") }}</p>
+
+      {% if user.role == "employer" %}
+        <!-- Form update premium -->
+        <form method="POST" action="{{ url_for('admin.update_premium', user_id=user.id) }}" class="mt-3">
+            <div class="mb-3">
+                <label for="premium_until" class="form-label">Ngày hết hạn Premium</label>
+                <input type="date" class="form-control" id="premium_until" name="premium_until"
+                       value="{{ user.premium_until.strftime('%Y-%m-%d') if user.premium_until else '' }}">
+            </div>
+            <button type="submit" class="btn btn-warning">💎 Cập nhật Premium</button>
+        </form>
+
+        <form method="POST" action="{{ url_for('admin.delete_premium', id=user.id) }}" class="mt-2"
+              onsubmit="return confirm('Bạn có chắc muốn xóa Premium?');">
+            <button type="submit" class="btn btn-danger">🗑 Xóa Premium</button>
+        </form>
+
+        {% else %}
+        <p class="text-muted mt-3">Chỉ nhà tuyển dụng mới có Premium.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <a href="{{ url_for('admin.list_premium') }}" class="btn btn-secondary mt-4">⬅ Quay lại danh sách Premium</a>
+</div>
+{% endblock %}

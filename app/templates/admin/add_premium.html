@@ -1,0 +1,23 @@
+{% extends "admin/layout.html" %}
+{% set active_page = "users" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Thêm Premium cho Employer</h2>
+
+  <form method="POST">
+    <div class="mb-3">
+      <label for="userSelect" class="form-label">Chọn Employer</label>
+      <select id="userSelect" name="user_id" class="form-select" required>
+        <option value="">-- Chọn một người dùng --</option>
+        {% for user in employers %}
+          <option value="{{ user.id }}">{{ user.full_name or user.email }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-success">Nâng cấp Premium</button>
+    <a href="{{ url_for('admin.list_premium') }}" class="btn btn-secondary">Hủy</a>
+  </form>
+</div>
+{% endblock %}

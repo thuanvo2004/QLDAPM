@@ -13,6 +13,7 @@
         <th>Họ tên</th>
         <th>Role</th>
         <th>Trạng thái</th>
+        <th>Premium</th>
         <th>Ngày tạo</th>
         <th class="text-center">Hành động</th>
       </tr>
@@ -35,6 +36,22 @@
             <span class="badge bg-success">Hoạt động</span>
           {% else %}
             <span class="badge bg-danger">Bị khóa</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if user.role == "employer" %}
+            {% if user.isPremiumActive %}
+              <span class="badge bg-warning">Premium</span>
+              {% if user.expiry_date %}
+                <small>(đến {{ user.expiry_date.strftime("%d/%m/%Y") }})</small>
+              {% endif %}
+              <a href="{{ url_for('admin.renew_premium', user_id=user.id) }}" class="btn btn-sm btn-outline-warning ms-1">Gia hạn</a>
+            {% else %}
+              <span class="badge bg-secondary">Thường</span>
+              <a href="{{ url_for('admin.add_premium', user_id=user.id) }}" class="btn btn-sm btn-outline-success ms-1">Nâng cấp</a>
+            {% endif %}
+          {% else %}
+            -
           {% endif %}
         </td>
         <td>{{ user.created_at.strftime("%d/%m/%Y") }}</td>

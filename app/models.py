@@ -20,6 +20,7 @@ class User(UserMixin, db.Model):
     isPremiumActive = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     active = db.Column(db.Boolean, default=True)
+    expiry_date = db.Column(db.DateTime, nullable=True)
 
 
     # Liên kết One-to-One với Candidate/Employer
