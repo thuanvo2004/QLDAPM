@@ -339,13 +339,16 @@ def list_employers():
 @employer_bp.route('/employers/<int:employer_id>')
 def employer_detail(employer_id):
     employer = Employer.query.get_or_404(employer_id)
-    now = date.today()  # Current date: 2025-09-13
+    now = date.today()
 
     # Fetch active jobs for the employer
     jobs = Job.query.filter(
         Job.employer_id == employer_id,
         or_(Job.deadline == None, Job.deadline >= now)
     ).all()
+
+    for job in jobs:
+        job.is_active = (job.deadline is None) or (job.deadline >= now)
 
     return render_template(
         'employer/employer_detail.html',

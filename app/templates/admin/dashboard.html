@@ -2,170 +2,275 @@
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-
+<div class="container mx-auto px-4 py-6">
   <!-- ==================== Header ==================== -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold">Dashboard Admin</h2>
+  <div class="flex justify-between items-center mb-8">
+    <h2 class="text-2xl font-bold text-blue-700">Dashboard Admin</h2>
+    <button class="bg-transparent hover:bg-blue-100 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded transition duration-300" onclick="exportStats()">
+      Xuất báo cáo
+    </button>
   </div>
 
   <!-- ==================== Stats Cards ==================== -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-3">
-      <div class="card shadow-sm border-0 rounded-4 text-center p-3 bg-light">
-        <div class="card-body">
-          <i class="bi bi-people-fill fs-2 text-primary mb-2"></i>
-          <h6 class="text-muted">Users</h6>
-          <h2 class="fw-bold">{{ stats.users }}</h2>
-        </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-lg shadow-lg p-4 hover:bg-blue-900 transition duration-300">
+      <div class="text-center">
+        <i class="fas fa-users text-3xl mb-2 animate-pulse"></i>
+        <h6 class="text-gray-200">Tổng Users</h6>
+        <h2 class="text-2xl font-bold">{{ stats.users }}</h2>
+        <a href="{{ url_for('admin.list_users') }}" class="text-gray-300 hover:text-white text-sm block mt-1">Xem chi tiết</a>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card shadow-sm border-0 rounded-4 text-center p-3 bg-light">
-        <div class="card-body">
-          <i class="bi bi-briefcase-fill fs-2 text-success mb-2"></i>
-          <h6 class="text-muted">Jobs</h6>
-          <h2 class="fw-bold">{{ stats.jobs }}</h2>
-        </div>
+    <div class="bg-gradient-to-br from-green-500 to-green-700 text-white rounded-lg shadow-lg p-4 hover:bg-green-900 transition duration-300">
+      <div class="text-center">
+        <i class="fas fa-briefcase text-3xl mb-2 animate-pulse"></i>
+        <h6 class="text-gray-200">Tổng Jobs</h6>
+        <h2 class="text-2xl font-bold">{{ stats.jobs }}</h2>
+        <a href="{{ url_for('admin.list_jobs') }}" class="text-gray-300 hover:text-white text-sm block mt-1">Xem chi tiết</a>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card shadow-sm border-0 rounded-4 text-center p-3 bg-light">
-        <div class="card-body">
-          <i class="bi bi-person-badge-fill fs-2 text-warning mb-2"></i>
-          <h6 class="text-muted">Candidates</h6>
-          <h2 class="fw-bold">{{ stats.candidates }}</h2>
-        </div>
+    <div class="bg-gradient-to-br from-yellow-500 to-yellow-700 text-white rounded-lg shadow-lg p-4 hover:bg-yellow-900 transition duration-300">
+      <div class="text-center">
+        <i class="fas fa-user-tag text-3xl mb-2 animate-pulse"></i>
+        <h6 class="text-gray-200">Tổng Candidates</h6>
+        <h2 class="text-2xl font-bold">{{ stats.candidates }}</h2>
+        <a href="{{ url_for('admin.list_candidates') }}" class="text-gray-300 hover:text-white text-sm block mt-1">Xem chi tiết</a>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card shadow-sm border-0 rounded-4 text-center p-3 bg-light">
-        <div class="card-body">
-          <i class="bi bi-building fs-2 text-danger mb-2"></i>
-          <h6 class="text-muted">Employers</h6>
-          <h2 class="fw-bold">{{ stats.employers }}</h2>
-        </div>
+    <div class="bg-gradient-to-br from-red-500 to-red-700 text-white rounded-lg shadow-lg p-4 hover:bg-red-900 transition duration-300">
+      <div class="text-center">
+        <i class="fas fa-building text-3xl mb-2 animate-pulse"></i>
+        <h6 class="text-gray-200">Tổng Employers</h6>
+        <h2 class="text-2xl font-bold">{{ stats.employers }}</h2>
+        <a href="{{ url_for('admin.list_employers') }}" class="text-gray-300 hover:text-white text-sm block mt-1">Xem chi tiết</a>
       </div>
     </div>
   </div>
 
   <!-- ==================== Chart ==================== -->
-  <div class="row mb-4">
-    <div class="col-lg-12">
-      <div class="card shadow-sm border-0 rounded-4 p-4">
-        <h5 class="fw-bold mb-3">Số lượng Users & Jobs theo tháng</h5>
-        <canvas id="dashboardChart" height="100"></canvas>
+  <div class="mb-8">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h5 class="text-xl font-bold text-blue-700">Số lượng Users & Jobs theo tháng</h5>
+        <div class="relative">
+          <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded inline-flex items-center" id="chartFilter" type="button">
+            <span>Lọc: {{ current_year }}</span>
+            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          <div class="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg hidden" id="filterDropdown">
+            <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-gray-100" onclick="filterChart('{{ current_year }}')">Năm {{ current_year }}</a>
+            <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-gray-100" onclick="filterChart('6months')">6 tháng qua</a>
+            <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-gray-100" onclick="filterChart('1year')">1 năm qua</a>
+          </div>
+        </div>
+      </div>
+      <div class="h-64">
+        <canvas id="dashboardChart"></canvas>
       </div>
     </div>
   </div>
 
-  <!-- ==================== Recent items ==================== -->
-  <div class="row mb-4">
-    <div class="col-lg-4">
-      <div class="card shadow-sm border-0 rounded-4 p-4">
-        <h5 class="fw-bold mb-3">Recent Jobs</h5>
-        <ul class="list-group list-group-flush">
-          {% for job in recent_jobs %}
-          <li class="list-group-item d-flex justify-content-between align-items-center">
+  <!-- ==================== Recent Items ==================== -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h5 class="text-xl font-bold text-blue-700 mb-4">Công việc gần đây</h5>
+      <div class="space-y-2">
+        {% for job in recent_jobs %}
+        <a href="{{ url_for('job.job_detail', job_id=job.id) }}" class="block p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition duration-300">
+          <div class="flex justify-between items-center">
             <div>
-              <i class="bi bi-briefcase me-2 text-success"></i>
-              <a href="{{ url_for('job.job_detail', job_id=job.id) }}">{{ job.title }}</a>
-              <small class="text-muted ms-2">({{ job.employer.company_name }})</small>
+              <i class="fas fa-briefcase text-green-500 mr-2"></i>
+              <span class="font-medium">{{ job.title }}</span>
+              <small class="text-gray-500 ml-2">({{ job.employer.company_name }})</small>
             </div>
-            <span class="badge bg-success rounded-pill">
+            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">
               {{ job.salary_min or 0 }}-{{ job.salary_max or 0 }} {{ job.currency or 'VND' }}
             </span>
-          </li>
-          {% endfor %}
-        </ul>
+          </div>
+        </a>
+        {% endfor %}
       </div>
+      {% if recent_jobs|length >= 5 %}
+        <a href="{{ url_for('admin.list_jobs') }}" class="mt-4 w-full inline-block text-center bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg transition duration-300">Xem tất cả</a>
+      {% endif %}
     </div>
 
-    <div class="col-lg-4">
-      <div class="card shadow-sm border-0 rounded-4 p-4">
-        <h5 class="fw-bold mb-3">Recent Candidates</h5>
-        <ul class="list-group list-group-flush">
-          {% for candidate in recent_candidates %}
-          <li class="list-group-item d-flex align-items-center">
-            <img src="{{ candidate.avatar or url_for('static', filename='images/avatar_default.png') }}"
-                 alt="avatar" class="rounded-circle me-3" width="40" height="40">
-            <div>
-              {{ candidate.full_name }}
-              <small class="text-muted d-block">{{ candidate.current_position or '-' }}</small>
-            </div>
-          </li>
-          {% endfor %}
-        </ul>
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h5 class="text-xl font-bold text-blue-700 mb-4">Ứng viên gần đây</h5>
+      <div class="space-y-2">
+        {% for candidate in recent_candidates %}
+        <a href="{{ url_for('admin.candidate_detail', candidate_id=candidate.id) }}" class="block p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition duration-300 flex items-center">
+          <img src="{{ candidate.avatar or url_for('static', filename='images/avatar_default.png') }}" alt="avatar" class="w-10 h-10 rounded-full mr-3">
+          <div>
+            <span class="font-medium">{{ candidate.full_name }}</span>
+            <small class="text-gray-500 block">{{ candidate.current_position or '-' }}</small>
+          </div>
+        </a>
+        {% endfor %}
       </div>
+      {% if recent_candidates|length >= 5 %}
+        <a href="{{ url_for('admin.list_candidates') }}" class="mt-4 w-full inline-block text-center bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg transition duration-300">Xem tất cả</a>
+      {% endif %}
     </div>
 
-    <div class="col-lg-4">
-      <div class="card shadow-sm border-0 rounded-4 p-4">
-        <h5 class="fw-bold mb-3">Recent Employers</h5>
-        <ul class="list-group list-group-flush">
-          {% for employer in recent_employers %}
-          <li class="list-group-item d-flex align-items-center">
-            <img src="{{ employer.logo or url_for('static', filename='images/company_default.png') }}"
-                 alt="logo" class="rounded-circle me-3" width="50" height="50">
-            <div>
-              <a href="{{ url_for('admin.view_employer', employer_id=employer.id) }}">{{ employer.company_name }}</a>
-              <small class="text-muted d-block">{{ employer.industry or '-' }}</small>
-            </div>
-          </li>
-          {% endfor %}
-        </ul>
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h5 class="text-xl font-bold text-blue-700 mb-4">Nhà tuyển dụng gần đây</h5>
+      <div class="space-y-2">
+        {% for employer in recent_employers %}
+        <a href="{{ url_for('admin.view_employer', employer_id=employer.id) }}" class="block p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition duration-300 flex items-center">
+          <img src="{{ employer.logo or url_for('static', filename='images/company_default.png') }}" alt="logo" class="w-12 h-12 rounded-full mr-3">
+          <div>
+            <span class="font-medium">{{ employer.company_name }}</span>
+            <small class="text-gray-500 block">{{ employer.industry or '-' }}</small>
+          </div>
+        </a>
+        {% endfor %}
       </div>
+      {% if recent_employers|length >= 5 %}
+        <a href="{{ url_for('admin.list_employers') }}" class="mt-4 w-full inline-block text-center bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg transition duration-300">Xem tất cả</a>
+      {% endif %}
     </div>
   </div>
 
+  <!-- ==================== Management Links ==================== -->
+  <div class="mt-8">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h5 class="text-xl font-bold text-blue-700 mb-4">Quản lý hệ thống</h5>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="{{ url_for('admin.list_users') }}" class="bg-gray-50 hover:bg-gray-100 rounded-lg p-4 text-center transition duration-300">
+          <i class="fas fa-users text-blue-500 text-3xl mb-2"></i>
+          <h6 class="font-bold">Quản lý Users</h6>
+          <p class="text-gray-500 text-sm">Xem và chỉnh sửa thông tin người dùng.</p>
+        </a>
+        <a href="{{ url_for('admin.list_premium') }}" class="bg-gray-50 hover:bg-gray-100 rounded-lg p-4 text-center transition duration-300">
+          <i class="fas fa-star text-yellow-500 text-3xl mb-2"></i>
+          <h6 class="font-bold">Quản lý Premium</h6>
+          <p class="text-gray-500 text-sm">Quản lý người dùng Premium.</p>
+        </a>
+        <a href="#" class="bg-gray-50 hover:bg-gray-100 rounded-lg p-4 text-center transition duration-300 opacity-50 cursor-not-allowed">
+          <i class="fas fa-gear text-gray-400 text-3xl mb-2"></i>
+          <h6 class="font-bold">Cài đặt hệ thống</h6>
+          <p class="text-gray-500 text-sm">Chức năng đang phát triển.</p>
+        </a>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- ==================== Chart.js ==================== -->
+<!-- ==================== Chart.js & Custom Scripts ==================== -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script> <!-- Thay your-fontawesome-kit.js bằng ID của bạn -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const ctx = document.getElementById('dashboardChart').getContext('2d');
-new Chart(ctx, {
+  // Chart configuration
+  const ctx = document.getElementById('dashboardChart').getContext('2d');
+  const chart = new Chart(ctx, {
     type: 'bar',
     data: {
-        labels: {{ labels|tojson }},
-        datasets: [
-            {
-                label: 'Jobs',
-                data: {{ job_values|tojson }},
-                backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1,
-                borderRadius: 6
-            },
-            {
-                label: 'Candidates',
-                data: {{ candidate_values|tojson }},
-                backgroundColor: 'rgba(255, 206, 86, 0.7)',
-                borderColor: 'rgba(255, 206, 86, 1)',
-                borderWidth: 1,
-                borderRadius: 6
-            },
-            {
-                label: 'Employers',
-                data: {{ employer_values|tojson }},
-                backgroundColor: 'rgba(255, 99, 132, 0.7)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1,
-                borderRadius: 6
-            }
-        ]
+      labels: {{ labels|tojson }},
+      datasets: [
+        {
+          label: 'Jobs',
+          data: {{ job_values|tojson }},
+          backgroundColor: 'rgba(59, 130, 246, 0.8)', // Blue-500
+          borderColor: 'rgba(59, 130, 246, 1)',
+          borderWidth: 2,
+          borderRadius: 8,
+          barPercentage: 0.8
+        },
+        {
+          label: 'Candidates',
+          data: {{ candidate_values|tojson }},
+          backgroundColor: 'rgba(234, 179, 8, 0.8)', // Yellow-500
+          borderColor: 'rgba(234, 179, 8, 1)',
+          borderWidth: 2,
+          borderRadius: 8,
+          barPercentage: 0.8
+        },
+        {
+          label: 'Employers',
+          data: {{ employer_values|tojson }},
+          backgroundColor: 'rgba(239, 68, 68, 0.8)', // Red-500
+          borderColor: 'rgba(239, 68, 68, 1)',
+          borderWidth: 2,
+          borderRadius: 8,
+          barPercentage: 0.8
+        }
+      ]
     },
     options: {
-        responsive: true,
-        plugins: {
-            legend: { display: true },
-            tooltip: { mode: 'index', intersect: false }
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 12 } } },
+        tooltip: { mode: 'index', intersect: false, backgroundColor: '#fff', titleColor: '#000', bodyColor: '#000' }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { font: { size: 12 }, color: '#6b7280' }, // Gray-600
+          grid: { color: 'rgba(0, 0, 0, 0.1)' }
         },
-        scales: {
-            y: { beginAtZero: true },
-            x: { grid: { display: false } }
+        x: {
+          ticks: { font: { size: 12 }, color: '#6b7280' }, // Gray-600
+          grid: { display: false }
         }
+      },
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuad'
+      }
     }
-});
+  });
+
+  // Dropdown filter
+  const filterButton = document.getElementById('chartFilter');
+  const filterDropdown = document.getElementById('filterDropdown');
+  filterButton.addEventListener('click', () => {
+    filterDropdown.classList.toggle('hidden');
+  });
+  document.addEventListener('click', (e) => {
+    if (!filterButton.contains(e.target) && !filterDropdown.contains(e.target)) {
+      filterDropdown.classList.add('hidden');
+    }
+  });
+
+  function filterChart(period) {
+    // Placeholder: Cập nhật backend để xử lý filter (6 months, 1 year)
+    alert(`Filtering for ${period}. This requires backend update!`);
+    filterDropdown.classList.add('hidden');
+  }
+
+  // Export stats (placeholder)
+  function exportStats() {
+    alert('Chức năng xuất báo cáo đang được phát triển!');
+  }
+
+  // Hover effects
+  document.querySelectorAll('.hover-bg-dark, .hover-bg-light, .hover-bg-100').forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      card.style.transform = 'translateY(-5px)';
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'translateY(0)';
+    });
+  });
 </script>
+
+<style>
+  .animate-pulse {
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  @media (max-width: 768px) {
+    .grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-cols-3 { grid-template-columns: 1fr; }
+  }
+</style>
 {% endblock %}

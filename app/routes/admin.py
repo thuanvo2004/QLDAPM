@@ -186,7 +186,6 @@ def employer_detail(employer_id):
     jobs = Job.query.filter_by(employer_id=employer_id).all()
     return render_template("admin/employer_detail.html", employer=employer, jobs=jobs)
 
-
 # Trang riêng xem employer (nếu muốn khác detail thì dùng đường dẫn /view)
 @admin_bp.route("/employers/<int:employer_id>/view")
 @login_required
@@ -194,7 +193,6 @@ def employer_detail(employer_id):
 def view_employer(employer_id):
     employer = Employer.query.get_or_404(employer_id)
     return render_template("admin/view_employer.html", employer=employer)
-
 
 @admin_bp.route("/employers/<int:employer_id>/edit", methods=["GET", "POST"])
 @login_required

@@ -52,7 +52,7 @@
     <select name="status" class="border border-gray-200 rounded-lg px-3 py-2 text-sm"
             onchange="document.getElementById('filter-form').submit()">
       <option value="">Tất cả trạng thái</option>
-      <option value="active" {% if request.args.get('status')=='is_active' %}selected{% endif %}>Đang hoạt động</option>
+      <option value="active" {% if request.args.get('status')=='is_active' %}selected{% endif %}>Đang mở</option>
       <option value="expired" {% if request.args.get('status')=='expired' %}selected{% endif %}>Hết hạn</option>
     </select>
 
@@ -147,11 +147,11 @@
                 <div>
                   {% if job.is_active %}
                     <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700 flex items-center gap-1">
-                      <i class="fa-regular fa-circle-check"></i> Active
+                      <i class="fa-regular fa-circle-check"></i> Đang mở
                     </span>
                   {% else %}
                     <span class="px-2 py-1 rounded-full text-xs bg-red-100 text-red-600 flex items-center gap-1">
-                      <i class="fa-regular fa-calendar-xmark"></i> Expired
+                      <i class="fa-regular fa-calendar-xmark"></i> Quá hạn
                     </span>
                   {% endif %}
                 </div>
