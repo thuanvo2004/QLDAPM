@@ -58,6 +58,11 @@ def apply_job(job_id):
         flash("Bạn đã nộp hồ sơ trước đó", "warning")
         return redirect(url_for("job.job_detail", job_id=job.id))
 
+    if request.method == "GET":
+        candidate_cvs = CVHistory.query.filter_by(candidate_id=current_user.candidate_profile.id).all()
+        form = CsrfForm()  # Instantiate CSRF form
+        return render_template("candidate/apply_job.html", job=job, employer=employer, candidate_cvs=candidate_cvs, form=form)
+
     # Xử lý CV (lấy từ form hoặc upload)
     cv_id = request.form.get("cv_id")
     uploaded_cv = request.files.get("cv_upload")
